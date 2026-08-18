@@ -1,5 +1,7 @@
 # Translation notes: ThomsonsMethodRevisitedExperiments -> Python
 
+[← Back to repo README](../README.md) | See also: [verification/octave_verify_multitaper/README.md](../verification/octave_verify_multitaper/README.md) (how this was verified against real MATLAB) | [legacy/matlab_source/ThomsonsMethodRevisitedExperiments/](../legacy/matlab_source/ThomsonsMethodRevisitedExperiments/) (the original .m files)
+
 Source: `PRJ_SPAC/codes/test/matlab/functions/ThomsonsMethodRevisitedExperiments/`
 (the live/current directory in the downloaded codebase snapshot, not the
 `bkup/codes_020212025` or `bkup/codes_02202025` copies -- see "Which source

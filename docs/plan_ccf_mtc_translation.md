@@ -1,5 +1,7 @@
 # Plan: Translate the CCF Multitaper Cross-Correlation Pipeline (`ccf_compute_crosscorr_mtc_Z/T.m`)
 
+[← Back to repo README](../README.md) | See also: [python/ccf_pipeline/NOTES.md](../python/ccf_pipeline/NOTES.md) (implementation status per phase) | [verification/octave_verify_ccf_pipeline/README.md](../verification/octave_verify_ccf_pipeline/README.md)
+
 ## Status update (2026-08-18, end of session)
 
 All 6 phases below are implemented and committed. Phases 0-4 and 6's `IsMspec` dispatch path are

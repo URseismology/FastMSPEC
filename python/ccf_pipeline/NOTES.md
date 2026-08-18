@@ -1,8 +1,10 @@
 # Translation notes: `ccf_compute_crosscorr_mtc_Z.m` -> `ccf_pipeline`
 
-See `docs/plan_ccf_mtc_translation.md` (repo root) for the full phased plan and the resolved
+[← Back to repo README](../../README.md) | See also: [verification/octave_verify_ccf_pipeline/README.md](../../verification/octave_verify_ccf_pipeline/README.md) | [legacy/matlab_source/README.md](../../legacy/matlab_source/README.md)
+
+See [`docs/plan_ccf_mtc_translation.md`](../../docs/plan_ccf_mtc_translation.md) (repo root) for the full phased plan and the resolved
 call-graph investigation. This file tracks per-phase implementation status and caveats, same
-role as `python/NOTES.md` for the multitaper library.
+role as [`python/NOTES.md`](../NOTES.md) for the multitaper library.
 
 ## Status
 
@@ -153,7 +155,8 @@ so this wasn't caught by prior real-world use with that specific window length.
 Real SAC data became available (`data/test/raw_data/{SA53,SA58,MTAN,RUNG,...}`, `data/metadata/
 {sta_list.txt,orientation.csv,...}`, plus a `bkup/` with a prior precomputed CCF result for the
 SA53-SA58 pair). This closed out Phase 5's real-data-verification gap and Phase 6's end-to-end
-gap:
+gap. The SA53/SA58/MTAN/RUNG subset used here is available for download -- see the repo root
+[`README.md`](../../README.md#getting-the-example-sac-data) ("Getting the example SAC data").
 
 - `prepare_data.build_windows` on a real day-pair (SA58/SA53, `1998.289`, BHZ, winlength=4h)
   matches a real Octave run of the equivalent `.m` logic to ~1e-12 -- both the raw windowed

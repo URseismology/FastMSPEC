@@ -1,5 +1,7 @@
 # Octave-based verification against the original MATLAB source
 
+[← Back to repo README](../../README.md) | See also: [python/NOTES.md](../../python/NOTES.md) (the translation this verifies) | [legacy/matlab_source/README.md](../../legacy/matlab_source/README.md)
+
 Octave (9.4.0, `sudo apt install octave`) runs the **actual, unmodified**
 `.m` files from `matlab_source/ThomsonsMethodRevisitedExperiments/` and
 compares their output directly against the Python translation -- a much

@@ -1,5 +1,7 @@
 # Phase 0 findings: `ccf_compute_crosscorr_mtc_Z.m` empirical dry-run
 
+[← Back to repo README](../../README.md) | See also: [python/ccf_pipeline/NOTES.md](../../python/ccf_pipeline/NOTES.md) (the translation this verifies) | [docs/plan_ccf_mtc_translation.md](../../docs/plan_ccf_mtc_translation.md) | [legacy/matlab_source/README.md](../../legacy/matlab_source/README.md)
+
 Ran the actual, unmodified `ccf_compute_crosscorr_mtc_Z.m` (+ its real `jSpectral`/`jCommon`/
 `jVarfun` dependencies, copied in here from the codebase snapshot) in Octave on a tiny synthetic
 `S1_data_mat`/`S2_data_mat` (2 days x 3 windows x 8 samples, `technique='FastMspec'`) to resolve

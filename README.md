@@ -6,17 +6,17 @@ multitaper spectral estimation, based on Santhosh Karnik's "Fast Slepian Transfo
 transform*, Appl. Comput. Harmon. Anal., 2017).
 
 This repository was repurposed and renamed from `Para_CCF` (2021), the earliest parallel-CCF
-MATLAB codebase in this project's lineage — see `legacy/` for how the two connect.
+MATLAB codebase in this project's lineage — see [`legacy/`](legacy/) for how the two connect.
 
 ## What's here
 
 | Directory | Contents |
 |---|---|
-| **`python/`** | The Python translation: `thomson_multitaper/` (DPSS/multitaper spectral estimation library) and `ccf_pipeline/` (the ambient-noise CCF pipeline that calls it). Each has its own `NOTES.md` documenting every translation decision, bug found, and verification result. |
-| **`verification/`** | The GNU Octave environments used to verify the Python translation against the real, unmodified MATLAB source — not synthetic reimplementation, the *actual* `.m` files, run and diffed against Python output. |
-| **`legacy/matlab_source/`** | The original MATLAB source this project translates from and verifies against, for side-by-side reading. |
-| **`legacy/para_ccf_original/`** | This repo's original contents before the rename — the 2021-era predecessor scripts. |
-| **`docs/`** | The technical plan for the CCF pipeline translation, written before implementation and updated as work progressed. |
+| [`python/`](python/) | The Python translation: [`thomson_multitaper/`](python/thomson_multitaper/) (DPSS/multitaper spectral estimation library, notes in [`python/NOTES.md`](python/NOTES.md)) and [`ccf_pipeline/`](python/ccf_pipeline/) (the ambient-noise CCF pipeline that calls it, notes in [`python/ccf_pipeline/NOTES.md`](python/ccf_pipeline/NOTES.md)). |
+| [`verification/`](verification/) | The GNU Octave environments used to verify the Python translation against the real, unmodified MATLAB source — not synthetic reimplementation, the *actual* `.m` files, run and diffed against Python output. See [`octave_verify_multitaper/README.md`](verification/octave_verify_multitaper/README.md) and [`octave_verify_ccf_pipeline/README.md`](verification/octave_verify_ccf_pipeline/README.md). |
+| [`legacy/matlab_source/`](legacy/matlab_source/) | The original MATLAB source this project translates from and verifies against, for side-by-side reading. See its [`README.md`](legacy/matlab_source/README.md). |
+| [`legacy/para_ccf_original/`](legacy/para_ccf_original/) | This repo's original contents before the rename — the 2021-era predecessor scripts. See [`NOTE.md`](legacy/para_ccf_original/NOTE.md) and the original [`README.md`](legacy/para_ccf_original/README.md). |
+| [`docs/`](docs/) | The technical plan for the CCF pipeline translation, written before implementation and updated as work progressed: [`plan_ccf_mtc_translation.md`](docs/plan_ccf_mtc_translation.md). |
 
 ## Status, in one paragraph
 
@@ -32,15 +32,31 @@ package's `NOTES.md` — nothing here is claimed more thoroughly verified than i
 
 ## Where to start reading
 
-1. **`python/thomson_multitaper/NOTES.md`** and **`verification/octave_verify_multitaper/README.md`**
+1. [`python/NOTES.md`](python/NOTES.md) and [`verification/octave_verify_multitaper/README.md`](verification/octave_verify_multitaper/README.md)
    — the multitaper library and how it was verified.
-2. **`docs/plan_ccf_mtc_translation.md`** — why the CCF pipeline translation targets
+2. [`docs/plan_ccf_mtc_translation.md`](docs/plan_ccf_mtc_translation.md) — why the CCF pipeline translation targets
    `ccf_compute_crosscorr_mtc_Z.m`/`_T.m` specifically (not the originally-assumed
    `a1_ccf_ambnoise_*.m` scripts), and the phased plan that followed from that finding.
-3. **`python/ccf_pipeline/NOTES.md`** and **`verification/octave_verify_ccf_pipeline/README.md`**
+3. [`python/ccf_pipeline/NOTES.md`](python/ccf_pipeline/NOTES.md) and [`verification/octave_verify_ccf_pipeline/README.md`](verification/octave_verify_ccf_pipeline/README.md)
    — the CCF pipeline translation itself, phase by phase, including the real-data verification.
-4. **`legacy/matlab_source/README.md`** — a map of which original `.m` file backs which Python
+4. [`legacy/matlab_source/README.md`](legacy/matlab_source/README.md) — a map of which original `.m` file backs which Python
    module, for line-by-line comparison.
+5. [`legacy/para_ccf_original/NOTE.md`](legacy/para_ccf_original/NOTE.md) — how this repo's original 2021 contents connect to the rest.
+
+## Getting the example SAC data
+
+The real seismic data used in the tests, examples, and real-data verification (station pairs
+SA53/SA58 and MTAN/RUNG, ~1.2 GB) is hosted on the lab's Synology NAS rather than committed to
+this repo or a public GitHub release, since it's real network waveform data rather than something
+appropriate to redistribute broadly:
+
+```bash
+curl -L https://repovibranium.synology.me/FastMSPEC_data/raw_data.tar.gz | tar xz -C data/
+```
+
+This unpacks into `data/raw_data/` and `data/metadata/`, matching the paths the tests and
+examples expect. Requires access to the lab network/VPN. SHA256 of the tarball:
+`ad4ee21b56c1fbd7340ce86a9f226de1cdca20aba56c151ee446d219649fe919`.
 
 ## Running the tests
 
@@ -51,6 +67,6 @@ PYTHONPATH=. python3 -m pytest tests/ ccf_pipeline/tests/ -v
 ```
 
 Some `ccf_pipeline` tests compare against `.mat` fixtures generated by the Octave scripts in
-`verification/octave_verify_ccf_pipeline/` and will skip (not fail) if those fixtures aren't
-present — see that directory's `README.md` to regenerate them (requires GNU Octave with the
+[`verification/octave_verify_ccf_pipeline/`](verification/octave_verify_ccf_pipeline/) and will skip (not fail) if those fixtures aren't
+present — see that directory's [`README.md`](verification/octave_verify_ccf_pipeline/README.md) to regenerate them (requires GNU Octave with the
 `signal` package installed).

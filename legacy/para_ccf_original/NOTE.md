@@ -1,5 +1,7 @@
 # Original Para_CCF contents
 
+[← Back to repo README](../../README.md) | See also: [legacy/matlab_source/README.md](../matlab_source/README.md)
+
 This directory holds the repository's original contents, unchanged, from before it was
 repurposed and renamed to `FastMSPEC`. These are the earliest available parallel-CCF-computation
 MATLAB scripts in this project's lineage (2021).
@@ -9,5 +11,5 @@ MATLAB scripts in this project's lineage (2021).
 still carries a commented-out function signature referencing this exact file) — i.e. this repo
 is genuinely where that line of the codebase started.
 
-See `../matlab_source/` for the (much later) MATLAB source this project's Python translation was
-actually built from, and the top-level `README.md` for the full picture.
+See [`../matlab_source/`](../matlab_source/) for the (much later) MATLAB source this project's Python translation was
+actually built from, and the [top-level `README.md`](../../README.md) for the full picture.
