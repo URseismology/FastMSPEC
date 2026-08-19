@@ -83,20 +83,44 @@ def table1_leakage(n: int = 2000, w: float = 1.0 / 100, ks=(39, 36, 32, 29)):
 # Fig 3: four-narrowband high-dynamic-range leakage demo
 # ---------------------------------------------------------------------------
 
-def fig3_signal(n: int = 2000, seed: int = 0):
-    """Generates x ~ CN(0, diag(S)) with the paper's four-narrowband PSD:
-    S(f) = 1e3 on [0.18,0.22], 1e9 on [0.28,0.32], 1e2 on [0.38,0.42],
-           1e1 on [0.78,0.82], 1e0 elsewhere. Returns (x, S) with S evaluated
-           on the length-n DFT grid f = 0..N-1 / N."""
+def fig3_signal(n: int = 2000, seed: int = 0, oversample: int = 64):
+    """Generates x ~ CN(0, R) with R the Toeplitz covariance matrix implied
+    by the paper's four-narrowband PSD (its Lemma 5: R = int S(f) e_f e_f^H
+    df over continuous f, not a covariance diagonal in the length-n DFT
+    basis): S(f) = 1e3 on [0.18,0.22], 1e9 on [0.28,0.32], 1e2 on
+    [0.38,0.42], 1e1 on [0.78,0.82], 1e0 elsewhere. Returns (x, S) with S
+    evaluated on the length-n DFT grid f = 0..N-1 / N.
+
+    Approximates that continuous-frequency process by synthesizing on a much
+    finer grid (m = n*oversample) via the same frequency-domain-shaping
+    idiom as `nb3_helpers.nlnm_synthetic`, then truncating to the first n
+    samples -- i.e. genuinely windowing a finite piece out of a longer
+    realization, rather than assigning independent values directly to the
+    n analysis-grid bins. That truncation is what makes real spectral
+    leakage possible: a signal built and analyzed on the *same* n-point grid
+    is, by construction, exactly diagonal in the periodogram's own DFT
+    basis, so no periodogram -- regardless of the true PSD's dynamic range
+    -- can ever show leakage against it. Verified against the paper's own
+    reported qualitative result for this example (periodogram and K=39 both
+    swamp the three weaker sources; K=29 resolves all four)."""
+    m = n * oversample
+    fm = np.arange(m) / m
+    s_m = np.ones(m)
+    s_m[(fm >= 0.18) & (fm <= 0.22)] = 1e3
+    s_m[(fm >= 0.28) & (fm <= 0.32)] = 1e9
+    s_m[(fm >= 0.38) & (fm <= 0.42)] = 1e2
+    s_m[(fm >= 0.78) & (fm <= 0.82)] = 1e1
+    rng = np.random.default_rng(seed)
+    w = (rng.standard_normal(m) + 1j * rng.standard_normal(m)) / np.sqrt(2)
+    x_long = np.fft.ifft(np.fft.fft(w) * np.sqrt(s_m))
+    x = x_long[:n]
+
     f = np.arange(n) / n
     s = np.ones(n)
     s[(f >= 0.18) & (f <= 0.22)] = 1e3
     s[(f >= 0.28) & (f <= 0.32)] = 1e9
     s[(f >= 0.38) & (f <= 0.42)] = 1e2
     s[(f >= 0.78) & (f <= 0.82)] = 1e1
-    rng = np.random.default_rng(seed)
-    w = (rng.standard_normal(n) + 1j * rng.standard_normal(n)) / np.sqrt(2)
-    x = np.fft.ifft(np.fft.fft(w) * np.sqrt(s))
     return x, s
 
 

@@ -221,30 +221,51 @@ def envelope_conditioned_coherency(coh: np.ndarray, dt: float, threshold_db: flo
     return conditioned_coh, envelope, np.fft.ifftshift(mask)
 
 
-def nlnm_synthetic(n: int, dt: float, seed: int = 0):
+def nlnm_synthetic(n: int, dt: float, seed: int = 0, oversample: int = 16):
     """Generates a length-n synthetic Gaussian random process whose PSD
     follows Peterson (1993)'s New Low Noise Model, using obspy's built-in
     NLNM table (obspy.signal.spectral_estimation.get_nlnm, which returns
     period-in-seconds vs. acceleration-PSD-in-dB, re 1 (m/s^2)^2/Hz).
     Returns (x, freqs, target_psd) where target_psd is on the same
     linear-power scale as a periodogram/multitaper estimate of x.
+
+    Synthesizes on a grid m = n*oversample finer than the n-point analysis
+    grid, then truncates to the first n samples -- same fix as
+    karnik_figures.fig3_signal, for the same reason: shaping white noise
+    directly on the n-point analysis grid makes the result exactly diagonal
+    in that grid's own DFT basis, so a periodogram of it can never show
+    genuine spectral leakage regardless of the target PSD's dynamic range.
+    This notebook only ever uses the result for a periodogram-vs-multitaper
+    *variance* comparison (not a leakage test), so the old construction
+    wasn't giving a wrong answer for its actual use here -- this is a
+    consistency fix, matching the codebase's now-established convention for
+    generating a signal from a target PSD, not a correction of a wrong
+    result in this notebook.
     """
     periods, db = get_nlnm()
     nlnm_freqs = 1.0 / periods  # ascending period -> descending frequency
     order = np.argsort(nlnm_freqs)
     nlnm_freqs, db = nlnm_freqs[order], db[order]
 
+    m = n * oversample
+    freqs_m = np.fft.rfftfreq(m, d=dt)
+    freqs_m_safe = np.clip(freqs_m, nlnm_freqs.min(), nlnm_freqs.max())
+    db_interp_m = np.interp(freqs_m_safe, nlnm_freqs, db)
+    target_psd_m = 10 ** (db_interp_m / 10)
+    target_psd_m[0] = target_psd_m[1]  # avoid a zero-frequency singularity
+
+    rng = np.random.default_rng(seed)
+    white = rng.standard_normal(m)
+    fwhite = np.fft.rfft(white)
+    shaped = fwhite * np.sqrt(target_psd_m * m / (2 * dt))
+    x_long = np.fft.irfft(shaped, n=m)
+    x = x_long[:n]
+
     freqs = np.fft.rfftfreq(n, d=dt)
     freqs_safe = np.clip(freqs, nlnm_freqs.min(), nlnm_freqs.max())
     db_interp = np.interp(freqs_safe, nlnm_freqs, db)
     target_psd = 10 ** (db_interp / 10)
-    target_psd[0] = target_psd[1]  # avoid a zero-frequency singularity
-
-    rng = np.random.default_rng(seed)
-    white = rng.standard_normal(n)
-    fwhite = np.fft.rfft(white)
-    shaped = fwhite * np.sqrt(target_psd * n / (2 * dt))
-    x = np.fft.irfft(shaped, n=n)
+    target_psd[0] = target_psd[1]
 
     full_freqs = np.fft.fftfreq(n, d=dt)
     full_psd = np.interp(np.abs(full_freqs), freqs, target_psd)
