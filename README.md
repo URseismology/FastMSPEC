@@ -2,8 +2,11 @@
 
 Python translation of a MATLAB ambient-noise cross-correlation (CCF) pipeline built on fast
 multitaper spectral estimation, based on Santhosh Karnik's "Fast Slepian Transform" method
-(S. Karnik, Z. Zhu, M. B. Wakin, J. K. Romberg, and M. A. Davenport, *The fast Slepian
-transform*, Appl. Comput. Harmon. Anal., 2017).
+(S. Karnik, Z. Zhu, M. B. Wakin, J. K. Romberg, and M. A. Davenport, "The fast Slepian
+transform," *Appl. Comput. Harmon. Anal.* 46(3):624-652, 2019,
+[doi:10.1016/j.acha.2017.07.005](https://doi.org/10.1016/j.acha.2017.07.005)). See
+[`notebooks/README.md`](notebooks/README.md#references) for the full reference list, including
+the follow-up multitaper paper and the ambient-noise application this repo was built for.
 
 This repository was repurposed and renamed from `Para_CCF` (2021), the earliest parallel-CCF
 MATLAB codebase in this project's lineage — see [`legacy/`](legacy/) for how the two connect.
@@ -17,6 +20,7 @@ MATLAB codebase in this project's lineage — see [`legacy/`](legacy/) for how t
 | [`legacy/matlab_source/`](legacy/matlab_source/) | The original MATLAB source this project translates from and verifies against, for side-by-side reading. See its [`README.md`](legacy/matlab_source/README.md). |
 | [`legacy/para_ccf_original/`](legacy/para_ccf_original/) | This repo's original contents before the rename — the 2021-era predecessor scripts. See [`NOTE.md`](legacy/para_ccf_original/NOTE.md) and the original [`README.md`](legacy/para_ccf_original/README.md). |
 | [`docs/`](docs/) | The technical plan for the CCF pipeline translation, written before implementation and updated as work progressed: [`plan_ccf_mtc_translation.md`](docs/plan_ccf_mtc_translation.md). |
+| [`notebooks/`](notebooks/) | Theory-to-application documentation, in four pre-run Jupyter notebooks: why multitaper spectral estimation and why "Fast" (reproducing Karnik et al.'s own paper figures), why this matters for ambient-noise cross-correlation, the pipeline applied to real data, and a scoped future-work roadmap for coda-correlation. See [`notebooks/README.md`](notebooks/README.md). |
 
 ## Status, in one paragraph
 
@@ -42,6 +46,8 @@ package's `NOTES.md` — nothing here is claimed more thoroughly verified than i
 4. [`legacy/matlab_source/README.md`](legacy/matlab_source/README.md) — a map of which original `.m` file backs which Python
    module, for line-by-line comparison.
 5. [`legacy/para_ccf_original/NOTE.md`](legacy/para_ccf_original/NOTE.md) — how this repo's original 2021 contents connect to the rest.
+6. [`notebooks/`](notebooks/) — if you want the *why*, not just the *what*: theory, motivation, and real-data
+   application, worked through with real figures rather than summarized.
 
 ## Getting the example SAC data
 
@@ -56,7 +62,7 @@ curl -L https://repovibranium.synology.me/FastMSPEC_data/raw_data.tar.gz | tar x
 
 This unpacks into `data/raw_data/` and `data/metadata/`, matching the paths the tests and
 examples expect. Requires access to the lab network/VPN. SHA256 of the tarball:
-`ad4ee21b56c1fbd7340ce86a9f226de1cdca20aba56c151ee446d219649fe919`.
+`4d5e4b3124d5d1325f57618d23d38755ba2c41ffb0a0c1711d3d8d0dc9d3ef46`.
 
 ## Running the tests
 
