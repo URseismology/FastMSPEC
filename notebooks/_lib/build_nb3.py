@@ -244,6 +244,94 @@ for a shrinking further gain), which is right where `FastMspec` and
 benefit is on top of, not instead of, picking a sensible K.
 """)
 
+md(r"""### 1c. Why multitaper at all? Single-taper vs. FastMspec on Love waves
+
+Sections 1 and 1b compared multitaper *techniques* against each other. This
+steps back one level: is multitaper worth using at all, compared to the
+original, much simpler approach in the legacy codebase — the "5% Cosine
+Single-Taper" (`ccf_pipeline`'s detrend+cosine-taper preprocessing feeding
+straight into a plain FFT coherency, no DPSS tapers, no averaging across
+anything but a single window realization; the dispatcher's non-`IsMspec`
+branch, `dispatch.compute_crosscorr`). Same station pair as Section 1
+(SA53/SA58) for continuity and because it avoids Section 2's already-flagged
+MTAN/RUNG SNR anomaly, but rotated to the transverse (Love-wave) component —
+the same `prepare_transverse_pair` machinery Section 2 uses, with `band='BH'`
+for this pair's broadband instruments.""")
+
+code("""t1, t2, dist_km_t = prepare_transverse_pair(
+    DATA, META, 'SA58', 'SA53', winlength_hours=3, nstart_sec=50, dt=1.0, band='BH',
+)
+print(f"transverse windows: {t1.shape}, station distance: {dist_km_t:.1f} km")
+
+t1p = pp.ccf_cos_taper_3dim(pp.ccf_detrend_3dim(t1))
+t2p = pp.ccf_cos_taper_3dim(pp.ccf_detrend_3dim(t2))
+
+t0 = time.time()
+single_result = compute_crosscorr(t1p, t2p, FilterConfig(dt=1.0))  # all flags False -> plain-fft/single-taper branch
+coh_single, coh_num_single = single_result
+ccf_love_single = coh_single.sum(axis=(0, 1)) / coh_num_single
+t_love_single = time.time() - t0
+
+t0 = time.time()
+fast_result_love = compute_crosscorr_mtc_fastmspec(t1p, t2p, wband=wband, cutoff=cutoff, epsilon=epsilon)
+ccf_love_fast = fast_result_love.coh_sum / fast_result_love.coh_num
+t_love_fast = time.time() - t0
+
+n_love = t1.shape[2]
+faxis_love = np.fft.fftfreq(n_love, d=1.0)
+pos_love = faxis_love > 0
+f_love = faxis_love[pos_love]
+cs_love = ccf_love_single[pos_love].real
+cf_love = ccf_love_fast[pos_love].real
+
+rgh_single = roughness(cs_love, f_love, 0.02, 0.3)
+rgh_fast = roughness(cf_love, f_love, 0.02, 0.3)
+print(f"Single-taper: {t_love_single:.2f}s, roughness={rgh_single:.4f}")
+print(f"FastMspec:    {t_love_fast:.1f}s,  roughness={rgh_fast:.4f}  ({rgh_single/rgh_fast:.1f}x smoother)")
+""")
+
+code("""fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+axes[0].plot(f_love, cs_love, linewidth=0.5, label='Single-taper')
+axes[0].plot(f_love, cf_love, linewidth=0.8, label='FastMspec')
+axes[0].set_xlim(0, 0.3)
+axes[0].set_xlabel('Frequency (Hz)'); axes[0].set_ylabel('Re[coherency]')
+axes[0].set_title('SA58-SA53 transverse (Love) coherency')
+axes[0].legend(fontsize=8)
+
+axes[1].plot(f_love, cs_love, linewidth=0.6, label='Single-taper')
+axes[1].plot(f_love, cf_love, linewidth=1.2, label='FastMspec')
+axes[1].set_xlim(0.05, 0.10)
+axes[1].set_xlabel('Frequency (Hz)')
+axes[1].set_title('Zoomed 0.05-0.10 Hz')
+axes[1].legend(fontsize=8)
+plt.suptitle(f'dist={dist_km_t:.0f} km -- single-taper: {t_love_single:.1f}s, roughness={rgh_single:.3f}; '
+             f'FastMspec: {t_love_fast:.0f}s, roughness={rgh_fast:.3f}')
+plt.tight_layout()
+plt.show()
+""")
+
+md(r"""The zoomed panel makes the point directly: `FastMspec` traces a clear
+oscillatory structure across 0.05-0.10 Hz that is essentially invisible in
+the single-taper estimate at the same scale — the single-taper curve isn't
+*wrong*, it scatters around the same values `FastMspec` settles on (it's
+the same underlying quantity, estimated from one realization instead of an
+average over many), but that scatter is large enough to bury the coherent
+Love-wave structure entirely. Quantitatively, single-taper is
+~13-14x rougher than `FastMspec` in the 0.02-0.3 Hz surface-wave band —
+this is the real cost of skipping multitaper, not a subtle effect.
+
+The trade-off isn't free, though, and it's worth being honest about both
+sides: single-taper took ~2s here; `FastMspec` took ~2 minutes. Multitaper
+buys real, necessary resolution for actually resolving Love-wave dispersion
+— but at a real compute cost. That's exactly the question Section 1 already
+answered at the *next* level down: given that multitaper is necessary,
+`FastMspec` gets there faster and with less memory than classical `Mspec`
+at matching quality, and clearly outperforms `MspecBestK`'s classical
+averaging at the same taper count. Single-taper's speed advantage over any
+multitaper technique is real, but it isn't a usable option here — it fails
+to recover the signal this whole pipeline exists to measure.
+""")
+
 md(r"""## 2. MTAN/RUNG: single-taper vs. FastMspec SNR on real Love-wave data
 
 This is the station pair and comparison from Sayan's report (Fig. 3):
