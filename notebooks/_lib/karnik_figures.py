@@ -96,7 +96,7 @@ def fig3_signal(n: int = 2000, seed: int = 0):
     s[(f >= 0.78) & (f <= 0.82)] = 1e1
     rng = np.random.default_rng(seed)
     w = (rng.standard_normal(n) + 1j * rng.standard_normal(n)) / np.sqrt(2)
-    x = np.fft.ifft(np.fft.fft(w) * np.sqrt(s) * np.sqrt(n))
+    x = np.fft.ifft(np.fft.fft(w) * np.sqrt(s))
     return x, s
 
 
