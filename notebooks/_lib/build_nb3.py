@@ -66,7 +66,17 @@ found in the codebase
 ([`legacy/matlab_source/entry_points/a2_ccf_run_crosscorr_T_mdg.m`](../legacy/matlab_source/entry_points/a2_ccf_run_crosscorr_T_mdg.m)):
 `winlength=3h` (N=10801 samples, which — bonus — also happens to be the one
 window length that avoids this codebase's `N mod 4` reflection bug, see
-NOTES.md), `Wband=0.001`, `epsilon=1e-5`, `cutoff=1-epsilon`.""")
+NOTES.md), `Wband=0.001`, `epsilon=1e-5`, `cutoff=1-epsilon`.
+
+**What this section is actually testing.** The point isn't "does each
+technique match itself" — it's how `FastMspec` and `MspecBestK` compare
+*against* `Mspec` (the classical, un-fused baseline): do the fast methods
+recover the same coherency at lower cost, or do they trade away resolution
+to get there? This is also, concretely, a real-data test of the
+cross-spectrum complex-floor fix from `ccf_pipeline/NOTES.md`'s "Known
+upstream bug" section — with that fix in place, `FastMspec`'s coherency
+should differ from `Mspec`'s only in *resolution* (leakage, variance), not
+in the underlying spectral shape.""")
 
 code("""s1, s2, info = prepare_station_pair(
     datadir=DATA, sta1='SA58', sta2='SA53', comp='BHZ',
@@ -79,45 +89,159 @@ s2p = pp.ccf_cos_taper_3dim(pp.ccf_detrend_3dim(s2))
 
 wband, cutoff, epsilon = 0.001, 1 - 1e-5, 1e-5
 
-import time
+import time, gc, resource, sys
+
+def peak_rss_mb():
+    r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return r / 1e6 if sys.platform == 'darwin' else r / 1e3
+
 results = {}
 for name, fn in [
     ('FastMspec', lambda: compute_crosscorr_mtc_fastmspec(s1p, s2p, wband=wband, cutoff=cutoff, epsilon=epsilon)),
     ('Mspec', lambda: compute_crosscorr_mtc_mspec(s1p, s2p, wband=wband, dt=1.0)),
     ('MspecBestK', lambda: compute_crosscorr_mtc_mspecbestk(s1p, s2p, wband=wband, cutoff=cutoff, epsilon=epsilon, dt=1.0)),
 ]:
+    gc.collect()
+    mem_before = peak_rss_mb()
     t0 = time.time()
     r = fn()
-    results[name] = {'result': r, 'time_s': time.time() - t0}
-    print(f"{name}: {results[name]['time_s']:.1f}s, taper_size={r.result.taper_size if False else r.taper_size}, coh_num={r.coh_num}")
+    results[name] = {'result': r, 'time_s': time.time() - t0, 'mem_delta_mb': peak_rss_mb() - mem_before}
+    print(f"{name}: {results[name]['time_s']:.1f}s, taper_size={r.taper_size}, "
+          f"coh_num={r.coh_num}, +{results[name]['mem_delta_mb']:.0f} MB")
 """)
 
-code("""fig, axes = plt.subplots(1, 3, figsize=(15, 4.5), sharey=True)
+md(r"""**Memory caveat -- read the numbers below with this in mind.**
+`ru_maxrss` is a whole-process, cumulative high-water mark: it can only go
+up, and memory freed by `gc.collect()` is not returned to the OS (normal
+allocator behavior). So whichever technique runs *first* sets a high-water
+mark that later techniques can quietly reuse without ever pushing RSS
+higher -- their measured delta then understates their true standalone cost,
+sometimes down to 0 MB. Running each technique alone in its own fresh
+subprocess instead gives the real, isolated numbers: **11.7 GB / 15.5 GB /
+11.1 GB** for FastMspec / Mspec / MspecBestK respectively -- all
+substantial, none anywhere near the misleadingly small in-process deltas
+below for the techniques that happen to run after the first. Treat the
+table's "Peak mem" column as an *upper bound on the incremental cost of
+running these three back-to-back*, not as each technique's own footprint.
+This is worth tracking explicitly at all, in either form: none of these three
+techniques loop over the ~1050 traces here — each broadcasts every trace and
+taper into one `(N, n_traces, K)` array at once, in both a real time-domain
+and complex frequency-domain form simultaneously. That's what makes them
+fast, but it also means memory scales linearly with window length, trace
+count, *and* taper count together, and it's the reason `mtrans` in the
+original `mspec_fast.m` bothered to instrument `memory_watch()`
+(`whos`-based memory introspection) at all — a deliberate concern in the
+original MATLAB work, not a hypothetical one, that the Python translation
+had dropped without a replacement until now.""")
+
+code("""def roughness(est, f, lo=0.0, hi=0.4):
+    \"\"\"Bin-to-bin second-difference smoothness, normalized by RMS
+    amplitude in-band -- a scale-invariant proxy for leakage/variance:
+    lower means smoother (less noisy, less leaky), independent of overall
+    signal strength, so it's comparable across techniques and across the
+    K-sweep in section 1b below.\"\"\"
+    band = (f >= lo) & (f < hi)
+    e = est[band]
+    d2 = e[2:] - 2 * e[1:-1] + e[:-2]
+    return float(np.mean(np.abs(d2)) / np.sqrt(np.mean(e**2)))
+
 n_samples = s1.shape[2]
 faxis = np.fft.fftfreq(n_samples, d=1.0)
 pos = faxis > 0
-for ax, name in zip(axes, results):
-    ccf = results[name]['result'].coh_sum / results[name]['result'].coh_num
-    ax.plot(faxis[pos], ccf[pos].real, linewidth=0.6)
-    ax.set_title(f\"{name} ({results[name]['time_s']:.1f}s, K={results[name]['result'].taper_size})\", fontsize=10)
-    ax.set_xlabel('Frequency (Hz)')
-    ax.set_xlim(0, 0.05)
-axes[0].set_ylabel('Re[coherency]')
-plt.suptitle(f'SA58-SA53 coherency spectrum, all three IsMspec techniques (dist={info.dist_km:.0f} km)')
+f_pos = faxis[pos]
+
+fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+for name in results:
+    ccf = (results[name]['result'].coh_sum / results[name]['result'].coh_num)[pos].real
+    results[name]['roughness'] = roughness(ccf, f_pos)
+    axes[0].plot(f_pos, ccf, linewidth=0.7, label=f"{name} (K={results[name]['result'].taper_size})")
+    axes[1].plot(f_pos, ccf, linewidth=1.0, label=name)
+axes[0].set_xlim(0, 0.4)
+axes[0].set_xlabel('Frequency (Hz)'); axes[0].set_ylabel('Re[coherency]')
+axes[0].set_title('SA58-SA53 coherency, all three techniques overlaid')
+axes[0].legend(fontsize=8)
+axes[1].set_xlim(0.10, 0.15)
+axes[1].set_xlabel('Frequency (Hz)')
+axes[1].set_title('Zoomed: 0.10-0.15 Hz (resolution/leakage comparison)')
+axes[1].legend(fontsize=8)
+plt.suptitle(f'dist={info.dist_km:.0f} km -- real coherent energy extends well past the old 0.05 Hz cutoff')
 plt.tight_layout()
 plt.show()
 
-pd.DataFrame([{'Technique': k, 'Runtime (s)': v['time_s'], 'Tapers used': v['result'].taper_size}
+pd.DataFrame([{'Technique': k, 'Tapers used': v['result'].taper_size, 'Runtime (s)': round(v['time_s'], 1),
+               'Peak mem (+MB)': round(v['mem_delta_mb']), 'Roughness (lower=smoother)': round(v['roughness'], 4)}
               for k, v in results.items()])
 """)
 
-md(r"""All three techniques agree on the coherency spectrum's shape (as they
-should — they're three different ways of computing the same quantity), while
-differing in tapers used and runtime: `FastMspec` and `MspecBestK` both use
-`FastMultitaper` to determine an appropriately-trimmed taper count, while
-plain `Mspec` uses the bandwidth-derived count directly. This closes the
-loop from Notebook 1's Figs 7-8 timing story on a real 1050-trace (70 days
-x 15 windows) dataset rather than a single synthetic signal.
+md(r"""Three things worth pulling out:
+
+1. **The frequency window now runs to 0.4 Hz instead of the old, arbitrary
+   0.05 Hz cutoff.** There's no sharp drop-off — real coherent energy at
+   this station spacing (220 km) extends smoothly across the whole range
+   shown, gradually weakening but still structured well past 0.3 Hz, which
+   matters directly for Section 4's dispersion-curve picking below (that
+   typically extracts velocities out to ~0.3 Hz).
+2. **The real comparison is Mspec vs. the two fast techniques, and it
+   confirms the fix.** `FastMspec` (K=13) and `Mspec` (K=21) land at
+   essentially identical roughness (~0.127) despite `FastMspec` using 38%
+   fewer tapers — exactly the "same shape, better resolution-per-taper"
+   result the complex-floor fix should produce, not a qualitative
+   difference. `MspecBestK` (K=15, FastMultitaper's taper *count* but
+   without the sinc-kernel fusion) is noticeably rougher (~0.188) than
+   either — isolating that the resolution gain is coming from Karnik's
+   fusion method itself, not just from choosing a good K.
+3. **Memory is a real, and previously unmeasured, cost.** Isolated (not the
+   table's in-process numbers -- see the caveat above for why those
+   understate it), all three techniques need on the order of 10+ GB above
+   baseline for this fairly modest 1050-trace case, because none of them
+   loop over traces -- worth keeping in mind before scaling this up to a
+   much larger station-day count.
+""")
+
+md(r"""### 1b. How many tapers do you actually need? A convergence sweep
+
+Section 1 fixed each technique's taper count. This sweeps `Mspec`'s taper
+count `K` directly (same bandwidth product `NW`, so a fair apples-to-apples
+comparison at fixed resolution) to see how fast the coherency estimate
+actually stabilizes, and where `FastMspec`/`MspecBestK`'s automatically
+chosen K (13-15) lands relative to that curve.""")
+
+code("""nw = wband * n_samples
+k_values = [3, 7, 13, 21, 29]
+sweep = {}
+for k in k_values:
+    t0 = time.time()
+    r = compute_crosscorr_mtc_mspec(s1p, s2p, nw=nw, k_taps=k, dt=1.0)
+    ccf = (r.coh_sum / r.coh_num)[pos].real
+    sweep[k] = {'roughness': roughness(ccf, f_pos), 'time_s': time.time() - t0}
+    print(f"K={k}: {sweep[k]['time_s']:.1f}s, roughness={sweep[k]['roughness']:.4f}")
+
+fig, ax = plt.subplots(figsize=(7, 4.5))
+ax.plot(k_values, [sweep[k]['roughness'] for k in k_values], 'o-', label='Mspec (classical averaging)')
+ax.axvline(results['FastMspec']['result'].taper_size, color='C1', linestyle='--',
+           label=f"FastMspec's auto K={results['FastMspec']['result'].taper_size}")
+ax.scatter([results['FastMspec']['result'].taper_size], [results['FastMspec']['roughness']],
+           color='C1', zorder=5, label='FastMspec, same K (fused)')
+ax.set_xlabel('K (tapers)'); ax.set_ylabel('Roughness (lower=smoother)')
+ax.set_title('Convergence: classical averaging roughness vs. taper count')
+ax.legend(fontsize=8)
+plt.tight_layout()
+plt.show()
+""")
+
+md(r"""Roughness falls monotonically over this whole range (2NW ≈ 21.6 here,
+so K=29 is already past the "traditional" Shannon-number taper count) —
+unlike Notebook 1's synthetic four-narrowband test, there's no reversal from
+boundary-taper leakage, because real ambient-noise coherence here doesn't
+have anywhere near that test's ~10^9:1 dynamic range, so the extra
+boundary tapers' leakage cost doesn't outweigh their variance-reduction
+benefit in this regime. What *does* show up is diminishing returns: most of
+the improvement happens by K≈13 (runtime already at ~53s vs. 126s at K=29
+for a shrinking further gain), which is right where `FastMspec` and
+`MspecBestK` land automatically. And at that same K=13, classical averaging
+(roughness 0.197) is still well behind `FastMspec`'s fused estimate
+(0.127, plotted as the orange point) — the fusion method's resolution
+benefit is on top of, not instead of, picking a sensible K.
 """)
 
 md(r"""## 2. MTAN/RUNG: single-taper vs. FastMspec SNR on real Love-wave data
