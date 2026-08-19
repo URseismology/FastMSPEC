@@ -122,10 +122,11 @@ scipy's built-in filtfilt variants.
   that `avgspec_sayan`/`avgspec_xy_sayan` in `mspec_fast.m` are mathematically identical (the
   auto version is just the cross version called with the same signal twice). Not reimplemented
   as two separate functions.
-- **Complex-valued "floor" operation**: MATLAB's `max(z, eps*maxz)` on a complex array compares
-  by magnitude and keeps the actual complex element (not a real-part comparison). Replicated via
-  `_complex_floor` in `fast_cross_spectrum.py` rather than assuming real-valued output --
-  necessary because the cross-spectrum (unlike the auto-spectrum case) is genuinely complex.
+- **Complex-valued "floor" operation, auto-spectrum only**: MATLAB's `max(z, eps*maxz)` on a
+  complex array compares by magnitude and keeps the actual complex element (not a real-part
+  comparison). Replicated via `_complex_floor` in `fast_cross_spectrum.py`, but only for the
+  auto-spectrum case (`x is y`) -- see "Known upstream bug" below for why the cross-spectrum case
+  no longer applies it.
 - **Trace ordering in the 2-D reshape** (`_reshape_to_traces_by_samples`): MATLAB's
   `reshape(A,[],N1)` on a column-major `(day,window,samples)` array produces traces ordered
   day-fastest-then-window. Reproduced in numpy via `transpose(2,1,0).reshape(n_samp,-1)` --
@@ -149,6 +150,29 @@ wrong-length spectrum whenever `N mod 4` is 0 or 3. Fixed in `_reflect_onesided_
 using `N`'s true parity. Full analysis: `../../verification/octave_verify_ccf_pipeline/README.md`. The one concrete
 production config found in this codebase (`N=10801`, `N mod 4 == 1`) happens to avoid the bug,
 so this wasn't caught by prior real-world use with that specific window length.
+
+`avgspec_xy_sayan` (`functions/jSpectral/mspec_fast.m`, Sayan's cross-spectrum extension of
+Karnik's `FastMultitaper.SpectralEstimate`) applies the same `max(z, eps*maxz)` positivity floor
+that Karnik's original code uses for its (real, non-negative) auto-spectrum -- but `avgspec_xy_sayan`'s
+`z` is `SXY`, a genuinely complex cross-spectrum with no non-negativity constraint. Lilly's
+original (non-fast) `avgspec` never floors anything, for either the auto- or cross-spectrum case,
+and Karnik's own code never produces a cross-spectrum at all, so there's no precedent in either
+source for flooring a complex quantity this way. Because MATLAB's `max` on complex arguments
+compares by magnitude, this silently overwrites any `SXY` bin near a coherence null -- exactly
+where the phase carries the most physically meaningful information for Bessel-coherence/dispersion
+work -- with a real value carrying the *global* maximum's phase instead of that bin's own. Fixed
+in `fast_spectrum_batch` (`fast_cross_spectrum.py`) by only applying `_complex_floor` when `x is y`
+(the auto-spectrum call convention used throughout `crosscorr_mtc.py`); the cross-spectrum case now
+returns `(z0+z1)/K` unmodified. Not reproduced from the `.m` source. This is on the path exercised
+by every real `'FastMspec'`-technique cross-correlation (`ccf_compute_crosscorr_mtc_T.m`/`_Z.m`),
+so it affects `SXY` and therefore the coherence (`SXY/sqrt(SXX*SYY)`) used throughout Notebook 3.
+**Expected test impact**: `tests/test_crosscorr_mtc.py::test_matches_octave_on_onesided_portion`
+compares against a real Octave run of the unmodified (buggy) `.m` source -- it's skipped in
+environments without the `octave_verify_ccf/synth_medium.mat` fixture, but wherever it does run
+with that fixture, it will now legitimately fail on the FastMspec case's cross-spectrum comparison
+near coherence nulls. That's expected given this is an intentional divergence, not a regression;
+the fixture/test would need regenerating against a MATLAB source with the same fix applied (or the
+test updated to tolerate this known, intentional difference) to pass again.
 
 ## Real-data verification (2026-08-18, update)
 

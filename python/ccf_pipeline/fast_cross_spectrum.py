@@ -72,4 +72,16 @@ def fast_spectrum_batch(fmtse: FastMultitaper, x: np.ndarray, y: np.ndarray) -> 
     z1 = eigspec[:, :, fmtse.index_plus].sum(axis=2) - eigspec[:, :, ~fmtse.index_plus].sum(axis=2)
 
     z = (z0 + z1) / fmtse.K
-    return _complex_floor(z, eps)
+    if x is y:
+        # auto-spectrum: a real, non-negative power -- the floor guards
+        # against tiny negative numerical artifacts from the fast
+        # sinc-convolution approximation (matches FastMultitaper.m's own
+        # floor, which is only ever applied to an auto-spectrum).
+        return _complex_floor(z, eps)
+    # cross-spectrum: genuinely complex, with no non-negativity constraint.
+    # mspec_fast.m's avgspec_xy_sayan applies the same floor here too, but
+    # MATLAB's max() on a complex array compares by magnitude, so it
+    # silently overwrites any bin near a coherence null -- exactly where
+    # the phase is physically meaningful -- with a real value carrying the
+    # *global* max's phase. See NOTES.md's "Known upstream bug" section.
+    return z
