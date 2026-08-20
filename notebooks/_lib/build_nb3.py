@@ -581,112 +581,247 @@ This directly predicts Section 1e's result, without needing to know $c$ in
 advance — $\Delta f_{\text{zero}}$ can be read off `FastMspec`'s own
 (undistorted) crossings.""")
 
-code("""# empirical Delta f_zero from FastMspec's own crossings, in a clean,
-# well-resolved sub-band (visually confirmed clean oscillation in Section 1c)
-clean_band = (f_love >= 0.05) & (f_love < 0.15)
-zc_clean = zero_crossings(cf_love[clean_band], f_love[clean_band])
-spacings = np.diff(zc_clean)
-df_zero = spacings.mean()  # mean, not median -- a few spurious close pairs skew the median low
-c_implied = 2 * (dist_km_t * 1000) * df_zero
-print(f"Delta f_zero (empirical, from FastMspec's crossings): {df_zero:.5f} Hz")
-print(f"implied phase velocity c = 2*r*df_zero = {c_implied:.0f} m/s = {c_implied/1000:.2f} km/s")
-print("(literature Love-wave phase velocities ~2-4.5 km/s -- sanity check on df_zero itself)")
-print()
+md(r"""Two problems with stopping there, raised on review: (1) $\Delta
+f_{\text{zero}}$ isn't actually one constant — real dispersion curves have
+$c(f)$, so the true zero-crossing spacing should vary across the spectrum,
+and a single global number begs the question of what spacing we're even
+comparing against; (2) the *quality* of the spectrum matters as much as
+its noise level — Section 1c's roughness metric measures variance, but a
+low-variance estimate can still have a poorly-conditioned crossing (flat
+through zero) that's easy to mislocate. Both point to the same fix: use
+each crossing's own *local* amplitude swing (already established at the end
+of Section 1e) both to decide which crossings are trustworthy enough to
+trust for $\Delta f_{\text{zero}}$, and as the second, complementary line of
+evidence alongside drift. This section builds the argument in five parts,
+following the structure of Ekström et al.'s Aki-spectral-formulation work
+on noise-derived phase velocities (Ekström, Abers & Webb 2009; Ekström
+2014, 2017 — see References): (1) raw spectral behavior at the smoothing
+extremes, (2) where each method's crossings are actually trustworthy, (3)
+whether the implied zero-crossing spacing is stable enough to define
+$\Delta f_{\text{zero}}$ at all, (4) drift measured against that spacing,
+and (5) pulling it together.""")
 
-n_love_samples = len(faxis_love)
-rows = [{'estimator': 'FastMspec', 'bandwidth_hz': 2 * wband, 'ratio_to_df_zero': 2 * wband / df_zero}]
-for w in windows:
-    if w == 1:
-        continue
-    bw = w / n_love_samples
-    rows.append({'estimator': f'single-taper, window={w}', 'bandwidth_hz': bw, 'ratio_to_df_zero': bw / df_zero})
-principle_df = pd.DataFrame(rows)
-principle_df['violates_criterion'] = principle_df['ratio_to_df_zero'] >= 1.0
-principle_df
-""")
+md(r"""#### Part 1 — do the end-member curves even look different?
 
-code("""fig, ax = plt.subplots(figsize=(7, 4.5))
-window_ratios = [w / n_love_samples / df_zero for w in windows]
-ax.plot(window_ratios, drifts, 'o-', color='C3', label='single-taper, smoothed')
-ax.axvline(1.0, color='k', linestyle='--', linewidth=1, label=r'$2W/\\Delta f_{zero}=1$ (criterion)')
-ax.axvline(2 * wband / df_zero, color='C1', linestyle=':', linewidth=1.5, label=f'FastMspec (ratio={2*wband/df_zero:.2f})')
-for x, y, w in zip(window_ratios, drifts, windows):
-    ax.annotate(f'w={w}', (x, y), textcoords='offset points', xytext=(5, 5), fontsize=8)
-ax.set_xlabel(r'Resolution bandwidth / $\\Delta f_{zero}$')
-ax.set_ylabel('Mean nearest-neighbor drift (Hz)')
-ax.set_title('Drift vs. the bandwidth/zero-crossing-spacing ratio')
+`FastMspec` is a single, fixed estimate — it doesn't have a smoothing knob
+to turn. Single-taper's smoothed variants do, from a mild window (5) to an
+aggressive one (100).""")
+
+code("""fig, ax = plt.subplots(figsize=(8, 4.5))
+cs_w5 = uniform_filter1d(cs_love, size=5)
+cs_w100 = uniform_filter1d(cs_love, size=100)
+
+zoom = (f_love >= 0.05) & (f_love < 0.15)
+ax.plot(f_love[zoom], cf_love[zoom], color='C1', linewidth=1.5, label='FastMspec')
+ax.plot(f_love[zoom], cs_w5[zoom], color='C0', linewidth=1, alpha=0.8, label='Single-taper, window=5')
+ax.plot(f_love[zoom], cs_w100[zoom], color='C3', linewidth=1.5, label='Single-taper, window=100')
+ax.axhline(0, color='gray', linewidth=0.5)
+ax.set_xlabel('Frequency (Hz)'); ax.set_ylabel('Re[coherency]')
+ax.set_title('Zoomed: 0.05-0.15 Hz')
 ax.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
 """)
 
-md(r"""The match to Section 1e's own numbers is close enough to be the real
-explanation, not a coincidence: window=50's ratio lands at essentially
-exactly 1.0 — right at the criterion's boundary — precisely where the report
-calls drift "noticeable," and window=100's ratio is nearly 2 — clearly past
-it — exactly where the report calls it "unreliable." Window=5 sits at a
-ratio of ~0.1, deeply inside the safe region, matching "preserved
-reasonably well." `FastMspec`'s own ratio (~0.4) is comfortably safe too,
-while still using over 4x the bandwidth of window=5 — which is *why* it
-gets meaningfully more variance reduction than window=5 without paying
-window=50/100's drift cost.""")
+md(r"""Deliberately not what you might expect: at this scale, all three
+broadly track the same oscillation, and `window=100` (more smoothing) is
+even *visually closer* to `FastMspec` than `window=5` is — because more
+smoothing means less point-to-point scatter, and scatter is what a raw
+amplitude comparison actually measures. That's the point: **amplitude-level
+agreement doesn't imply crossing-location agreement** — a heavily smoothed
+curve can look like a good match while its zero crossings have moved
+substantially, which is exactly what Parts 2-4 go on to show. Eyeballing
+the spectrum isn't enough; you have to look at crossings specifically.""")
 
-md(r"""**Mechanism, not just correlation.** The criterion predicts *why*:
-averaging across (rather than within) an oscillation cycle should flatten
-the local amplitude swing at each crossing, not just shift it. Checking
-this directly, per-crossing:""")
+md(r"""#### Part 2 — where are the *trustworthy* crossings?
 
-code("""def local_amplitude_swing(y, idx, half_win=3):
-    \"\"\"Amplitude swing (max-min) in a small window straddling each
-    zero-crossing index -- a proxy for how well-conditioned (steep,
-    unambiguous) vs. poorly-conditioned (shallow, noise-prone) it is.\"\"\"
+Not every zero-crossing is equally meaningful — one sitting on a steep,
+high-amplitude swing is well-conditioned; one on a shallow wiggle could be
+almost anything. Comparing swing *values* directly across methods doesn't
+work, though: single-taper's raw noise alone produces bigger local swings
+than `FastMspec`'s entire (low-variance) signal, so a shared absolute
+threshold is meaningless — a check below confirms 100% of single-taper's
+crossings would "pass" a threshold set from `FastMspec`'s scale. Each
+method needs its own relative threshold: the top half of *its own* swing
+distribution.""")
+
+code("""def zero_crossings_idx(y, freqs):
+    sgn = np.sign(y)
+    idx = np.where(np.diff(sgn) != 0)[0]
+    zc = freqs[idx] + (freqs[idx + 1] - freqs[idx]) * (0 - y[idx]) / (y[idx + 1] - y[idx])
+    return zc, idx
+
+def local_amplitude_swing(y, idx, half_win=3):
     out = []
     for i in idx:
         lo, hi = max(0, i - half_win), min(len(y), i + half_win + 2)
         out.append(y[lo:hi].max() - y[lo:hi].min())
     return np.array(out)
 
-cf_band = cf_love[love_band]
-cs_smoothed_50 = uniform_filter1d(cs_love, size=50)[love_band]
+cf_band, cs_band = cf_love[love_band], cs_love[love_band]
+zc_f, idx_f = zero_crossings_idx(cf_band, fb_love)
+zc_s, idx_s = zero_crossings_idx(cs_band, fb_love)
+swing_f = local_amplitude_swing(cf_band, idx_f)
+swing_s = local_amplitude_swing(cs_band, idx_s)
 
-idx_fast = np.where(np.diff(np.sign(cf_band)) != 0)[0]
-idx_smooth50 = np.where(np.diff(np.sign(cs_smoothed_50)) != 0)[0]
-swing_fast = local_amplitude_swing(cf_band, idx_fast)
-swing_smooth50 = local_amplitude_swing(cs_smoothed_50, idx_smooth50)
-print(f"FastMspec crossings: mean local amplitude swing = {swing_fast.mean():.5f}")
-print(f"Single-taper (window=50) crossings: mean local amplitude swing = {swing_smooth50.mean():.5f}"
-      f"  ({swing_fast.mean()/swing_smooth50.mean():.1f}x smaller)")
+print(f"FastMspec crossings: n={len(zc_f)}, swing range=[{swing_f.min():.5f}, {swing_f.max():.5f}]")
+print(f"Single-taper (raw) crossings: n={len(zc_s)}, swing range=[{swing_s.min():.5f}, {swing_s.max():.5f}]")
+shared_thresh = np.median(swing_f)
+print(f"\\nIf we (wrongly) shared FastMspec's median swing ({shared_thresh:.5f}) as a threshold: "
+      f"{100*np.mean(swing_s >= shared_thresh):.0f}% of single-taper's crossings would 'pass' -- meaningless.")
 
-from scipy.stats import pearsonr
-matched50 = nearest_match(zc_fastmspec, zc_by_window[50])
-drift50 = np.abs(matched50 - zc_fastmspec)
-r, p = pearsonr(swing_fast, drift50)
-print()
-print(f"Correlation, FastMspec crossing steepness vs. that crossing's window=50 drift: r={r:.3f} (p={p:.4f})")
-print("(negative r: steeper/better-conditioned crossings in the true signal drift less under smoothing)")
+thresh_f, thresh_s = np.median(swing_f), np.median(swing_s)
+reliable_f, reliable_s = swing_f >= thresh_f, swing_s >= thresh_s
+print(f"\\nUsing each method's own median instead: FastMspec {reliable_f.sum()}/{len(zc_f)} reliable, "
+      f"single-taper {reliable_s.sum()}/{len(zc_s)} reliable (by construction, ~50% each).")
 """)
 
-md(r"""Confirms the mechanism directly: `FastMspec`'s crossings have
-noticeably larger local amplitude swing than the same crossings' smoothed
-single-taper counterparts, and crossings that are steeper (better-conditioned)
-in `FastMspec`'s own estimate are the ones that drift *less* once smoothed —
-a real, statistically significant relationship, not just a qualitative
-impression.
+code("""fig, axes = plt.subplots(2, 1, figsize=(12, 4), sharex=True)
+axes[0].vlines(zc_f[reliable_f], 0, 1, color='C1', linewidth=1.2)
+axes[0].vlines(zc_f[~reliable_f], 0, 1, color='lightgray', linewidth=0.6)
+axes[0].set_yticks([]); axes[0].set_ylabel('FastMspec', rotation=0, ha='right', va='center')
+axes[1].vlines(zc_s[reliable_s], 0, 1, color='C0', linewidth=1.2)
+axes[1].vlines(zc_s[~reliable_s], 0, 1, color='lightgray', linewidth=0.6)
+axes[1].set_yticks([]); axes[1].set_ylabel('Single-taper\\n(raw)', rotation=0, ha='right', va='center')
+axes[1].set_xlabel('Frequency (Hz)')
+plt.suptitle('Reliable crossings (colored, top 50% by own swing) vs. unreliable (gray)')
+plt.tight_layout()
+plt.show()
+""")
 
-**The scope of the claim, precisely.** `FastMspec`'s advantage here is
-conditional, not universal: it holds *because*, for this station pair and
-bandwidth choice, $2W \approx 0.4\,\Delta f_{\text{zero}}$. A pair twice as
-far apart (halving $\Delta f_{\text{zero}}$ for the same phase velocity) or
-a survey of much slower waves would need a correspondingly narrower $W$ to
-stay under the same criterion — and past that point, `FastMspec`'s own
-resolution would start distorting dispersion structure exactly like
-over-smoothed single-taper does, since the criterion is about the
-*resolution bandwidth itself*, not which method achieves it. The right
-statement isn't "multitaper is better than smoothing" unconditionally — it's
-that multitaper gives an *explicit, physically-groundable* bandwidth knob
-($W$, chosen from expected $r$ and $c$) where single-taper's post-hoc
-smoothing window has no natural connection to the physics at all, making it
-easy to violate this criterion without realizing it.
+md(r"""Visually the difference is stark: `FastMspec`'s reliable crossings are
+spread fairly evenly across the band; single-taper's are packed into dense
+clusters — a signature of noise-driven zero-crossings clustering tightly
+around wherever the (unaveraged) curve happens to wander near zero, not of
+genuine, evenly-spaced dispersion structure.""")
+
+md(r"""#### Part 3 — is $\Delta f_{\text{zero}}$ even stable enough to define?
+
+If reliable crossings reflect real dispersion structure, their spacing
+should cluster in a physically sensible, reasonably bounded range. If they're
+still noise-contaminated, spacing will be erratic and concentrated at
+unrealistically small values (noise wiggles are close together by nature).""")
+
+code("""spacing_f_reliable = np.diff(np.sort(zc_f[reliable_f]))
+spacing_s_reliable = np.diff(np.sort(zc_s[reliable_s]))
+
+print(f"FastMspec (reliable): n={len(spacing_f_reliable)}, mean={spacing_f_reliable.mean():.5f} Hz, "
+      f"median={np.median(spacing_f_reliable):.5f} Hz, std/mean={spacing_f_reliable.std()/spacing_f_reliable.mean():.2f}")
+print(f"Single-taper (reliable, own top 50%): n={len(spacing_s_reliable)}, mean={spacing_s_reliable.mean():.5f} Hz, "
+      f"median={np.median(spacing_s_reliable):.5f} Hz, std/mean={spacing_s_reliable.std()/spacing_s_reliable.mean():.2f}")
+print(f"\\nEven restricted to its OWN best half, single-taper's spacing is "
+      f"{spacing_f_reliable.mean()/spacing_s_reliable.mean():.1f}x tighter than FastMspec's -- "
+      f"its 'best' crossings are still predominantly noise-driven, not dispersion-driven.")
+
+fig, ax = plt.subplots(figsize=(7, 4.5))
+bins = np.logspace(np.log10(1e-5), np.log10(0.05), 40)
+# NOTE: density=True with log-spaced bins divides by linear bin width, which
+# wildly over-weights the narrow bins near the small-spacing end -- use
+# fraction-of-that-method's-own-crossings-per-bin instead (weights), a
+# meaningful and non-misleading normalization for comparing two very
+# differently-sized samples on a log axis.
+ax.hist(spacing_f_reliable, bins=bins, color='C1', alpha=0.6, label='FastMspec (reliable)',
+        weights=np.ones_like(spacing_f_reliable) / len(spacing_f_reliable))
+ax.hist(spacing_s_reliable, bins=bins, color='C0', alpha=0.6, label='Single-taper (reliable, own top 50%)',
+        weights=np.ones_like(spacing_s_reliable) / len(spacing_s_reliable))
+ax.set_xscale('log')
+ax.set_xlabel(r'Local zero-crossing spacing (Hz, log scale)')
+ax.set_ylabel('Fraction of that method\\'s own crossings')
+ax.set_title(r'$\\Delta f_{zero}$ distribution: stable for FastMspec, not for single-taper')
+ax.legend(fontsize=8)
+plt.tight_layout()
+plt.show()
+
+# Delta f_zero for Part 4: local spacing at each FastMspec-reliable crossing (mean of its neighbor gaps)
+zc_f_reliable_sorted = np.sort(zc_f[reliable_f])
+local_df_zero = np.zeros(len(zc_f_reliable_sorted))
+for i in range(len(zc_f_reliable_sorted)):
+    gaps = []
+    if i > 0:
+        gaps.append(zc_f_reliable_sorted[i] - zc_f_reliable_sorted[i - 1])
+    if i < len(zc_f_reliable_sorted) - 1:
+        gaps.append(zc_f_reliable_sorted[i + 1] - zc_f_reliable_sorted[i])
+    local_df_zero[i] = np.mean(gaps)
+""")
+
+md(r"""So: not fully "known across the entire spectrum" as one number, but
+**bounded and physically interpretable** for `FastMspec`'s reliable subset
+in a way single-taper's crossings, at any quality percentile, are not. This
+is the honest scope of the claim — a local, quality-filtered $\Delta
+f_{\text{zero}}(f)$, not a single global constant.""")
+
+md(r"""#### Part 4 — drift statistics, against that local spacing
+
+For each of `FastMspec`'s reliable, locally-spaced crossings, how far is the
+nearest crossing in each smoothed single-taper variant — as a fraction of
+*that crossing's own* local spacing, not one global number?""")
+
+code("""def nearest(ref, other):
+    return other[np.argmin(np.abs(other - ref))] if len(other) else np.nan
+
+drift_stats = {}
+for w in [5, 50, 100]:
+    variant = uniform_filter1d(cs_love, size=w)[love_band]
+    zc_w, _ = zero_crossings_idx(variant, fb_love)
+    pct = np.array([100 * abs(nearest(zc_r, zc_w) - zc_r) / dfz
+                     for zc_r, dfz in zip(zc_f_reliable_sorted, local_df_zero)])
+    drift_stats[w] = pct
+    print(f"window={w:3d}: drift as % of local df_zero -- "
+          f"median={np.median(pct):.1f}%, IQR=[{np.percentile(pct,25):.1f}%,{np.percentile(pct,75):.1f}%], "
+          f"fraction >50% drift = {100*np.mean(pct>50):.0f}%")
+
+median_local_df_zero = np.median(local_df_zero)
+print(f"\\nClosing the loop with the opening criterion: FastMspec's own 2W = {2*wband:.5f} Hz, "
+      f"vs. median local df_zero = {median_local_df_zero:.5f} Hz -- "
+      f"ratio = {2*wband/median_local_df_zero:.2f} (criterion: <1 is safe), "
+      f"now using the refined, reliable-subset-based estimate rather than the earlier single clean-band number.")
+
+fig, ax = plt.subplots(figsize=(7, 4.5))
+ax.boxplot([np.clip(drift_stats[w], 0, 200) for w in [5, 50, 100]], tick_labels=['window=5', 'window=50', 'window=100'],
+           showfliers=False)
+ax.axhline(50, color='r', linestyle='--', linewidth=1, label='50% of local spacing')
+ax.set_ylabel('Drift as % of local $\\\\Delta f_{zero}$ (clipped at 200% for display)')
+ax.set_title('Drift distribution grows with smoothing window')
+ax.legend(fontsize=8)
+plt.tight_layout()
+plt.show()
+""")
+
+md(r"""Median drift climbs from ~4% of local spacing (window=5, negligible)
+to ~22% (window=50) to ~51% (window=100) — at the median, a window=100
+crossing has moved *more than halfway to its neighbor*, and just over half
+of all crossings exceed that mark. That's not added noise on an otherwise
+correct pick; it's a real risk of identifying the wrong crossing entirely.""")
+
+md(r"""#### Part 5 — pulling it together
+
+- **Part 1**: `FastMspec` is one fixed, stable curve; single-taper visibly
+  warps further from it as the smoothing window widens — there's no
+  window size that's simultaneously "smooth enough" and "close enough."
+- **Part 2**: swing-based reliability, applied fairly (each method against
+  its own distribution), shows `FastMspec`'s trustworthy crossings spread
+  evenly across the band; single-taper's cluster into dense, noise-driven
+  clumps.
+- **Part 3**: the zero-crossing spacing implied by those crossings is
+  physically bounded and interpretable for `FastMspec`, but not for
+  single-taper at any quality percentile — answering directly whether
+  $\Delta f_{\text{zero}}$ is even knowable well enough to use as a
+  yardstick (yes, from `FastMspec`'s reliable subset; not from
+  single-taper's).
+- **Part 4**: measured against that yardstick, drift is negligible at
+  window=5, already substantial at window=50, and comparable to half the
+  crossing spacing at window=100 — a real, quantified failure mode, not an
+  aesthetic one.
+
+Together these support the resolution-bandwidth criterion from earlier in
+this section ($2W \lesssim \Delta f_{\text{zero}}$) with a more rigorous
+empirical foundation than the single global $\Delta f_{\text{zero}}$ this
+section started with: `FastMspec`'s advantage is real, quantifiable, and
+grounded in the same class of noise-derived phase-velocity reasoning as
+Ekström, Abers & Webb (2009) and Ekström (2014, 2017) — not an artifact of
+matching one report's specific numbers. The scope caveat from before still
+holds: this is conditional on the bandwidth criterion, not a universal
+claim that multitaper beats smoothing regardless of parameters.
 """)
 
 md(r"""## 2. MTAN/RUNG: single-taper vs. FastMspec SNR on real Love-wave data

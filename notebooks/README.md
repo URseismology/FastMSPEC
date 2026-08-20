@@ -101,6 +101,18 @@ primary source, with the local copy as a convenience mirror).
   and Notebook 3's Bessel-fit diagnostic are built on.
 - Yokoi, T., & Margaryan, S. (2008). Consistency of the spatial autocorrelation method with
   seismic interferometry and its consequence. *Geophysical Prospecting*, 56(3), 435-451.
+- Ekström, G., Abers, G. A., & Webb, S. C. (2009). Determination of surface-wave phase velocities
+  across USArray from noise and Aki's spectral formulation. *Geophysical Research Letters*, 36(18).
+  [doi:10.1029/2009GL039131](https://doi.org/10.1029/2009GL039131).
+- Ekström, G. (2014). Love and Rayleigh phase-velocity maps, 5-40 s, of the western and central USA
+  from USArray data. *Earth and Planetary Science Letters*, 402, 42-49.
+  [doi:10.1016/j.epsl.2013.11.022](https://doi.org/10.1016/j.epsl.2013.11.022).
+- Ekström, G. (2017). Short-period surface-wave phase velocities across the conterminous United
+  States. *Physics of the Earth and Planetary Interiors*, 270, 168-175.
+  [doi:10.1016/j.pepi.2017.07.010](https://doi.org/10.1016/j.pepi.2017.07.010). These three,
+  together with Aki (1957) above, are the literature precedent Notebook 3's Section 1f
+  bandwidth/zero-crossing-spacing argument is grounded in -- large-scale, noise-derived
+  phase-velocity work built on the same Aki spectral formulation.
 - Tkalčić, H., Phạm, T. S., & Wang, S. (2020). The Earth's coda correlation wavefield: Rise of the
   new paradigm and recent advances. *Earth-Science Reviews*, 208, 103285.
   [doi:10.1016/j.earscirev.2020.103285](https://doi.org/10.1016/j.earscirev.2020.103285). Notebook
