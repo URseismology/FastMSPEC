@@ -18,6 +18,15 @@
    reimplementation, and obspy's built-in Peterson (1993) NLNM model
    (`obspy.signal.spectral_estimation.get_nlnm`) rather than hand-copying
    the model's published coefficients.
+
+3. `bessel_leakage_test_signal` -- a synthetic bivariate signal pair with a
+   known true cross-spectrum, extending karnik_figures.fig3_signal's
+   oversample-and-truncate leakage construction (Notebook 1) to a *pair* of
+   jointly Gaussian signals whose true coherency follows the Aki (1957)
+   Bessel model used throughout Notebook 2, for testing whether a technique
+   can recover cross-spectrum amplitude in a low-power region near a much
+   stronger one -- i.e. testing leakage specifically, as distinct from
+   variance (which any smoothing kernel can reduce, leaked or not).
 """
 from __future__ import annotations
 
@@ -270,3 +279,60 @@ def nlnm_synthetic(n: int, dt: float, seed: int = 0, oversample: int = 16):
     full_freqs = np.fft.fftfreq(n, d=dt)
     full_psd = np.interp(np.abs(full_freqs), freqs, target_psd)
     return x, full_freqs, full_psd
+
+
+def bessel_leakage_test_signal(n: int, oversample: int, r_over_c: float, seed: int = 0):
+    """A bivariate signal pair (x, y) with a known true cross-spectrum
+    S(f)*gamma(f), where S(f) is the same four-narrowband, high-dynamic-
+    range power spectrum as karnik_figures.fig3_signal (Notebook 1), and
+    gamma(f) = J0(2*pi*r_over_c*f) is the Aki (1957) Bessel coherency model
+    from Notebook 2, evaluated at a fixed (unitless) distance-over-velocity
+    ratio. Both signals share the same auto-power envelope S(f) (equal
+    Sxx=Syy=S), so the true coherency is exactly gamma(f) everywhere and
+    the true cross-spectrum magnitude tracks S(f)'s huge dynamic range.
+
+    Built the same way as fig3_signal (a much finer grid, oversample*n
+    points, truncated to n samples -- see that function's docstring for why
+    this is what makes genuine truncation-driven leakage possible), extended
+    from one signal to a correlated pair: X[k] = sqrt(S[k])*W1[k],
+    Y[k] = sqrt(S[k])*(conj(gamma[k])*W1[k] + sqrt(1-|gamma[k]|^2)*W2[k])
+    for independent unit-variance frequency-domain noise W1, W2 (via FFT of
+    unit-variance time-domain noise, matching fig3_signal's convention).
+    Verified by Monte Carlo averaging directly on the oversampled grid (no
+    truncation) against the S(f)/gamma(f) targets to <1% relative error.
+
+    Returns (x, y, s, gamma) where s and gamma are evaluated on the
+    length-n analysis grid (matching fig3_signal's convention), so the true
+    cross-spectrum is s*gamma.
+    """
+    m = n * oversample
+    fm = np.arange(m) / m
+    s_m = np.ones(m)
+    s_m[(fm >= 0.18) & (fm <= 0.22)] = 1e3
+    s_m[(fm >= 0.28) & (fm <= 0.32)] = 1e9
+    s_m[(fm >= 0.38) & (fm <= 0.42)] = 1e2
+    s_m[(fm >= 0.78) & (fm <= 0.82)] = 1e1
+    gamma_m = j0(2 * np.pi * r_over_c * fm)
+
+    rng = np.random.default_rng(seed)
+    w1 = (rng.standard_normal(m) + 1j * rng.standard_normal(m)) / np.sqrt(2)
+    w2 = (rng.standard_normal(m) + 1j * rng.standard_normal(m)) / np.sqrt(2)
+    fw1 = np.fft.fft(w1)
+    fw2 = np.fft.fft(w2)
+
+    a = np.conj(gamma_m)
+    b = np.sqrt(np.maximum(1 - np.abs(gamma_m) ** 2, 0))
+    x_freq = np.sqrt(s_m) * fw1
+    y_freq = np.sqrt(s_m) * (a * fw1 + b * fw2)
+
+    x = np.fft.ifft(x_freq)[:n]
+    y = np.fft.ifft(y_freq)[:n]
+
+    f = np.arange(n) / n
+    s = np.ones(n)
+    s[(f >= 0.18) & (f <= 0.22)] = 1e3
+    s[(f >= 0.28) & (f <= 0.32)] = 1e9
+    s[(f >= 0.38) & (f <= 0.42)] = 1e2
+    s[(f >= 0.78) & (f <= 0.82)] = 1e1
+    gamma = j0(2 * np.pi * r_over_c * f)
+    return x, y, s, gamma

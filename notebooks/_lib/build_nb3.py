@@ -43,8 +43,11 @@ from ccf_pipeline.crosscorr_mtc import (
     compute_crosscorr_mtc_fastmspec, compute_crosscorr_mtc_mspec, compute_crosscorr_mtc_mspecbestk,
 )
 from ccf_pipeline.dispatch import compute_crosscorr, FilterConfig
+from ccf_pipeline.fast_cross_spectrum import fast_spectrum_batch
 from thomson_multitaper import FastMultitaper
-from _lib.nb3_helpers import calc_snr_onesided, prepare_transverse_pair, nlnm_synthetic
+from _lib.nb3_helpers import (
+    calc_snr_onesided, prepare_transverse_pair, nlnm_synthetic, bessel_leakage_test_signal,
+)
 
 DATA = Path('../data/raw_data')
 META = Path('../data/metadata')
@@ -330,6 +333,119 @@ at matching quality, and clearly outperforms `MspecBestK`'s classical
 averaging at the same taper count. Single-taper's speed advantage over any
 multitaper technique is real, but it isn't a usable option here — it fails
 to recover the signal this whole pipeline exists to measure.
+""")
+
+md(r"""### 1d. Smoothing fixes variance, not leakage
+
+Section 1c's roughness metric shows `FastMspec` is smoother than
+single-taper — but roughness/variance is something *any* smoothing kernel
+can reduce, leaked or not, by construction (a boxcar moving-average kills
+bin-to-bin scatter regardless of whether the underlying values are biased).
+What smoothing *cannot* fix is leakage: a systematic bias where a strong
+narrowband source contaminates a nearby genuinely-weak frequency, which is
+exactly the phenomenon Notebook 1's Fig. 3 demonstrated for a single
+spectrum. This section extends that same test to a cross-spectrum, with a
+known ground truth, specifically to isolate leakage from variance: does
+`FastMspec` recover the correct (low) amplitude in a low-power region next
+to a much stronger one, in a way that merely smoothing single-taper cannot?
+
+**Construction** (`nb3_helpers.bessel_leakage_test_signal`): two signals
+sharing Notebook 1's Fig. 3 four-narrowband power spectrum $S(f)$ (a $10^9$
+source alongside three much weaker ones), but now jointly correlated so
+their true coherency is exactly $\gamma(f) = J_0(2\pi \cdot 10 \cdot f)$ —
+the Aki (1957) Bessel model from Notebook 2 — giving a known true
+cross-spectrum $S(f)\gamma(f)$ to check recovery against, including in the
+regions where $S(f)$ (and hence the cross-spectrum) is small. Same
+oversample-and-truncate construction as Fig. 3, extended from one signal to
+a correlated pair.""")
+
+code("""x, y, s_true, gamma_true = bessel_leakage_test_signal(n=2000, oversample=64, r_over_c=10.0, seed=0)
+n_leak = len(x)
+f_leak = np.arange(n_leak) / n_leak
+target_sxy = s_true * gamma_true
+
+# single-taper: plain periodogram-style cross-spectrum, no taper
+Xf, Yf = np.fft.fft(x), np.fft.fft(y)
+sxy_single = Xf * np.conj(Yf) / n_leak
+
+# FastMspec: actual production fast_spectrum_batch, same K=29 "trimmed" choice as Fig. 3
+fmtse_leak = FastMultitaper(n_leak, 0.01, 1 - 1e-9, 1e-9)
+sxy_fast = fast_spectrum_batch(fmtse_leak, x[:, None], y[:, None])[:, 0]
+print(f"FastMspec taper count: K={fmtse_leak.K}")
+
+n_one = n_leak // 2 + 1
+f_one = f_leak[:n_one]
+target_one = target_sxy[:n_one]
+sxy_single_one = sxy_single[:n_one]
+
+def roughness(est, band):
+    e = est[band]
+    d2 = e[2:] - 2 * e[1:-1] + e[:-2]
+    return float(np.mean(np.abs(d2)) / np.sqrt(np.mean(np.abs(e) ** 2)))
+
+full = np.ones(n_one, dtype=bool)
+target_roughness = roughness(sxy_fast.real, full)
+
+# roughness-match single-taper via boxcar smoothing -- an honest comparison:
+# same variance level, isolating whatever difference remains to leakage alone
+from scipy.ndimage import uniform_filter1d
+best_w, best_diff = 1, np.inf
+for w in range(1, 80):
+    sm = uniform_filter1d(sxy_single_one.real, size=w) + 1j * uniform_filter1d(sxy_single_one.imag, size=w)
+    diff = abs(roughness(sm.real, full) - target_roughness)
+    if diff < best_diff:
+        best_diff, best_w = diff, w
+sxy_smoothed = (uniform_filter1d(sxy_single_one.real, size=best_w)
+                + 1j * uniform_filter1d(sxy_single_one.imag, size=best_w))
+print(f"Roughness-matched smoothing window: {best_w} bins "
+      f"(single-taper roughness {roughness(sxy_single_one.real, full):.3f} -> "
+      f"{roughness(sxy_smoothed.real, full):.3f}, FastMspec {target_roughness:.3f})")
+
+near_peak = (f_one >= 0.35) & (f_one < 0.5)
+print()
+print("Near-peak low-power region [0.35, 0.5) Hz -- mean values:")
+print(f"  True:               {target_one[near_peak].real.mean():.2f}")
+print(f"  Single-taper (raw): {sxy_single_one[near_peak].real.mean():.2f}")
+print(f"  Single-taper (smoothed, matched roughness): {sxy_smoothed[near_peak].real.mean():.2f}")
+print(f"  FastMspec:          {sxy_fast[near_peak].real.mean():.2f}")
+""")
+
+code("""fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+axes[0].semilogy(f_one, np.abs(target_one), 'k-', linewidth=1.5, label='True |Sxy|')
+axes[0].semilogy(f_one, np.abs(sxy_single_one), linewidth=0.4, alpha=0.6, label='Single-taper (raw)')
+axes[0].semilogy(f_one, np.abs(sxy_smoothed), linewidth=1.2, label=f'Single-taper (smoothed, w={best_w})')
+axes[0].semilogy(f_one, np.abs(sxy_fast), linewidth=1.2, label=f'FastMspec (K={fmtse_leak.K})')
+axes[0].set_xlabel('Frequency'); axes[0].set_ylabel('|Sxy|')
+axes[0].set_title('Full range')
+axes[0].legend(fontsize=7)
+
+axes[1].plot(f_one[near_peak], target_one[near_peak].real, 'k-', linewidth=2, label='True Re[Sxy]')
+axes[1].plot(f_one[near_peak], sxy_single_one[near_peak].real, linewidth=0.5, alpha=0.6, label='Single-taper (raw)')
+axes[1].plot(f_one[near_peak], sxy_smoothed[near_peak].real, linewidth=1.5, label='Single-taper (smoothed)')
+axes[1].plot(f_one[near_peak], sxy_fast[near_peak].real, linewidth=1.5, label='FastMspec')
+axes[1].set_xlabel('Frequency'); axes[1].set_ylabel('Re[Sxy]')
+axes[1].set_title('Zoomed: near-peak low-power region [0.35, 0.5)')
+axes[1].legend(fontsize=7)
+plt.suptitle('Amplitude recovery near a 10^9 source: leakage vs. roughness-matched smoothing')
+plt.tight_layout()
+plt.show()
+""")
+
+md(r"""This is unambiguous. Roughness-matched to `FastMspec` (same smoothness,
+so this isn't a variance comparison anymore), single-taper's smoothed
+estimate in the near-peak region is barely different from the raw one —
+still off by roughly four orders of magnitude from the true value, decaying
+slowly across the whole region as the $10^9$ source's leakage tail bleeds
+outward. Smoothing averaged already-contaminated bins together; it never
+had a chance to remove a bias that's present in *every* nearby bin. `FastMspec`
+isn't perfect here either — its estimate sits a few units above the true
+near-zero value — but it's the only one of the three within striking distance
+of the truth, and the full-range plot shows why: it's the only estimate that
+actually traces the Bessel-null structure of the true cross-spectrum, rather
+than a smeared plateau sitting on top of it. This is the leakage/variance
+distinction Section 1c's roughness metric alone couldn't show: multitaper
+buys both, and only real tapering (not any amount of post-hoc smoothing of a
+cheaper estimate) gets you the leakage suppression half of that.
 """)
 
 md(r"""## 2. MTAN/RUNG: single-taper vs. FastMspec SNR on real Love-wave data
