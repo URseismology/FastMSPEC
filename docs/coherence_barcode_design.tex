@@ -1,0 +1,446 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\newtheorem{definition}{Definition}
+
+\title{The Coherence Barcode: \\ A Template-Matching Diagnostic for Ambient-Noise Phase-Velocity Estimation}
+\author{FastMSPEC project design document}
+\date{2026-08-23}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document formalizes a diagnostic and phase-velocity-picking method developed for the
+FastMSPEC project: representing a coherence (noise correlation function, NCF) spectrum's
+zero-crossings, local maxima, and local minima as a typed sequence of frequency-tagged events
+--- a ``barcode'' --- and judging spectral-estimation techniques (single-taper vs.\ multitaper
+methods such as FastMspec) by how well their barcode matches a library of physically-motivated
+templates, scanned across a plausible range of Love-wave phase velocities. The method is grounded
+in, but distinct from, three lines of prior work: Ekstr\"om et al.'s (2009) zero-crossing
+phase-velocity construction, Hawkins and Sambridge's (2019) extension of that construction to
+peaks and troughs via an analytical Bessel-function result, and Xue and Olugboji's (2025) AkiNet
+architecture, whose bounded-corridor reference-curve design independently converges on the same
+underlying principle used here. This document is intended as a standalone reference for the
+method's design, independent of the conversation history that produced it, so that the
+associated notebook implementation can be revisited, audited, or extended without re-deriving
+the reasoning from scratch.
+\end{abstract}
+
+\tableofcontents
+
+\section{Motivation}
+
+Ambient-noise interferometry estimates the coherence, or noise correlation function (NCF),
+between two seismic stations, whose real part is predicted by Aki's (1957) spectral formulation
+to follow a Bessel-function form. For Rayleigh waves (and, as a common simplifying
+approximation also used throughout this project, for Love waves too --- see
+Section~\ref{sec:love-caveat}),
+\begin{equation}
+  \rho(f, r) \approx J_0\!\left(\frac{2\pi f r}{c(f)}\right),
+  \label{eq:aki}
+\end{equation}
+where $\rho(f,r)$ is the real part of the coherence spectrum, $r$ is the interstation distance,
+$f$ is frequency, and $c(f)$ is the (generally frequency-dependent) phase velocity.
+
+Extracting $c(f)$ from an observed, noisy $\rho(f,r)$ is a nonlinear inverse problem. A classical
+approach (Ekstr\"om et al., 2009) identifies zero-crossings of the observed spectrum and matches
+them against the known zero-crossing structure of Equation~\ref{eq:aki} to construct trial
+dispersion curves. The FastMSPEC project (this repository) has, over the course of its
+development, repeatedly found that \emph{how well an estimator's coherence spectrum supports
+this kind of feature extraction} is itself informative about the estimator's quality --- not just
+its variance, but whether its zero-crossings (and, as developed here, its turning points) sit
+where a physically plausible earth would put them.
+
+Prior diagnostics built in this project (documented in \texttt{notebooks/03\_fastmspec\_
+application.ipynb}, Sections 1c--1f) established two separate findings: (1) single-taper
+spectral estimates have much higher variance than multitaper (FastMspec) estimates, and (2)
+smoothing single-taper's estimate to match FastMspec's variance does not recover FastMspec's
+resolution --- smoothed single-taper's zero-crossings still drift substantially, and the amount
+of drift can be predicted from a resolution-bandwidth criterion, $2W \lesssim \Delta f_{\text{zero}}$,
+where $\Delta f_{\text{zero}} = c/(2r)$ is the natural zero-crossing spacing implied by the
+Aki--Bessel relationship. Both findings, however, only checked \emph{internal self-consistency}
+of a candidate spectrum against itself (e.g., how much do a technique's own crossings drift under
+smoothing, or how tightly clustered is its own implied zero-crossing spacing). Neither compared a
+candidate directly against an actual physical model of what a real earth's coherence spectrum
+should look like.
+
+This document formalizes that missing comparison: the \textbf{coherence barcode}.
+
+\section{The Barcode}
+
+\begin{definition}[Barcode]
+For any coherence curve $\gamma(f)$ --- real (estimated from data) or theoretical (evaluated from
+a model) --- its \emph{barcode} is the ordered sequence of typed, frequency-tagged events:
+\begin{itemize}[nosep]
+  \item \textbf{Z} (zero-crossing): $f$ such that $\gamma(f) = 0$ with a sign change.
+  \item \textbf{M} (maximum): $f$ such that $\gamma$ has a local maximum.
+  \item \textbf{N} (minimum): $f$ such that $\gamma$ has a local minimum.
+\end{itemize}
+\end{definition}
+
+The name and visual framing come directly from how this looks when plotted: each event type
+rendered as a distinctly colored vertical mark along the frequency axis produces a pattern
+resembling a barcode. This is not merely a visualization convenience --- it is the organizing
+metaphor for the whole method: a \emph{good} spectral-estimation technique should produce a
+barcode that can be matched, stripe for stripe, against a barcode generated from physically
+plausible earth structure.
+
+\subsection{Template barcodes: analytically exact event locations}
+\label{sec:template-barcodes}
+
+A \emph{template} is the barcode of Equation~\ref{eq:aki} evaluated at one specific candidate
+phase-velocity curve $c(f)$. Because the theoretical curve is smooth and known in closed form
+(given $c(f)$), its barcode can be computed exactly, without any of the numerical
+sign-change-detection or derivative-estimation machinery needed for noisy real data.
+
+This exactness follows from a classical Bessel-function identity used by Hawkins and Sambridge
+(2019, their Equations 1--3), extending the zero-crossing construction of Ekstr\"om et al.\ (2009,
+their Equation 2) to peaks and troughs as well:
+\begin{itemize}[nosep]
+  \item \textbf{Zero-crossings} of $J_0(x)$ occur at $x = j_{0,k}$, the $k$-th zero of $J_0$
+    (tabulated; in \texttt{scipy}, \texttt{scipy.special.jn\_zeros(0, N)}).
+  \item \textbf{Maxima and minima} of $J_0(x)$ occur where its derivative vanishes. Since
+    $\frac{d}{dx} J_0(x) = -J_1(x)$, these occur at $x = j_{1,k}$, the $k$-th zero of $J_1$
+    (tabulated via \texttt{scipy.special.jn\_zeros(1, N)}).
+\end{itemize}
+
+Given a candidate phase-velocity curve $c(f)$, the Bessel argument is
+$x(f) = \frac{2\pi f r}{c(f)}$. Template event frequencies are then obtained by solving
+\begin{equation}
+  x(f_k) = j_{0,k} \quad \text{(Z events)}, \qquad x(f_k) = j_{1,k} \quad \text{(M/N events)}
+\end{equation}
+for $f_k$. When $c(f)$ has no closed form (as is the case here, where $c(f)$ is built from a
+discretely sampled real dispersion curve --- Section~\ref{sec:refcurve}), this requires a
+one-dimensional numerical root-find (e.g., \texttt{scipy.optimize.brentq} against an interpolated
+$c(f)$) rather than a closed-form inversion. The key advantage over naive dense-sampling is that
+the \emph{target} Bessel-argument value being solved for is exact and tabulated, not approximated
+by finite-difference sign-change or derivative detection on a sampled grid --- there is no
+discretization error in identifying \emph{which} $x$-values correspond to events, only ordinary
+root-finding tolerance in solving for the corresponding $f$.
+
+Maxima and minima alternate strictly with each other and with zero-crossings in a fixed pattern
+(since $J_0$ and $J_1$'s zeros interlace); this provides a useful internal consistency check when
+implementing the solver (Section~\ref{sec:verification}).
+
+\subsection{Candidate barcodes: noise-contaminated, need reliability filtering}
+
+A \emph{candidate} barcode is extracted from a real spectral estimate --- FastMspec, single-taper
+(raw or smoothed), Mspec, or MspecBestK. Unlike templates, candidates have no closed form; their
+barcodes must be extracted numerically (sign-change detection for Z, local extrema detection for
+M/N) on the sampled, noisy estimate itself.
+
+Real spectra contain spurious noise-driven events alongside genuine ones. Prior work in this
+project (Notebook 3, Section 1f) established that these cannot be separated by a single absolute
+threshold shared across techniques: a low-variance estimate (FastMspec) and a high-variance one
+(raw single-taper) have incomparable absolute amplitude-swing scales --- a threshold calibrated
+from FastMspec's swing distribution would trivially pass 100\% of single-taper's noise-driven
+events, since single-taper's noise alone produces larger local swings than FastMspec's entire
+signal.
+
+The resolution, carried forward here: each method's events are filtered to ``reliable'' using
+that method's \emph{own} relative threshold --- e.g., the top 50\% by local amplitude swing
+(maximum minus minimum in a small window straddling the event) within that method's own
+distribution, not an absolute value shared across techniques. This is applied uniformly to Z, M,
+and N events (turning-point prominence generalizes the same construction used for zero-crossing
+swing).
+
+\section{Matching and Scoring}
+\label{sec:scoring}
+
+Given a candidate barcode and one template barcode, a \emph{match score} quantifies how well they
+agree. Four design elements, discussed in turn below: (1) a same-type, locally-scaled matching
+tolerance; (2) combined precision and recall, not recall alone; (3) hard rejection of
+physically-implausible matches, mirroring AkiNet's architectural (not merely penalized) bounding
+corridor; and (4) frequency-dependent trust weighting, following an explicit argument in Hawkins
+and Sambridge (2019) about where a reference earth model is most and least reliable.
+
+\subsection{Matching tolerance}
+
+A candidate event matches a template event of the same type if the two frequencies are within a
+tolerance. This tolerance is scaled to the \emph{template's own local event spacing} at that
+point, not a fixed frequency value --- consistent with the drift-as-a-percentage-of-local-spacing
+methodology already validated in Notebook 3 Section 1f. A fixed absolute tolerance would be too
+loose where template events are closely spaced (high frequency) and too tight where they are
+widely spaced (low frequency).
+
+\subsection{Precision and recall, not recall alone}
+
+A naive score --- the fraction of template events that have a matching candidate event (recall)
+--- is vulnerable to a specific failure mode: a very dense, noisy candidate can trivially
+``match'' almost any template purely by having many more events than the template does. Concretely,
+in this project's own data, raw single-taper produces roughly 1{,}135 zero-crossings over a band
+where FastMspec produces 126; recall-only scoring would reward exactly the noise-dominated
+behavior the diagnostic is meant to penalize. The score therefore combines precision (fraction of
+candidate events that correspond to a real template event) and recall (fraction of template
+events that are matched) into a combined measure (e.g., their harmonic mean, analogous to an
+F1 score).
+
+\subsection{Hard corridor rejection}
+\label{sec:corridor-rejection}
+
+AkiNet (Xue and Olugboji, 2025, Section 3.3.1) bounds its inverted phase velocity to
+$c^{\text{ivt}}(f) = W\hat{z}(f) + b(f)$, where $b(f)$ is a reference curve and $W$ is a diagonal
+scaling matrix defining a fixed perturbation corridor (they use $\pm 0.8$~km/s) around it. This is
+an \emph{architectural} constraint: the network's output cannot leave the corridor regardless of
+what the data appear to want, not a soft penalty term traded off against data fit in a loss
+function.
+
+This method mirrors that design choice directly, rather than relying only on soft
+precision/recall scoring: a candidate event whose \emph{implied} local phase velocity (via the
+Ekstr\"om et al.\ 2009-style relation $c = \omega r / z$, evaluated at that event's own frequency
+and nearest Bessel-zero index) falls outside the \emph{entire} template corridor --- not merely
+``does not match the single best-fitting template,'' but ``is not explainable by any corridor
+member at all'' --- is rejected as a candidate match, rather than merely counted as one more
+unmatched (but otherwise unremarkable) event. This distinguishes ``noisy, but plausible'' events
+from ``implying an unphysical velocity outright,'' which a flat precision/recall score alone
+cannot.
+
+\subsection{Frequency-dependent trust}
+\label{sec:freq-weighting}
+
+Hawkins and Sambridge (2019) argue directly for why a reference earth model should be trusted
+more at some frequencies than others: ``most of the deviation between a prior Earth model and a
+new regional study will be confined to the near surface or higher frequency'' (Discussion
+section). Long-period (low-frequency) surface waves sample deeper, larger-scale, more spatially
+averaged structure, which tends to vary less between a generic reference model and any specific
+region; short-period (high-frequency) waves sample shallow, heterogeneous structure where
+regional deviation from a reference model is expected and legitimate.
+
+This method therefore weights mismatches (missed template events, spurious candidate events, or
+corridor-rejected events, Section~\ref{sec:corridor-rejection}) \emph{more heavily} at the
+low-frequency end of the analysis band than at the high-frequency end. A technique that fails to
+reproduce the barcode structure where the reference model is most trustworthy is more damning
+than one that struggles only where legitimate regional deviation is expected. This replaces a
+naive frequency-uniform scoring scheme.
+
+\subsection{Diagnostic value of a null result}
+
+AkiNet's own discussion frames a specific failure mode --- the network's output defaulting to the
+bare reference curve $b(f)$ (i.e., zero perturbation) --- as a \emph{useful, diagnostic} failure
+signature, not merely a bad outcome: it occurs when the input data are too poor to inform the fit
+at all, and its predictability makes such cases easy to flag for quality control (Xue and
+Olugboji, 2025, Section 4.4 and Discussion).
+
+This method surfaces the analogous case explicitly: if a candidate's best-matching template turns
+out to be (or lies very close to) $\delta = 0$ (the bare reference curve, no perturbation), this
+is reported alongside the match score rather than silently absorbed into a single scalar. Combined
+with a poor absolute match score, it indicates the candidate carries too little real signal to
+usefully constrain anything, rather than being read as a confident ``matches the reference well''
+result.
+
+\section{The Template Family}
+\label{sec:refcurve}
+
+\subsection{Reference curve: \texttt{SDISPL.ASC}}
+
+Templates require a base reference curve $c_{\text{ref}}(f)$ to build the perturbed family around
+(Section~\ref{sec:template-family}). A rough, hand-placed reference curve already existed
+elsewhere in this project (Notebook 3, Section 4, used for the \texttt{seislib} comparison), but
+its provenance was undocumented and it was explicitly flagged in this project's own notes as ``NOT
+Sayan's exact curve.''
+
+A real, physically computed reference curve was located during this design process, on the lab
+network-attached storage (\texttt{repovibranium}), at
+\texttt{madagascar\_data/pre\_computed\_files/SDISPL.ASC}. This is a standard Herrmann
+Computer-Programs-in-Seismology-format ASCII dispersion-curve file (columns: \texttt{LMODE},
+\texttt{NFREQ}, \texttt{PERIOD(S)}, \texttt{FREQUENCY(Hz)}, \texttt{C(KM/S)}), containing a
+multi-mode Love-wave dispersion computation: the fundamental mode (\texttt{LMODE=0}) spans periods
+2--2048~s (velocities 1.22--4.83~km/s), with higher modes (\texttt{LMODE=1--8}) each contributing
+starting at progressively shorter periods. This is the same file used by Sayan Swar's own
+\texttt{phasevel\_compute\_slide13and14.ipynb} (also on \texttt{repovibranium}, in
+\texttt{madagascar\_codes/python/}) to build the reference curve shown in his project report's
+Figure~6, via exactly the same \texttt{LMODE==0} filter used here.
+
+Restricted to this project's actual analysis band (0.02--0.3~Hz), the fundamental mode shows
+normal dispersion (velocity decreasing with increasing frequency): 4.49~km/s at 0.02~Hz down to
+1.53~km/s at 0.3~Hz. This range brackets a much cruder empirical estimate derived independently
+elsewhere in this project (Notebook 3, Section 1f: $\sim$2.11~km/s from raw zero-crossing
+spacing) sensibly, which is itself a useful cross-check on both.
+
+\subsection{Building the template family}
+\label{sec:template-family}
+
+A single reference curve is not, by itself, ``a range of plausible phase velocities.'' Following
+AkiNet's own design (Section~\ref{sec:corridor-rejection}), the template family is built as an
+\emph{additive} perturbation corridor around the reference curve:
+\begin{equation}
+  c_{\text{template}}(f) = c_{\text{ref}}(f) + \delta, \qquad \delta \in [-0.8, 0.8] \text{ km/s},
+\end{equation}
+stepped finely (e.g.\ 0.05~km/s steps, giving roughly 33 templates across the corridor). The
+corridor width, $\pm 0.8$~km/s, is adopted directly from AkiNet's own tuned value --- chosen by
+its authors, by experimentation, as ``generous enough to span all plausible velocities required by
+the data'' on the same problem domain (real Love-wave ambient noise) --- rather than re-derived
+independently.
+
+An earlier version of this design considered \emph{multiplicative} scaling of the reference curve
+instead of additive perturbation; this was revised after reviewing AkiNet's own architecture,
+which is explicitly additive, not multiplicative.
+
+\subsection{The Love-wave Bessel-model simplification}
+\label{sec:love-caveat}
+
+Equation~\ref{eq:aki} (pure $J_0$) is, strictly, the Rayleigh-wave form. AkiNet (Xue and Olugboji,
+2025, Equation 3, citing Nishida et al., 2024) gives the more physically correct Love-wave form as
+a combination of the zeroth- and second-order Bessel functions,
+\begin{equation}
+  \rho(f, r) \approx \frac{1}{2}\left[J_0\!\left(\frac{2\pi f r}{c(f)}\right) - J_2\!\left(\frac{2\pi f r}{c(f)}\right)\right].
+\end{equation}
+This method uses pure $J_0$ for its first version, matching every prior use of the Bessel model
+elsewhere in this project (Notebook 2's illustrative example, \texttt{nb3\_helpers.bessel\_fit\_
+quality}, and Notebook 3 Section 1d's synthetic leakage test), and matching Hawkins and
+Sambridge's (2019) own practical simplification --- their paper uses pure $J_0$ for both Love and
+Rayleigh data throughout, despite studying both wave types.
+
+The trade-off is explicit: pure $J_0$ keeps the exact, tabulated-zero property that makes the
+analytical approach in Section~\ref{sec:template-barcodes} valuable in the first place. The
+combined $J_0 - J_2$ form does not have simply tabulated zeros (it is a difference of two
+different Bessel functions, not one), and would require numerical root-finding for template
+events too, losing most of the practical advantage of the analytical approach for this first
+version. This is recorded here as a known, deliberate simplification, not an oversight --- a
+natural candidate for a future revision of this method.
+
+\section{Relationship to Existing Tools}
+
+This method is a genuine synthesis, not a restatement of any single existing tool in this project
+or in the literature reviewed while designing it:
+
+\begin{itemize}
+  \item \textbf{\texttt{nb3\_helpers.bessel\_fit\_quality}} (this project) grid-searches a
+    constant-velocity trial $c$ only (never a frequency-dependent $c(f)$), and fits the
+    \emph{full complex amplitude} of the observed coherence against the Bessel prediction via RMS
+    residual. This project's own documentation already flags the resulting metric as unreliable,
+    since it is ``dominated by overall coherence strength, not Bessel-shape quality.'' A
+    crossing/turning-point barcode is structurally immune to this specific failure mode: event
+    \emph{locations} do not depend on the overall amplitude scale the way a full RMS-amplitude
+    fit does.
+  \item \textbf{Notebook 3, Section 1f} (this project) checks only internal self-consistency of a
+    candidate's own crossing spacing against itself; it never compares a candidate against an
+    actual external physical template. This method's template library supplies exactly that
+    missing external reference.
+  \item \textbf{\texttt{seislib.extract\_dispcurve}} (Magrini et al., 2022) uses zero-crossings
+    only (no turning points) and a single fixed reference curve, used as a mode-tracking
+    guide/prior with a tolerance band around the reference velocity at each step --- confirmed by
+    reading its source (\texttt{\_an\_processing\_seislib\_functions.py}, obtained from the same
+    lab NAS location as the reference curve used here). This is a sequential-tracking mechanism,
+    not an explicit multi-hypothesis scan-and-score across a template library. AkiNet's own paper
+    (Xue and Olugboji, 2025) identifies ``cycle skip'' --- committing early to the wrong phase
+    oscillation --- as exactly this class of method's characteristic failure mode; a
+    scan-everything, score-everything approach is structurally more resistant to it, since it
+    never commits to a single crossing sequence before evaluating alternatives.
+  \item \textbf{AkiNet} (Xue and Olugboji, 2025) solves the same underlying inverse problem via
+    continuous physics-informed neural-network optimization rather than a discrete scan over
+    templates. Its bounded-corridor architecture is philosophically identical to the template
+    family used here (Section~\ref{sec:template-family}) --- both encode ``a plausible
+    neighborhood around a physically motivated reference,'' arrived at independently via two very
+    different mechanisms.
+  \item \textbf{Ekstr\"om et al.\ (2009)} already constructs multiple trial phase-velocity curves
+    from observed zero-crossings (indexed by an integer ambiguity $m$ in their Equation~2) and
+    selects whichever is closest to a reference curve --- the same core ``generate candidates,
+    compare against a reference, pick the best'' idea this method formalizes and extends, using
+    an explicit multi-template precision/recall score (Section~\ref{sec:scoring}) rather than
+    single-curve closest-match selection, and three event types instead of one.
+  \item \textbf{Hawkins and Sambridge (2019)} extend that same zero-crossing construction to
+    peaks and troughs via the $J_1$-zero identity (Section~\ref{sec:template-barcodes}) --- the
+    direct analytical basis this method's template-event generation relies on --- within a
+    fundamentally different overall method (an adjoint-based nonlinear waveform-fitting
+    inversion of a full path-average earth model, not a discrete barcode-matching scan).
+\end{itemize}
+
+The barcode/template-matching framing itself --- three typed event streams, matched via combined
+precision, recall, corridor rejection, and frequency-weighted trust against a scanned template
+library --- is original to this project, not a restatement of any of the above.
+
+\section{Scope and Open Items}
+
+\begin{itemize}[nosep]
+  \item \textbf{Deliverable.} Both a reliability metric (for judging FastMspec against
+    single-taper and other techniques) and a phase-velocity pick (the best-matching template's
+    $c(f)$) --- the latter a from-scratch alternative to \texttt{seislib.extract\_dispcurve}, not
+    a replacement for Notebook 3's existing Section~4, which remains as independent, unmodified
+    work.
+  \item \textbf{Data scope.} SA53/SA58 (Love-wave, transverse component) only for the first
+    version. MTAN/RUNG --- the pair where \texttt{seislib} previously failed to converge in this
+    project, and the same pair AkiNet's own paper uses as a stress-test example --- is an obvious
+    and motivated next test, deferred to a later round once this method is validated on the
+    cleaner pair.
+  \item \textbf{Event weighting.} Z, M, and N event types are weighted equally in the match score
+    for this first version; revisiting this (e.g. weighting crossings more heavily, since they
+    tend to be more sharply localized than turning points) is a plausible future refinement.
+  \item \textbf{Love-wave Bessel model.} Pure $J_0$ for this first version
+    (Section~\ref{sec:love-caveat}); the more physically correct $J_0 - J_2$ combined form is a
+    documented, deliberate simplification, not an oversight.
+\end{itemize}
+
+\section{Implementation Notes}
+\label{sec:verification}
+
+The companion notebook implementation should verify, before any results are trusted or reported:
+\begin{enumerate}
+  \item \texttt{SDISPL.ASC} parses identically to Sayan Swar's own approach (\texttt{LMODE==0}
+    filter, \texttt{[FREQUENCY\_Hz, C\_KM\_S]} columns).
+  \item The template library is a sensible, non-degenerate fan of curves when plotted
+    ($c_{\text{ref}}(f)$ and several $c_{\text{ref}}(f) + \delta$ members over 0.02--0.3~Hz).
+  \item The analytical event solver (Section~\ref{sec:template-barcodes}) is correct: root-found
+    frequencies should zero out $J_0(x(f))$ (or $J_1(x(f))$ for extrema) to near machine
+    precision, and should agree with a brute-force dense-sampling/sign-change check on the same
+    template curve; Z/M/N events should alternate in the expected order.
+  \item FastMspec's best-match score should exceed single-taper's (raw and roughness-matched
+    smoothed variants) on real data --- the expected result given everything established in
+    Notebook 3 Sections 1c--1f. A result to the contrary should be treated as a bug to find, not a
+    finding to report.
+  \item The picked best-fit velocity should be checked against both the raw reference curve's own
+    value in the same band and the cruder empirical estimate from Section 1f, as a sanity range
+    check.
+\end{enumerate}
+
+\begin{thebibliography}{9}
+
+\bibitem{aki1957}
+Aki, K. (1957). Space and time spectra of stationary stochastic waves, with special reference to
+microtremors. \textit{Bulletin of the Earthquake Research Institute}, 35, 415--456.
+
+\bibitem{ekstrom2009}
+Ekstr\"om, G., Abers, G.\ A., \& Webb, S.\ C.\ (2009). Determination of surface-wave phase
+velocities across USArray from noise and Aki's spectral formulation. \textit{Geophysical Research
+Letters}, 36(18), L18301. \url{https://doi.org/10.1029/2009GL039131}
+
+\bibitem{ekstrom2014}
+Ekstr\"om, G.\ (2014). Love and Rayleigh phase-velocity maps, 5--40~s, of the western and central
+USA from USArray data. \textit{Earth and Planetary Science Letters}, 402, 42--49.
+\url{https://doi.org/10.1016/j.epsl.2013.11.022}
+
+\bibitem{ekstrom2017}
+Ekstr\"om, G.\ (2017). Short-period surface-wave phase velocities across the conterminous United
+States. \textit{Physics of the Earth and Planetary Interiors}, 270, 168--175.
+\url{https://doi.org/10.1016/j.pepi.2017.07.010}
+
+\bibitem{hawkins2019}
+Hawkins, R., \& Sambridge, M.\ (2019). An adjoint technique for estimation of interstation phase
+and group dispersion from ambient noise cross correlations. \textit{Bulletin of the Seismological
+Society of America}, 109(5), 1716--1728. \url{https://doi.org/10.1785/0120190060}
+
+\bibitem{magrini2022}
+Magrini, F., Lauro, S., K\"astle, E., \& Boschi, L.\ (2022). Surface-wave tomography using
+SeisLib: a Python package for multiscale seismic imaging. \textit{Geophysical Journal
+International}, 231(2), 1011--1030. \url{https://doi.org/10.1093/gji/ggac236}
+
+\bibitem{xue2025}
+Xue, S., \& Olugboji, T.\ (2025). AkiNet: A physics-informed AI for wave extraction from noise.
+\textit{Journal of Geophysical Research: Machine Learning and Computation}, 2(4), e2025JH000932.
+\url{https://doi.org/10.1029/2025JH000932}
+
+\bibitem{olugboji2022}
+Olugboji, T., \& Xue, S.\ (2022). A short-period surface-wave dispersion dataset for model
+assessment of Africa's crust: ADAMA. \textit{Seismological Research Letters}, 93(3), 1943--1959.
+\url{https://doi.org/10.1785/0220210355}
+
+\end{thebibliography}
+
+\end{document}
