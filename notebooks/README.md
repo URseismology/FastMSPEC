@@ -112,7 +112,7 @@ primary source, with the local copy as a convenience mirror).
 - Ekström, G. (2017). Short-period surface-wave phase velocities across the conterminous United
   States. *Physics of the Earth and Planetary Interiors*, 270, 168-175.
   [doi:10.1016/j.pepi.2017.07.010](https://doi.org/10.1016/j.pepi.2017.07.010). These three,
-  together with Aki (1957) above, are the literature precedent Notebook 3's Section 1f
+  together with Aki (1957) above, are the literature precedent Notebook 5's Section 3
   bandwidth/zero-crossing-spacing argument is grounded in -- large-scale, noise-derived
   phase-velocity work built on the same Aki spectral formulation.
 - Tkalčić, H., Phạm, T. S., & Wang, S. (2020). The Earth's coda correlation wavefield: Rise of the
