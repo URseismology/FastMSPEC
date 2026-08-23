@@ -3,5 +3,6 @@ __pycache__/
 .pytest_cache/
 *.mat
 *.csv
-/data/
+/data/*
+!/data/reference/
 .venv/

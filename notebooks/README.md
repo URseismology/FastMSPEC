@@ -2,7 +2,7 @@
 
 [← Back to repo README](../README.md)
 
-Four pre-run Jupyter notebooks connecting the theory behind this repo's `thomson_multitaper` and
+Five pre-run Jupyter notebooks connecting the theory behind this repo's `thomson_multitaper` and
 `ccf_pipeline` packages to why they matter for Sayan's ambient-noise cross-correlation problem, and
 to real data. Each is committed with its outputs already saved, so it renders fully on GitHub
 without needing to be re-executed.
@@ -13,6 +13,7 @@ without needing to be re-executed.
 | [`02_why_cross_spectra.ipynb`](02_why_cross_spectra.ipynb) | Why this matters for ambient-noise cross-correlation specifically: the Bessel-coherence link to phase velocity, the Love-wave problem, the scale problem, and the bridge from Notebook 1's auto-spectra to the pipeline's cross-spectra | New synthesis, grounded in Sayan's report/presentation and this repo's own `fast_cross_spectrum.py` |
 | [`03_fastmspec_application.ipynb`](03_fastmspec_application.ipynb) | The pipeline run on real data: SA53/SA58 (all three `IsMspec` techniques compared), MTAN/RUNG (Love-wave SNR), a synthetic NLNM stability demo, and real dispersion-curve picking via `seislib` | New real-data results — **includes two honest negative/anomalous findings** (see below), not smoothed over |
 | [`04_coda_correlation_future_work.ipynb`](04_coda_correlation_future_work.ipynb) | Roadmap for coda-correlation, explicitly out of scope for Sayan's course project | Scaffold only, no MATLAB or Python implementation exists to port |
+| [`05_coherence_barcode.ipynb`](05_coherence_barcode.ipynb) | Zero-crossing stability under smoothing (moved from Notebook 3) and a new diagnostic: the **coherence barcode**, a template-matching method that scores a candidate coherence spectrum's zero-crossings/maxima/minima against a library of physically-motivated phase-velocity templates | New method, original to this project — full design rationale in [`../docs/coherence_barcode_design.tex`](../docs/coherence_barcode_design.tex)/`.pdf` |
 
 ## Worth knowing before reading Notebook 3
 
@@ -55,16 +56,17 @@ cd ../notebooks
 jupyter nbconvert --to notebook --execute --inplace 01_multitaper_theory.ipynb  # ~15-20 min
 jupyter nbconvert --to notebook --execute --inplace 02_why_cross_spectra.ipynb  # ~1 min
 jupyter nbconvert --to notebook --execute --inplace 03_fastmspec_application.ipynb  # ~5-10 min, needs data/ (see repo root README)
+jupyter nbconvert --to notebook --execute --inplace 05_coherence_barcode.ipynb  # ~5-10 min, needs data/ (see repo root README)
 ```
 
 `seislib` (Notebook 3, Section 4) needs `python3-dev` (or your platform's equivalent Python
 development headers) installed system-wide to compile a Cython extension during `pip install` —
 if that install fails with a `Python.h: No such file or directory` error, that's the fix.
 
-`_lib/` holds the build scripts (`build_nb1.py`..`build_nb4.py`) that generate these notebooks from
-scratch via `nbformat`, plus shared helper code (`karnik_figures.py`, `nb3_helpers.py`) — useful if
-you want to see exactly how a figure was produced, or to regenerate a notebook after editing its
-build script.
+`_lib/` holds the build scripts (`build_nb1.py`..`build_nb5.py`) that generate these notebooks from
+scratch via `nbformat`, plus shared helper code (`karnik_figures.py`, `nb3_helpers.py`,
+`nb5_helpers.py`) — useful if you want to see exactly how a figure was produced, or to regenerate a
+notebook after editing its build script.
 
 ## References
 
@@ -128,10 +130,19 @@ primary source, with the local copy as a convenience mirror).
 - Hawkins, R., & Sambridge, M. (2019). An adjoint technique for estimation of interstation phase
   and group dispersion from ambient noise cross correlations. *Bulletin of the Seismological
   Society of America*, 109(5), 1716-1728.
-  [doi:10.1785/0120190060](https://doi.org/10.1785/0120190060). Motivates (not literally
-  implemented — the full paper was paywalled from this environment) Notebook 3's envelope
-  conditioning for the Bessel-fit dispersion diagnostic.
+  [doi:10.1785/0120190060](https://doi.org/10.1785/0120190060). Motivates Notebook 3's envelope
+  conditioning for the Bessel-fit dispersion diagnostic; their analytical extension of the
+  zero-crossing formula to maxima/minima (via zeros of $J_1$) is the exact basis for Notebook 5's
+  analytical template-barcode construction (see
+  [`../docs/coherence_barcode_design.tex`](../docs/coherence_barcode_design.tex)).
 - Xue, S., & Olugboji, T. (2025). AkiNet: A physics-informed AI for wave extraction from noise.
   *Journal of Geophysical Research: Machine Learning and Computation*, 2(4), e2025JH000932.
-  [doi:10.1029/2025JH000932](https://doi.org/10.1029/2025JH000932). Same motivating role as
-  Hawkins & Sambridge above, for the same reason (paywalled).
+  [doi:10.1029/2025JH000932](https://doi.org/10.1029/2025JH000932). Motivates Notebook 3's
+  envelope conditioning (same role as Hawkins & Sambridge above); its bounded additive
+  phase-velocity corridor (Section 3.3.1) is the direct model for Notebook 5's template-family
+  construction and hard corridor rejection.
+- Herrmann, R. B. Computer Programs in Seismology (CPS). Saint Louis University.
+  [https://www.eas.slu.edu/eqc/eqccps.html](https://www.eas.slu.edu/eqc/eqccps.html). Source
+  format of `data/reference/SDISPL.ASC` (`SDISPL.ASC`'s multi-mode dispersion ASCII layout),
+  Notebook 5's real reference Love-wave dispersion curve — see
+  [`../data/reference/README.md`](../data/reference/README.md) for its provenance.
