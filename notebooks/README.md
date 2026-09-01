@@ -105,39 +105,45 @@ primary source, with the local copy as a convenience mirror).
   seismic interferometry and its consequence. *Geophysical Prospecting*, 56(3), 435-451.
 - Ekström, G., Abers, G. A., & Webb, S. C. (2009). Determination of surface-wave phase velocities
   across USArray from noise and Aki's spectral formulation. *Geophysical Research Letters*, 36(18).
-  [doi:10.1029/2009GL039131](https://doi.org/10.1029/2009GL039131).
+  [doi:10.1029/2009GL039131](https://doi.org/10.1029/2009GL039131) --
+  [local copy](../docs/references/Ekstrom_2009_GRL.pdf).
 - Ekström, G. (2014). Love and Rayleigh phase-velocity maps, 5-40 s, of the western and central USA
   from USArray data. *Earth and Planetary Science Letters*, 402, 42-49.
   [doi:10.1016/j.epsl.2013.11.022](https://doi.org/10.1016/j.epsl.2013.11.022).
 - Ekström, G. (2017). Short-period surface-wave phase velocities across the conterminous United
   States. *Physics of the Earth and Planetary Interiors*, 270, 168-175.
-  [doi:10.1016/j.pepi.2017.07.010](https://doi.org/10.1016/j.pepi.2017.07.010). These three,
-  together with Aki (1957) above, are the literature precedent Notebook 5's Section 3
-  bandwidth/zero-crossing-spacing argument is grounded in -- large-scale, noise-derived
-  phase-velocity work built on the same Aki spectral formulation.
+  [doi:10.1016/j.pepi.2017.07.010](https://doi.org/10.1016/j.pepi.2017.07.010) --
+  [local copy](../docs/references/Ekstrom_2017_PEPI.pdf). These three, together with Aki (1957)
+  above, are the literature precedent Notebook 5's bandwidth/zero-crossing-spacing argument is
+  grounded in -- large-scale, noise-derived phase-velocity work built on the same Aki spectral
+  formulation.
 - Tkalčić, H., Phạm, T. S., & Wang, S. (2020). The Earth's coda correlation wavefield: Rise of the
   new paradigm and recent advances. *Earth-Science Reviews*, 208, 103285.
   [doi:10.1016/j.earscirev.2020.103285](https://doi.org/10.1016/j.earscirev.2020.103285). Notebook
   4's entire theoretical grounding.
 - Magrini, F., Lauro, S., Kästle, E., & Boschi, L. (2022). Surface-wave tomography using SeisLib:
   a Python package for multiscale seismic imaging. *Geophysical Journal International*, 231(2),
-  1011-1030. [doi:10.1093/gji/ggac236](https://doi.org/10.1093/gji/ggac236). The `seislib` package
-  Notebook 3 Section 4 uses (referred to as "SeisLab" in Sayan's report — the same package,
-  confirmed by cross-checking author/citation).
+  1011-1030. [doi:10.1093/gji/ggac236](https://doi.org/10.1093/gji/ggac236) --
+  [local copy](../docs/references/Magrini_2022_SeisLib_GJI.pdf). The `seislib` package Notebook 3
+  Section 4 uses directly, and that Notebook 5's `python/dispcurve_pick/` vendors and instruments
+  (referred to as "SeisLab" in Sayan's report — the same package, confirmed by cross-checking
+  author/citation).
 - Peterson, J. R. (1993). *Observations and modeling of seismic background noise* (Open-File
   Report 93-322). U.S. Geological Survey. Source of the New Low Noise Model Notebook 3 Section 3's
   synthetic test is built on (via `obspy`'s built-in implementation, not hand-transcribed).
 - Hawkins, R., & Sambridge, M. (2019). An adjoint technique for estimation of interstation phase
   and group dispersion from ambient noise cross correlations. *Bulletin of the Seismological
   Society of America*, 109(5), 1716-1728.
-  [doi:10.1785/0120190060](https://doi.org/10.1785/0120190060). Motivates Notebook 3's envelope
-  conditioning for the Bessel-fit dispersion diagnostic; their analytical extension of the
-  zero-crossing formula to maxima/minima (via zeros of $J_1$) is the exact basis for Notebook 5's
-  analytical template-barcode construction (see
+  [doi:10.1785/0120190060](https://doi.org/10.1785/0120190060) --
+  [local copy](../docs/references/Hawkins_Sambridge_2019_BSSA.pdf). Motivates Notebook 3's
+  envelope conditioning for the Bessel-fit dispersion diagnostic; their analytical extension of the
+  zero-crossing formula to maxima/minima (via zeros of $J_1$) grounds the template-family
+  construction `nb5_helpers.py` reuses in Notebook 5 (see
   [`../docs/coherence_barcode_design.tex`](../docs/coherence_barcode_design.tex)).
 - Xue, S., & Olugboji, T. (2025). AkiNet: A physics-informed AI for wave extraction from noise.
   *Journal of Geophysical Research: Machine Learning and Computation*, 2(4), e2025JH000932.
-  [doi:10.1029/2025JH000932](https://doi.org/10.1029/2025JH000932). Motivates Notebook 3's
+  [doi:10.1029/2025JH000932](https://doi.org/10.1029/2025JH000932) --
+  [local copy](../docs/references/Xue_Olugboji_2025_AkiNet_JGRMLC.pdf). Motivates Notebook 3's
   envelope conditioning (same role as Hawkins & Sambridge above); its bounded additive
   phase-velocity corridor (Section 3.3.1) is the direct model for Notebook 5's template-family
   construction and hard corridor rejection.

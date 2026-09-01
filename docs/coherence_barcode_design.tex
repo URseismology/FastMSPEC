@@ -307,6 +307,7 @@ version. This is recorded here as a known, deliberate simplification, not an ove
 natural candidate for a future revision of this method.
 
 \section{Relationship to Existing Tools}
+\label{sec:relationship}
 
 This method is a genuine synthesis, not a restatement of any single existing tool in this project
 or in the literature reviewed while designing it:
@@ -324,16 +325,31 @@ or in the literature reviewed while designing it:
     candidate's own crossing spacing against itself; it never compares a candidate against an
     actual external physical template. This method's template library supplies exactly that
     missing external reference.
-  \item \textbf{\texttt{seislib.extract\_dispcurve}} (Magrini et al., 2022) uses zero-crossings
-    only (no turning points) and a single fixed reference curve, used as a mode-tracking
-    guide/prior with a tolerance band around the reference velocity at each step --- confirmed by
-    reading its source (\texttt{\_an\_processing\_seislib\_functions.py}, obtained from the same
-    lab NAS location as the reference curve used here). This is a sequential-tracking mechanism,
-    not an explicit multi-hypothesis scan-and-score across a template library. AkiNet's own paper
-    (Xue and Olugboji, 2025) identifies ``cycle skip'' --- committing early to the wrong phase
-    oscillation --- as exactly this class of method's characteristic failure mode; a
-    scan-everything, score-everything approach is structurally more resistant to it, since it
-    never commits to a single crossing sequence before evaluating alternatives.
+  \item \textbf{\texttt{seislib.extract\_dispcurve}} (Magrini et al., 2022) is considerably more
+    elaborate than this document originally characterized it, confirmed by a full read of its
+    source (\texttt{\_an\_processing\_seislib\_functions.py}, Sayan Swar's own copy, obtained from
+    the same lab NAS location as the reference curve used here) rather than its high-level
+    behavior alone. It is a four-stage, reference-curve-guided \emph{sequential} zero-crossing
+    tracker: (1)~sign-change zero-crossing detection matched against tabulated $J_0$ zeros (or
+    $J_0 - J_2$ zeros for the horizontal-polarization/Love-wave case, per K\"astle et al., 2016,
+    itself a direct methodological descendant of Ekstr\"om et al., 2009) to resolve candidate
+    Bessel-branch indices; (2)~a three-criterion \texttt{bad\_quality} gate on each candidate
+    crossing --- adjacent-peak amplitude ratio exceeding 3.0, crossing amplitude below half a
+    smoothed local envelope, or spacing to the previous crossing exceeding 1.5$\times$ the
+    reference-predicted step; (3)~elliptical-kernel density-field picking (weighted, KDE-like,
+    around non-bad-quality crossings) with a local density-ratio acceptance threshold and
+    cycle-jump-aware rejection of implausible velocity jumps; (4)~a hard minimum-frequency-coverage
+    acceptance test, returning a curve only if picks span enough of the band, else raising an
+    exception with no partial result. \textbf{Critically, none of stages~2--4's internal quality
+    signals are exposed to the caller} --- the public return is binary (a curve, or an exception),
+    and this project's \texttt{python/dispcurve\_pick/} package vendors and lightly instruments
+    exactly this file to surface those already-computed internals (bad-quality-crossing fraction,
+    accepted-pick count, frequency-coverage fraction, mean pick amplitude ratio) as an explicit,
+    continuous quality score, without altering the picking algorithm's own behavior. AkiNet's own
+    paper (Xue and Olugboji, 2025) identifies ``cycle skip'' --- committing early to the wrong
+    phase oscillation --- as this class of method's characteristic failure mode; seislib's own
+    cycle-jump rejection and backup-picks mechanism (stage~3) is its internal defense against
+    exactly that failure mode, not an omission this project needed to work around.
   \item \textbf{AkiNet} (Xue and Olugboji, 2025) solves the same underlying inverse problem via
     continuous physics-informed neural-network optimization rather than a discrete scan over
     templates. Its bounded-corridor architecture is philosophically identical to the template
@@ -399,6 +415,70 @@ The companion notebook implementation should verify, before any results are trus
     value in the same band and the cruder empirical estimate from Section 1f, as a sanity range
     check.
 \end{enumerate}
+
+\section{Revision: From Barcode Matching to Instrumented Reference-Guided Picking}
+\label{sec:revision}
+
+The scoring mechanism described in Sections~\ref{sec:scoring}--\ref{sec:template-family}
+above --- extracting a candidate's raw zero-crossing/maximum/minimum events by simple sign-change
+and neighbor-comparison detection, then scoring them via precision/recall against a scanned
+template library --- was implemented and validated (Notebook 5, first version): it correctly
+ranked FastMspec above single-taper, and its own closing discussion honestly flagged a problem
+that turned out to be more than a minor caveat: \emph{maximum/minimum detection produced roughly
+5$\times$ as many ``reliable'' events as zero-crossing detection, dominated by per-frequency-bin
+noise wiggles rather than genuine curvature}. On reflection, and per direct guidance, this is not
+a tunable threshold problem --- it is that naive local-event detection on raw noisy data is simply
+not a sound foundation for a quality metric, regardless of how the resulting events are later
+filtered or scored. Best practice, and the approach \texttt{seislib} itself takes, is to translate the
+coherence data into an actual phase-velocity curve \emph{first}, using a picking process with real
+internal quality control, and to judge correlation quality from information available in that
+process --- not to score raw spectral events directly.
+
+This motivates the revision implemented from Notebook 5 v2 onward:
+
+\begin{itemize}[nosep]
+  \item \textbf{What is discarded.} The event-scanning scorer in its entirety ---
+    \texttt{candidate\_barcode}, \texttt{match\_score}, \texttt{\_one\_to\_one\_match},
+    \texttt{scan\_templates}, and the raw Z/M/N neighbor-comparison extraction helpers. These
+    remain reachable via git history (tag \texttt{notebook5-v1-event-scanning}) but are not carried
+    forward.
+  \item \textbf{What survives, repurposed.} The template family
+    (Section~\ref{sec:template-family}: \texttt{load\_reference\_curve}, \texttt{build\_template\_family},
+    the \texttt{SDISPL.ASC} $\pm$ AkiNet-corridor construction) is unchanged, but its role changes:
+    instead of being scanned as fixed targets for a candidate's raw events to match against, each
+    member is fed as the \texttt{ref\_curve} prior into seislib's own picker, and the
+    best-performing prior (by convergence, coverage, and bad-quality fraction) is kept as the pick.
+    This is the same ``bounded neighborhood around a physically motivated reference'' principle the
+    original design shared with AkiNet (Section~\ref{sec:relationship}), now driving a real picker
+    instead of a standalone scorer.
+  \item \textbf{The new quality signal.} \texttt{python/dispcurve\_pick/} vendors and instruments
+    seislib's own \texttt{extract\_dispcurve} (Section~\ref{sec:relationship} above) to expose its
+    already-computed internal diagnostics --- bad-quality-crossing fraction, accepted-pick count,
+    frequency-coverage fraction, mean pick amplitude ratio --- as an explicit, continuous score,
+    without altering the picking algorithm's own behavior (verified byte-identical to unmodified
+    upstream when diagnostics are not requested). This directly answers what the original design
+    could not: a real, physically grounded, already-battle-tested quality criterion, rather than
+    one built from scratch on unreliable raw events.
+  \item \textbf{Barcode visual, reframed.} The three-way Z/M/N coloring is replaced by seislib's
+    own two-way good/bad-quality-crossing distinction --- more honest given M/N was the noisiest,
+    least trustworthy part of the original design, and directly tied to a real, principled
+    criterion rather than an ad hoc relative-swing threshold.
+  \item \textbf{Deferred, not abandoned: extending quality assessment to M/N.} The ambition behind
+    a three-typed-event barcode was not wrong in principle --- maxima and minima do carry real
+    information (Hawkins and Sambridge, 2019) --- only the naive detection-and-filtering
+    implementation was. seislib's \texttt{bad\_quality} criteria are defined specifically for
+    zero-crossings; designing an analogous, principled quality gate for turning points remains a
+    named, open item (tracked in \texttt{docs/notebook5\_revamp\_progress.md}), to be revisited
+    once the zero-crossing-based picker is validated at full dataset scale, not before.
+  \item \textbf{Scale.} This revision is exercised across the full Madagascar dataset (380 station
+    pairs, all four \texttt{ccf\_pipeline} techniques: single-taper, FastMspec, Mspec,
+    MspecBestK) processed on the university's HPC cluster, not the one-to-two-pair scale the
+    original design was validated on --- both because a real quality metric is only as convincing
+    as the dataset it is shown to hold up across, and because this closes a gap
+    \texttt{python/ccf\_pipeline/NOTES.md} already named: the FastMspec path was, until this
+    revision, verified only against synthetic data and Octave, never a real end-to-end
+    SAC-to-output run at scale.
+\end{itemize}
 
 \begin{thebibliography}{9}
 

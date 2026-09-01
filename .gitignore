@@ -6,3 +6,6 @@ __pycache__/
 /data/*
 !/data/reference/
 .venv/
+*.log
+*.aux
+*.toc
