@@ -15,7 +15,7 @@ next stage.
 - [ ] **Stage 0** -- This tracking file
 - [x] **Stage 1** -- Provenance/citations (pull 5 papers, `docs/references/README.md`, update
       `notebooks/README.md` + `docs/coherence_barcode_design.tex`)
-- [ ] **Stage 2** -- Vendor + instrument the seislib picker (`python/dispcurve_pick/`)
+- [x] **Stage 2** -- Vendor + instrument the seislib picker (`python/dispcurve_pick/`)
 - [ ] **Stage 3** -- Validate against Sayan's SKRH-BAND result; 4-technique timing pilot
 - [ ] **Stage 4** -- bluehive batch pipeline, full 380 pairs x 4 techniques
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
@@ -68,4 +68,30 @@ was carved out of `/data/*` -- not yet done, flagged so it isn't forgotten.
 
 Merged into `main`, pushed.
 
-Next: Stage 2 (vendor + instrument the seislib picker).
+### 2026-09-01 -- Stage 2
+
+Vendored Sayan's copy of seislib's `_an_processing.py` from the NAS into `python/dispcurve_pick/`
+(1539 lines; diffed against installed `seislib==1.2.1` at pull time -- identical except one
+deprecated-numpy-API line and a trailing newline). Instrumented at exactly 3 sites (bad_quality
+capture, per-pick amplitude-ratio capture inside the `pick_velocity` closure, the final
+return/raise site), each in a clearly marked comment block, adding an opt-in
+`return_diagnostics=True` that surfaces `PickDiagnostics` (bad-quality fraction, candidate-crossing
+count, accepted-pick count, frequency-coverage fraction, mean amplitude ratio) without altering
+the picking algorithm itself.
+
+`tests/test_matches_upstream.py` (3/3 passing) confirmed this by finding and fixing two real bugs
+along the way: (1) `np.in1d`, used in Sayan's copy, no longer exists in this environment's numpy
+2.4.6 -- fixed to `np.isin`, matching what the currently-installed `seislib` package itself already
+uses at that line (an environment-compatibility fix, not a behavior change); (2)
+`DispersionCurveExceptionWithDiagnostics`'s `__init__` tried to pass a message string to
+`DispersionCurveException.__init__`, which upstream defines to take no arguments at all -- fixed to
+call `super().__init__()` then set `self.message` directly. Full technical writeup:
+`python/dispcurve_pick/NOTES.md`.
+
+Re-fetched `tectonic` and `pypdf` were both needed fresh this session (this sandbox's filesystem
+doesn't persist installed tools/packages across sessions) -- noting this since it'll likely recur:
+check for tools before assuming a prior session's setup carried over.
+
+Merged into `main`, pushed.
+
+Next: Stage 3 (validate against Sayan's own SKRH-BAND result; 4-technique timing pilot).
