@@ -18,12 +18,15 @@ filename `xueolugboji2026.pdf`, but its own metadata confirms *Journal of Geophy
 Machine Learning and Computation* 2025.2, DOI `10.1029/2025JH000932` — genuinely 2025, consistent
 with this project's existing "Xue & Olugboji 2025" citations).
 
-The three coherence-theory papers (`Walden_2000...`, `Haley_Anitescu_2017...`,
-`Keding_2024...`) were found by following Karnik et al. (2022)'s own citation trail both backward
-(their reference list -- Walden and Haley & Anitescu) and forward (who cites them -- Keding et
-al.), per direct guidance, in support of Stage 5's principled resolution/variance/bias treatment
-(see `docs/notebook5_revamp_progress.md`'s deferred/requirement log) -- not read in full detail
-yet, confirmed on-topic and correctly cited via their own embedded metadata/title pages.
+The coherence-theory papers below (`Walden_2000...` through `Walden_McCoy_Percival_1994...`) were
+found in support of Stage 5's principled resolution/variance/bias treatment (see
+`docs/notebook5_revamp_progress.md`'s deferred/requirement log), via two routes: three (Walden
+2000, Haley & Anitescu 2017, Keding et al. 2024) by following Karnik et al. (2022)'s own citation
+trail both backward (their reference list) and forward (who cites them), per direct guidance; the
+remaining three (the two Park papers, Walden/McCoy/Percival 1994) supplied directly, from memory,
+including the closest match found so far to this project's own use case (Park & Levin 2016 -- see
+table). None read in full formula-level detail yet (that's Stage 5 work) -- all confirmed on-topic
+and correctly cited via their own embedded metadata/title pages.
 
 | Local file | Citation | Used by |
 |---|---|---|
@@ -35,3 +38,6 @@ yet, confirmed on-topic and correctly cited via their own embedded metadata/titl
 | `Walden_2000_Multivariate_Biometrika.pdf` | Walden (2000), *Biometrika*, 87(4), 767-788 | Multitaper *multivariate* (cross-spectral/coherence) estimator theory -- means, smoothing/leakage bias, variance, asymptotic (Wishart-based) distributions, unified across Slepian, sine-taper, Welch, and lag-window estimators. Its own real-seismic-data example (Section 6, 60 series, a frequency band with known-zero true coherence) shows Slepian multitaper coherence bias staying below ~0.2 there, vs. up to ~0.6 for a lower-quality lag-window estimator -- a real, published, quantitative bound on exactly the "spurious near-null coherence" bias this project's own picking-stability argument needs. Traced backward from Karnik et al. (2022)'s own reference list, per direct guidance to follow the citation trail. Grounds Stage 5's principled resolution/variance/bias treatment (see `docs/notebook5_revamp_progress.md`'s deferred/requirement log).
 | `Haley_Anitescu_2017_Optimal_Bandwidth.pdf` | Haley & Anitescu (2017), *IEEE Signal Processing Letters*, 24(11), 1696-1700 | A genuine algorithm (not just theory) for automatically selecting the multitaper bandwidth/K that minimizes estimated MSE (bias² + jackknife-estimated variance), rather than a fixed, hand-chosen constant -- a concrete candidate for replacing this project's currently-hardcoded `Wband=0.001`/`NW=100` with a principled, data-driven choice in Stage 5. Also from Karnik et al. (2022)'s reference list.
 | `Keding_2024_CrossSpectra_Bias.pdf` | Keding, Alickovic, Skoglund & Sandsten (2024), *Frontiers in Neuroscience*, 18:1415397, doi:10.3389/fnins.2024.1415397 | A 2024 paper (different application domain -- EEG-based speech tracking, not seismology) explicitly citing Karnik et al. (2022) and addressing coherence-level bias and spectral peak-shifting bias directly -- found via forward citation search, a methodologically relevant cross-check on bias-correction technique for the same underlying statistical problem this project's picking-stability argument is built on.
+| `Park_Lindberg_Vernon_1987_JGR.pdf` | Park, Lindberg & Vernon (1987), *JGR*, 92(B12), 12675-12684 | The classic foundational paper applying Thomson's multitaper method to real seismograms -- adaptive multitaper spectral estimation on real seismic data, directly relevant precedent for this project's own real-data application.
+| `Park_Levin_2016_GJI_Jackknife.pdf` | Park & Levin (2016), *GJI*, 207, 512-527, doi:10.1093/gji/ggw291 | The closest match found to this project's own use case: multiple-taper *correlation* (MTC, i.e. cross-spectral coherence) applied to real seismic receiver functions, with an explicit Section 2 (statistical-assumption testing) and Section 6 (jackknife time-domain uncertainty estimation) -- a real, seismology-specific statistical treatment of multitaper cross-spectral estimator bias/variance, not just the more abstract general theory in Walden (2000). Points to the original Park & Levin (2000) paper (introducing MTC) as worth tracking down too if the full derivation history is needed.
+| `Walden_McCoy_Percival_1994_IEEE_TSP.pdf` | Walden, McCoy & Percival (1994), *IEEE Trans. Signal Processing*, 42(2) | The variance formula for multitaper spectrum estimates (real Gaussian processes), cited directly in Walden (2000)'s own reference list -- the univariate variance result underlying the multivariate/coherence treatment above.

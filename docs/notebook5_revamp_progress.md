@@ -65,6 +65,18 @@ next stage.
     coherence-level bias and spectral peak-shifting bias. Confirmed via each paper's own metadata
     that citations are correct; full formula-level extraction still deferred to actual Stage 5
     work, not rushed here.
+  - **Second update, same session**: three more papers supplied directly (from memory, not
+    citation-trail search): **Park, Lindberg & Vernon (1987, JGR)** -- the classic foundational
+    paper applying Thomson's multitaper method to real seismograms; **Park & Levin (2016, GJI)**
+    -- the closest match found to this project's own use case so far: multiple-taper
+    *correlation* (their "MTC" algorithm, i.e. cross-spectral coherence) applied to real seismic
+    receiver functions, with an explicit statistical-assumption-testing section and a dedicated
+    jackknife uncertainty-estimation section (Section 6) -- real seismology-specific statistical
+    treatment, not just the more abstract general theory in Walden (2000); points to the original
+    Park & Levin (2000) paper (introducing MTC) as worth tracking down too if the full derivation
+    history is wanted; **Walden, McCoy & Percival (1994, IEEE Trans. Signal Processing)** -- the
+    univariate variance formula cited directly in Walden (2000)'s own reference list. All added to
+    `docs/references/` with the same provenance/summary convention as the rest.
 - **Stage 4 SLURM design: parallelize at (pair, technique) granularity, not (pair) with all 4
   techniques serial inside one task.** Observed directly during Stage 3's local timing pilot:
   running single-taper/FastMspec/Mspec/MspecBestK serially in one process is slow and
