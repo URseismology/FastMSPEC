@@ -23,6 +23,17 @@ next stage.
 
 ## Deferred / requirement log
 
+- **Stage 5 design, sharpened framing (2026-09-02, for next session): `K`/`W` needs an upper bound
+  AND a lower bound, and only the upper bound is principled so far.** The resolution-bandwidth
+  criterion (`2W <~ Delta_f_zero = c/2r`, below) gives the **upper bound**: `W` (hence `K`, via
+  `K ~ 2NW-1`) too large over-smooths and merges/misses real zero-crossings -- this is what's
+  already confirmed against real Round-1 convergence-vs-distance data. Still missing: a **principled
+  lower bound** on `K` -- how small can `K` go before the coherence estimator's own variance/bias
+  (the `~1/K` bias floor near true-null coherence, Walden 2000) starts *manufacturing* spurious
+  crossings instead of merely missing real ones. Today's `K` values (13-15 MspecBestK, 80 Mspec,
+  FastMspec's fused equivalent) are hand-picked, not derived from either bound. This is the first
+  thing to review next session, once Round 1's results are in hand to check any candidate lower-
+  bound criterion against real convergence/bad-quality-fraction data, before Round 2 is designed.
 - **Stage 5 design: ground picking stability in actual multitaper coherence estimator theory, not
   just empirical/heuristic QC signals.** Per direct guidance: the current quality diagnostics
   (`bad_quality_fraction`, `freq_coverage_fraction`, `mean_amp_ratio`) are all seislib's own
