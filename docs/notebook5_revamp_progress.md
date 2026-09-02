@@ -381,5 +381,29 @@ same case: ~5.5GB (~10x reduction), comfortably within normal node memory -- no 
 Full writeup: `python/ccf_pipeline/NOTES.md`. Redeployed to bluehive; a live retest
 (`--mem=24G`, well below the old 64G that failed) is running as this entry is written.
 
-Next: confirm the Mspec memory fix live, then present Stage 4's status and the full-batch
-submission decision to the user.
+**Memory fix confirmed live**: retested on `preempt` with `--mem=24G` (well below the old 64G
+that failed) -- ran to completion in 1014.6s (~16.9 min), zero memory errors, not even a warning
+this time (unlike FastMspec's earlier close call at 32G). The fix works as designed.
+
+**The result itself is a genuine, unplanned confirmation of the Stage 5 design direction above**:
+Mspec did not converge for this pair (`XVKIRI_XVMAGY`, same pair single-taper also failed and
+FastMspec succeeded on) -- and checking the resolution-bandwidth criterion directly explains why,
+not just describes it: Mspec's smoothing bandwidth (`2W = 2*NW/N = 0.0185` Hz, from its fixed
+`NW=100`) is **5-11x wider than the natural zero-crossing spacing** at this pair's 459.8 km
+distance for any plausible phase velocity (`df_zero = c/2r` ~ 0.0016-0.0038 Hz across 1.5-3.5
+km/s) -- it violates `2W <~ df_zero` outright, by a wide margin, at every reasonable velocity.
+FastMspec's much narrower bandwidth (`2W = 0.002` Hz) satisfies the same criterion for all but the
+very lowest velocities, consistent with its convergence on the same pair. Real, textbook evidence
+that Mspec's failure here is over-smoothing blurring straight through the Bessel-null crossings
+being picked -- not just "another noisy result" -- and a first confirmation that the principled
+framework just discussed has real predictive power on data already in hand, before Stage 5 has
+even formally started.
+
+**Stage 4 is now functionally complete**: all four techniques confirmed correct and running on
+real bluehive infrastructure (single-taper, FastMspec, Mspec directly; MspecBestK shares Mspec's
+code path at a much smaller K, already validated locally in Stage 3 and structurally identical to
+FastMspec's already-SLURM-confirmed path). The multiprocessing-vs-plain question is answered
+(multiprocessing wins, ~3.94x). The one remaining step is the full 380 x 4 = 1520-task submission
+itself -- deliberately not automatic, presented to the user next as an explicit go/no-go.
+
+Next: present Stage 4's status and the full-batch submission decision to the user.
