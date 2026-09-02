@@ -5,7 +5,12 @@ Python-to-Python "did I change behavior" check rather than a MATLAB-to-Python tr
 asserts the instrumented `extract_dispcurve` produces byte-identical `(crossings, dispersion_curve)`
 output to the unmodified, pip-installed `seislib==1.2.1` package on the same input, both with
 `return_diagnostics=False` (the default -- must match trivially) and `return_diagnostics=True`
-(crossings/curve must still match exactly; only the extra diagnostics element is new).
+(crossings/curve must still match exactly; only the extra diagnostics element is new). This test
+itself still imports the real `seislib` package (for the comparison), but the picker under test
+(`dispcurve_pick.extract_dispcurve`) does not -- it uses this project's own vendored copies of the
+handful of seislib utility functions/exceptions it needs, precisely so it doesn't depend on the
+full `seislib` package (whose unrelated `tomography` extension fails to build on some HPC
+toolchains) -- see `_vendored_seislib_exceptions.py`'s docstring and NOTES.md.
 
 A real-data check against Sayan Swar's own SKRH-BAND result happens separately in Stage 3, once
 that data is pulled locally -- this test is deliberately self-contained (synthetic input only) so
@@ -17,6 +22,8 @@ from scipy.special import j0
 
 import seislib.an as upstream_seislib
 import seislib.exceptions as seislib_exceptions
+
+from dispcurve_pick import _vendored_seislib_exceptions as vendored_exceptions
 
 from dispcurve_pick import extract_dispcurve, PickDiagnostics, DispersionCurveExceptionWithDiagnostics
 
@@ -86,17 +93,23 @@ def test_diagnostics_true_curve_still_matches_upstream(synthetic_input):
 def test_diagnostics_on_failure_carries_diagnostics(synthetic_input):
     """A candidate too weak/short to converge should still raise
     DispersionCurveExceptionWithDiagnostics (a DispersionCurveException subclass) carrying
-    whatever diagnostics were captured before the failure, when return_diagnostics=True; and the
-    plain, unmodified DispersionCurveException otherwise (matching upstream's own failure mode)."""
+    whatever diagnostics were captured before the failure, when return_diagnostics=True; and this
+    project's own vendored (not upstream's) DispersionCurveException otherwise -- our
+    extract_dispcurve no longer imports the real seislib package at all (see
+    _vendored_seislib_exceptions.py's docstring: it pulls in an unrelated, broken Cython extension
+    on some HPC toolchains), so the class raised is a distinct-but-functionally-identical vendored
+    copy, not literally `seislib_exceptions.DispersionCurveException` -- confirmed equal by
+    message text, the one thing that actually matters behaviorally, not by `isinstance`."""
     kwargs = dict(synthetic_input)
     # Restrict to a band far too narrow to pass the coverage acceptance test.
     kwargs["freqmin"], kwargs["freqmax"] = 0.20, 0.21
 
-    with pytest.raises(seislib_exceptions.DispersionCurveException):
+    with pytest.raises(seislib_exceptions.DispersionCurveException) as upstream_excinfo:
         upstream_seislib.extract_dispcurve(**kwargs)
 
-    with pytest.raises(seislib_exceptions.DispersionCurveException):
-        extract_dispcurve(**kwargs)  # return_diagnostics=False: must be the plain upstream type
+    with pytest.raises(vendored_exceptions.DispersionCurveException) as ours_excinfo:
+        extract_dispcurve(**kwargs)  # return_diagnostics=False
+    assert str(ours_excinfo.value) == str(upstream_excinfo.value)
 
     with pytest.raises(DispersionCurveExceptionWithDiagnostics) as excinfo:
         extract_dispcurve(**kwargs, return_diagnostics=True)

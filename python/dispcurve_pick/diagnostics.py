@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from seislib.exceptions import DispersionCurveException
+from ._vendored_seislib_exceptions import DispersionCurveException
 
 
 @dataclass

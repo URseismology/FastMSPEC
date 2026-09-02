@@ -210,4 +210,79 @@ inline in the script rather than silently worked around.
 
 Merged into `main`, pushed.
 
-Next: Stage 4 (bluehive batch pipeline, full 380 pairs x 4 techniques).
+### 2026-09-01 -- Stage 4 (in progress)
+
+**Built** `python/dispcurve_pick_batch/`: `manifest.py` (380-pair catalog -> 1520 work units,
+technique-outer ordering so each technique is a contiguous index range --
+`technique_index_ranges()`), `work_unit.py` (the core `process()`: per-technique preprocessing,
+MATLAB cross-validation where available, template-corridor scan via the instrumented picker,
+never raises -- exceptions land in the result's `error` field), `run_plain.py` /
+`run_multiprocessing.py` (the dual drivers, per earlier direct guidance), `aggregate.py`. Also
+promoted `load_reference_curve`/`build_template_family` from `notebooks/_lib/nb5_helpers.py` into
+`python/dispcurve_pick/template_family.py` so both the batch pipeline and the eventual Stage 5
+notebook import from one place, without the batch pipeline depending on `notebooks/_lib`.
+
+**Local validation before touching bluehive**: `work_unit.process()` run end-to-end on the real
+SKRH-BAND pair (both techniques already validated in Stage 3) -- reproduced Stage 3's exact
+findings (single-taper doesn't converge; FastMspec converges, best_delta=-0.30 km/s, close to
+Stage 3's own -0.35 from a slightly different scoring exercise).
+
+**Deployment hit two real, worth-recording surprises** (both already written up in detail in
+`python/dispcurve_pick_batch/NOTES.md`'s "Deploying to bluehive" and
+`python/dispcurve_pick/NOTES.md`'s "Why the seislib package dependency was removed" -- summarized
+here):
+1. `PRJ_SPAC/codes/prod/` (the planned deploy location, inside Sayan's own `Sayan_Swar_WS`) is
+   read-only to this account -- discovered live via a failed `mkdir`, not assumed from listing
+   permissions alone. Redirected to a fresh top-level directory this account does own:
+   `/scratch/tolugboj_lab/FastMSPEC_dispcurve_batch/`.
+2. A plain `venv` hit a wall of genuine toolchain fragility on the login node: the default
+   `python3/3.11.0` module's SSL support is broken entirely (every pip HTTPS request silently
+   "finds no versions"); the working `python3/3.11.10` module needs `LD_LIBRARY_PATH` from the
+   *same* `module load` in every single command (doesn't persist across separate `ssh`
+   invocations, same class of issue as `$BASE` env vars earlier); building numpy from source needs
+   a newer gcc than the login node's ancient default `cc` (a loaded gcc module exists but meson
+   invokes `cc` specifically -- needs `CC=gcc CXX=g++`); and `obspy`'s `pyproj` dependency needs
+   PROJ >= 9.4.0, newer than any available `proj` module (max 8.1.1, itself broken by an unrelated
+   OpenSSL library-version mismatch). Switched to a **fresh, dedicated conda environment**
+   (`fastmspec_batch`, same shared Anaconda install other lab members use, but a new env -- not
+   Sayan's own broken `Seislib` one, untouched): `conda create -n fastmspec_batch -c conda-forge
+   python=3.11 numpy scipy pandas obspy` -- prebuilt binaries, zero compilation, worked immediately.
+
+**A genuine improvement fell out of the second surprise**: `pip install seislib` *also* failed on
+this login node, for a third, unrelated reason (a broken pre-generated Cython extension in
+`seislib.tomography`, irrelevant to dispersion-curve picking but built as part of any `pip install
+seislib` regardless). Rather than fight that too, vendored the ~6 small functions/classes
+`dispcurve_pick` actually needs from `seislib.utils`/`seislib.exceptions` directly
+(`_vendored_seislib_utils.py`, `_vendored_seislib_exceptions.py` -- confirmed functionally
+identical to the installed package via direct source diff, cosmetic differences only). The picking
+path no longer depends on the full `seislib` package at all, anywhere -- a real dependency-surface
+reduction, not just a bluehive workaround. `seislib` stays installed locally for
+`tests/test_matches_upstream.py`'s own byte-fidelity comparison against real upstream, and for
+Notebook 3 Section 4's separate, unmodified direct usage -- both updated/re-verified, 3/3 tests
+still passing after the refactor.
+
+**bluehive validation so far** (code + `data/reference/SDISPL.ASC` + the pulled
+`madagascar_stn_conn_ccflist.csv` deployed via `rsync`):
+- Direct invocation (no SLURM) of one single-taper work unit on a fresh pair (XVKIRI/XVMAGY, not
+  previously seen): ran cleanly end-to-end, 87.6s, and its MATLAB cross-validation *also* worked
+  --matched to 2.67e-13 relative error (machine precision), on a pair Stage 3 never touched --
+  a strong, unplanned bonus confirmation that the single-taper preprocessing fix generalizes.
+- A 2-task SLURM array smoke test on `debug` (single-taper, two more fresh pairs): both completed
+  cleanly, 207.0s and 294.3s -- confirms the full SLURM mechanics (submission, array indexing,
+  conda activation, module resolution, idempotent result-file writing) work correctly. Notably
+  slower than the login node's 87.6s (~2.4-3.4x) -- compute nodes here are genuinely slower/more
+  contended than the login node for this workload; real, worth-remembering for sizing the full run.
+- A FastMspec smoke test (`--time=00:15:00 --mem=16G`, guessed without applying the above
+  slowdown factor) was killed by SLURM at both the time AND memory limit -- a real, useful
+  finding, not a bug: FastMspec's ~243s login-node baseline (144s cross-spectrum + ~99s picking),
+  scaled by the same ~2.4-3.4x compute-node slowdown single-taper showed, lands almost exactly at
+  the 15-minute mark. Retried with `--time=00:45:00 --mem=32G`; in progress as this entry is
+  written.
+
+Not yet done: confirming the retried FastMspec run, an equivalent Mspec/MspecBestK smoke test
+(Mspec especially, given its documented >10x cost over every other technique), the local
+plain-vs-multiprocessing comparison, and the actual full-batch submission decision (deliberately
+not automatic -- a ~1520-task, real-cluster-time commitment warrants an explicit go-ahead, not a
+default).
+
+Next: Stage 4 continued (bluehive batch pipeline, full 380 pairs x 4 techniques).

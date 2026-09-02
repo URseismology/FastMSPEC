@@ -62,6 +62,36 @@ silently returns the plain 2-tuple, not a 3-tuple. Not fixed, since manual picki
 this project's batch use case and is never exercised with `return_diagnostics=True` anywhere in
 this repo -- flagged rather than silently accepted.
 
+## Why the `seislib` package dependency was removed (Stage 4)
+
+`_vendored_seislib_an_processing.py` originally imported 3 utility functions and 3 exception
+classes from the installed `seislib` package (`from seislib.utils import ...` /
+`from seislib.exceptions import ...`). Discovered during Stage 4 (deploying to bluehive): `pip
+install seislib` there fails to build a completely unrelated Cython extension
+(`seislib.tomography._ray_theory._math`, pre-generated `.c` code with a genuine variable-
+redeclaration conflict against this toolchain's gcc) -- `pip` compiles every extension in a
+package as part of building its wheel, so this blocks installing `seislib` at all, even though
+dispersion-curve picking never touches `seislib.tomography`.
+
+Fix: vendor the 3 functions (`adapt_timespan`, `adapt_sampling_rate`, `running_mean`, plus
+`resample`, a helper `adapt_sampling_rate` itself calls) and 3 exception classes
+(`DispersionCurveException`, `TimeSpanException`, `NonFiniteDataException`) directly --
+`_vendored_seislib_utils.py`, `_vendored_seislib_exceptions.py`. Confirmed functionally identical
+to the installed package via a direct source diff at vendoring time (one function,
+`DispersionCurveException`, is literally byte-identical; the rest differ only in cosmetic operator
+spacing and some trimmed docstring "Notes" sections -- no logic changed). This is a genuine
+dependency-surface reduction, not just a bluehive workaround: the picking path no longer needs the
+full `seislib` package (with its unrelated tomography/plotting submodules) installed at all,
+anywhere. `seislib` itself is still a real, used dependency elsewhere in this repo (Notebook 3
+Section 4's direct `seislib.an` import, and `tests/test_matches_upstream.py`'s own byte-fidelity
+check against real upstream) -- only this module's production picking path was decoupled from it.
+
+`tests/test_matches_upstream.py` was updated accordingly: it now asserts our own vendored
+`DispersionCurveException` (not literally `seislib.exceptions.DispersionCurveException`, a
+distinct-but-functionally-identical class since we no longer import it) is raised with an
+identical message to what upstream would raise, checked by string comparison rather than
+`isinstance`.
+
 ## Environment-compatibility fix (not a behavior change)
 
 Sayan's copy uses `np.in1d` (line ~796, inside the manual-picking branch's crossing-lookup logic),

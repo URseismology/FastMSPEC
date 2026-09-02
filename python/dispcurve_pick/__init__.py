@@ -14,9 +14,12 @@ Matching to Instrumented Reference-Guided Picking").
 """
 from ._vendored_seislib_an_processing import extract_dispcurve
 from .diagnostics import PickDiagnostics, DispersionCurveExceptionWithDiagnostics
+from .template_family import load_reference_curve, build_template_family
 
 __all__ = [
     "extract_dispcurve",
     "PickDiagnostics",
     "DispersionCurveExceptionWithDiagnostics",
+    "load_reference_curve",
+    "build_template_family",
 ]

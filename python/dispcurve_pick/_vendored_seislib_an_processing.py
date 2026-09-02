@@ -19,13 +19,18 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from obspy import Stream
 from obspy.signal.invsim import cosine_taper
-from seislib.utils import adapt_timespan, adapt_sampling_rate, running_mean
-from seislib.exceptions import TimeSpanException, DispersionCurveException
-from seislib.exceptions import NonFiniteDataException
-
 # --- FastMSPEC instrumentation: begin (see python/dispcurve_pick/NOTES.md) ---
-# Vendored from Sayan Swar's copy of seislib's internal picking module (itself seislib's own
-# `_an_processing.py`, essentially unmodified -- see NOTES.md for the exact upstream diff).
+# Originally `from seislib.utils import ...` / `from seislib.exceptions import ...`. Switched to
+# this project's own vendored copies (functionally identical -- confirmed by direct source diff
+# at vendoring time) so this module no longer depends on the full `seislib` package, which pulls
+# in an unrelated, broken Cython extension (seislib.tomography._ray_theory) on some HPC toolchains
+# (bluehive's login-node gcc, specifically -- see NOTES.md "Why the seislib package dependency was
+# removed"). `seislib` itself is still used elsewhere in this repo (Notebook 3 Section 4, and
+# tests/test_matches_upstream.py's own byte-fidelity check against real upstream) -- only this
+# production picking path no longer needs it installed.
+from ._vendored_seislib_utils import adapt_timespan, adapt_sampling_rate, running_mean
+from ._vendored_seislib_exceptions import TimeSpanException, DispersionCurveException
+from ._vendored_seislib_exceptions import NonFiniteDataException
 # This import adds the diagnostics types `extract_dispcurve` is instrumented, below, to return
 # when called with `return_diagnostics=True`. It changes nothing about the picking algorithm.
 from .diagnostics import PickDiagnostics, DispersionCurveExceptionWithDiagnostics
