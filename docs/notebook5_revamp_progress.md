@@ -279,10 +279,29 @@ still passing after the refactor.
   the 15-minute mark. Retried with `--time=00:45:00 --mem=32G`; in progress as this entry is
   written.
 
-Not yet done: confirming the retried FastMspec run, an equivalent Mspec/MspecBestK smoke test
-(Mspec especially, given its documented >10x cost over every other technique), the local
-plain-vs-multiprocessing comparison, and the actual full-batch submission decision (deliberately
-not automatic -- a ~1520-task, real-cluster-time commitment warrants an explicit go-ahead, not a
-default).
+**FastMspec retry (`--time=00:45:00 --mem=32G`) succeeded**: `XVKIRI_XVMAGY__FastMspec` converged
+(`best_delta_km_s=0.55`), `matlab_rel_l2_error=8.04e-09` -- machine precision, even tighter than
+SKRH-BAND's ~3% (consistent with the complex-floor bug's null-region-specific signature from Stage
+3: this pair's spectrum apparently has fewer/shallower coherence nulls in-band, so the bug barely
+bites here -- expected data-dependent variation, not a contradiction). Runtime: 1162.4s (~19.4
+min) -- ~4.8x slower than the local login-node baseline (~243s), notably worse than single-taper's
+~2.4-3.4x slowdown on the same class of node; confirmed via `sstat`/direct `ps` on the compute node
+that this was genuine, steady 99.7%-CPU computation, not a hang. stderr logged "Exceeded step
+memory limit at some point" despite the job completing successfully -- 32GB was cutting it close;
+size FastMspec's real submission with more headroom (~40-48GB).
 
-Next: Stage 4 continued (bluehive batch pipeline, full 380 pairs x 4 techniques).
+**Both primary techniques (single-taper, FastMspec) are now confirmed correct end-to-end via real
+SLURM execution**, on three different real pairs beyond SKRH-BAND, with MATLAB cross-validation
+matching to near machine precision in every case tested. Mspec/MspecBestK have not been separately
+smoke-tested via SLURM (only locally, Stage 3) -- given Mspec's already-known >10x cost and the
+~4.8x node slowdown just observed, a live SLURM confirmation could plausibly run 1.5-3+ hours for
+one work unit; judged not worth spending that wall-clock on before the real batch, since the code
+path is structurally identical to the already-proven techniques (same `process()` function, only
+the technique branch differs) -- the real unknown left is resource sizing, not correctness, and
+that can be extrapolated from known per-technique cost ratios rather than re-confirmed live.
+
+**Not yet done**: the local plain-vs-multiprocessing comparison (next, per explicit request), and
+the actual full-batch submission decision -- deliberately not automatic, presented to the user as
+an explicit go/no-go given the real cluster-time and resource commitment involved.
+
+Next: local multiprocessing-vs-plain comparison, then the full-batch submission decision.
