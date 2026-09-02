@@ -23,6 +23,31 @@ next stage.
 
 ## Deferred / requirement log
 
+- **Stage 5 design: ground picking stability in actual multitaper coherence estimator theory, not
+  just empirical/heuristic QC signals.** Per direct guidance: the current quality diagnostics
+  (`bad_quality_fraction`, `freq_coverage_fraction`, `mean_amp_ratio`) are all seislib's own
+  heuristics -- empirically useful, but not derived from the coherence estimator's actual
+  statistics. A principled treatment has two pieces: (1) the resolution side, already partially
+  built (Stage 3's `2W <~ df_zero = c/2r` criterion) -- deterministic, says whether a crossing
+  survives smoothing at all, says nothing about how precisely it's located; (2) the variance/bias
+  side, the real gap -- classical Thomson/Percival & Walden coherence-estimator theory, which has
+  a specific known mechanism directly relevant here: a K-taper coherence estimate has a positive
+  bias floor of roughly `1/K` even at true zero coherence (it doesn't reach zero at a genuine
+  null, it dips toward `1/K` and bounces) -- a real, derivable explanation for "spurious
+  crossings near nulls," not just an empirical label. One real wrinkle specific to this pipeline:
+  coherence here is stacked over `coh_num` (~hundreds-1600) independent day/window traces *in
+  addition to* K-taper averaging -- the effective degrees of freedom driving bias/variance is some
+  combination of both, and it's an open, dataset-answerable question whether trace-stacking
+  dominates K's contribution at this real scale (plausible, given `coh_num` is often far larger
+  than K). Recommendation for Stage 5: derive/cite the coherence bias-variance formula (Percival &
+  Walden 1993, *Spectral Analysis for Physical Applications* -- the standard reference, not yet in
+  this project's citation list) in terms of K and `coh_num` per technique, use it to *predict*
+  where each technique's picks should be reliable, then check the 380-pair batch's actual
+  convergence/`bad_quality_fraction` data against that prediction -- turns Notebook 5 from
+  "measured convergence rates" into "theory, prediction, empirical confirmation," consistent with
+  this project's established ethic of grounding findings in the literature, not just describing
+  them. Not implemented yet -- real Stage 5 design work, deliberately not rushed alongside Stage
+  4's live cluster jobs.
 - **Stage 4 SLURM design: parallelize at (pair, technique) granularity, not (pair) with all 4
   techniques serial inside one task.** Observed directly during Stage 3's local timing pilot:
   running single-taper/FastMspec/Mspec/MspecBestK serially in one process is slow and
