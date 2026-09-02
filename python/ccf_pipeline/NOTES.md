@@ -218,6 +218,34 @@ gap. The SA53/SA58/MTAN/RUNG subset used here is available for download -- see t
   path Phases 0-3 focused on -- so this is a valuable *independent* real-data check of a
   different code path than everything verified so far, not a re-check of the same one.
 
+## Memory fix: `classical_spectrum_batch` chunked over K (2026-09-01, Notebook 5 revamp Stage 4)
+
+Discovered running `Mspec` (K=80) at real scale (Madagascar dataset, ~1600 traces per pair) on
+bluehive: the direct translation of `avgspec` materializes `(N, n_traces, K)`-shaped intermediates
+(the pre-FFT tapered traces, the post-FFT complex spectra for both `x` and `y`, and their
+product) -- for K=80 at this trace count, each such array is ~11-22GB, with several alive
+simultaneously, totalling an estimated **~55GB peak**. A live SLURM job requesting a generous 64GB
+was killed by the OOM killer within ~2 minutes -- too fast to be a gradual buildup during the
+computation itself, consistent with failing at array construction. `MspecBestK`'s much smaller K
+(~13-15) never hit this wall, which is why it went unnoticed until `Mspec` was actually run at
+this scale -- small-fixture testing (`N=32`) never exercises memory at all.
+
+Not a MATLAB-vs-Python translation bug -- `mspec_fast.m`'s own `avgspec` has the same
+`(N, n_traces, K)` materialization pattern, so this is a real scalability limitation both
+implementations share, only now actually hit because this is the first time either has processed
+data at this trace count. Fixed by chunking the taper (K) axis: `classical_spectrum_batch` now
+processes `k_chunk` tapers at a time (default 8) and accumulates a running sum, instead of
+building all K at once, then divides by K at the end -- mathematically identical to the original
+`eigspec.mean(axis=2)` (exactly `eigspec.sum(axis=2) / K`, just accumulated incrementally).
+Verified against the pre-chunking implementation on synthetic data (including a K not a multiple
+of `k_chunk`, exercising the ragged-last-chunk case): relative error ~1.6-2.3e-16 (pure
+floating-point summation-order noise, at machine epsilon) for `k_chunk=1` and the new default
+`k_chunk=8`; exactly 0 for `k_chunk=K` (a single chunk, identical code path to before). Estimated
+new peak for the same K=80/1600-trace case: ~5.5GB (~10x reduction) -- comfortably within normal
+node memory, no `highmem` partition needed. `k_chunk` is a new, optional, keyword-only-by-default
+parameter (default 8) -- fully backward compatible: every existing call site's signature and
+return shape are unchanged.
+
 ## What's genuinely unverified
 
 - Only the Z-component function has been ported/tested (all three techniques now done).

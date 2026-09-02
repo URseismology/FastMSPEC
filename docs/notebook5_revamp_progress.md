@@ -329,4 +329,32 @@ This is the natural decision point for the full-batch submission -- presented to
 than resolved unilaterally, given the real cluster-time/resource commitment involved (up to 1520
 tasks, with Mspec's own 380-task slice sized from extrapolation rather than direct measurement).
 
-Next: present Stage 4's status and the full-batch submission decision to the user.
+**Mspec on `preempt` (3hr/64GB) hit a real, severe memory wall**: killed by the OOM killer in only
+~2 minutes -- far too fast to be a gradual buildup during the ~45-minute computation, pointing at
+failure during array construction itself. The math confirms it: `classical_spectrum_batch`'s
+direct translation of `avgspec` materializes `(N, n_traces, K)`-shaped intermediates -- for
+Mspec's K=80 at this project's real Madagascar trace counts (~1600), a single such array is
+~11-22GB, with several alive simultaneously (pre-FFT tapered traces, post-FFT complex spectra for
+both traces, their product), totalling an estimated **~55GB peak**. `MspecBestK`'s much smaller K
+(~13-15) never hit this, which is why it went unnoticed until Mspec ran at real scale -- the
+small-N synthetic fixture this function was originally verified against never exercises memory at
+all. Not a MATLAB-vs-Python translation bug (the original `avgspec` has the same materialization
+pattern) -- a real scalability limitation neither implementation had been run hard enough to hit
+before.
+
+**Fixed at the root**, per explicit direction (optimize rather than just throw more memory/wait for
+`highmem`, and keep it backward compatible): `classical_spectrum_batch` now chunks over the taper
+(K) axis -- processes `k_chunk` tapers at a time (default 8), accumulating a running sum instead of
+materializing all K simultaneously, then divides by K at the end (mathematically identical to the
+original `.mean(axis=2)`). Verified numerically against the pre-chunking implementation on
+synthetic data (including a ragged-last-chunk case, K not a multiple of `k_chunk`): relative error
+~1.6-2.3e-16 (machine epsilon, pure floating-point summation-order noise) for `k_chunk=1` and the
+new default; exactly 0 for `k_chunk=K` (identical code path to before). `k_chunk` is a new,
+optional, keyword-only-by-default parameter -- every existing call site's signature/return shape
+is unchanged, confirmed backward compatible per explicit direction. Estimated new peak for the
+same case: ~5.5GB (~10x reduction), comfortably within normal node memory -- no `highmem` needed.
+Full writeup: `python/ccf_pipeline/NOTES.md`. Redeployed to bluehive; a live retest
+(`--mem=24G`, well below the old 64G that failed) is running as this entry is written.
+
+Next: confirm the Mspec memory fix live, then present Stage 4's status and the full-batch
+submission decision to the user.
