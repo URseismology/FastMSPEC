@@ -700,3 +700,49 @@ still-`PENDING` array indices on `preempt` and resubmitted that exact half as a 
 one. `run_plain.py`'s own idempotency guard (`if out_path.exists(): skip`) means this split carries
 zero risk of duplicate/wasted computation even though the same manifest indices are, in principle,
 now known to two separate jobs.
+
+### 2026-09-02 -- Stage 4: a first look at the partial results (742/1520, ~49%) -- three real findings
+
+`aggregate.py` is explicitly designed to run on a partial batch (per its own docstring), so ran it
+now rather than only tracking result *counts*. Real findings, not just a progress number:
+
+**1. `single-taper`: 0/194 converged -- and it's a mechanistic zero, not just "worse."**
+`freq_coverage_fraction` is **exactly 0.0 for all 193 non-null single-taper rows** (mean, std, min,
+max all `0.0`) -- not low-and-variable, invariant. Cross-checked against the other diagnostics: 
+single-taper has ~7-13x more `n_candidate_crossings` than any multitaper technique (1693.5 mean vs.
+125-250) despite a *lower* `bad_quality_fraction` (0.74 vs. 0.87-0.93) -- consistent with an
+unsmoothed, single-taper coherence estimate being far noisier (many more raw zero-crossings), which
+then defeats the picker's sequential cycle-jump-tracking logic even though individual crossings
+don't always trip the specific `bad_quality` gate. This is a real, physically-motivated result, not
+an obvious bug -- and it's actually a strong, quantitative reinforcement of this whole project's
+founding thesis (multitaper vs. single-taper), stronger than "somewhat better," closer to "the
+picker structurally cannot extract a curve from single-taper's coherence at all" under the current
+picker parameters. Flagging for Stage 5 rather than treating as settled: worth a plot of raw
+crossing density (single-taper vs. multitaper) as direct visual evidence for this claim.
+
+**2. `mean_amp_ratio` shows `inf` for 20-42% of multitaper work units, including converged ones --
+a diagnostic-aggregation bug in this project's own Stage 2 instrumentation, not a correctness bug.**
+Traced to `_vendored_seislib_an_processing.py:1008`:
+```python
+_diag_amp_ratios.append(maxamp / minamp if minamp > 0 else float('inf'))
+```
+Deliberate, not accidental -- when a pick's local envelope minimum is exactly zero the ratio really
+is infinite, and that's physically plausible right near a Bessel/coherence null (exactly the region
+this method targets). The bug is downstream: `_diag_mean_amp_ratio = np.mean(_diag_amp_ratios)`
+means a *single* such pick poisons the whole work unit's mean to `inf`, discarding every other
+finite, informative ratio from that unit. Confirmed this does **not** affect `converged`/
+`best_delta_km_s` -- `_score()`'s `min(mean_amp_ratio / 5.0, 1.0)` saturates cleanly on `inf`, no
+crash, no silent wrong answer in the actual picked results. It only makes `mean_amp_ratio` currently
+unusable as a quantitative per-pair quality signal for a large fraction of units.
+**Deliberately not patched mid-batch** -- doing so now would leave already-completed rows with the
+old (broken) aggregation and new rows with a fixed one, an inconsistent column that would need
+reconciling anyway. Recorded here as a concrete Stage 5 data-cleaning task instead: recompute a
+robust central tendency from the raw per-pick ratios if they're ever needed (median instead of mean,
+or finite-only mean + a separate reported null-pick-fraction), not a re-run of the batch.
+
+**3. MATLAB cross-validation, now at real sample size (366/742 rows, vs. Stage 3's single pilot
+pair) -- reassuring.** single-taper: mean relative L2 error **2.88e-10** (machine precision, 179
+real pairs) -- confirms pipeline correctness at production scale, not just the one hand-picked
+SKRH-BAND example. FastMspec: mean **6.38e-3** (0.6%), worst case 9.26% (`ANLA-ZOBE`) -- consistent
+with, not new relative to, the already-documented and intentionally-not-reproduced MATLAB complex-
+floor bug (`ccf_pipeline/NOTES.md`'s "Known upstream bug" section) characterized in Stage 3.
