@@ -608,3 +608,70 @@ version that treats a `squeue` error as "skip this tick," not "zero jobs," and a
 requires `results_so_far >= 1520` before ever declaring completion.
 
 Job 31344741 (380 Mspec units) is running; not yet confirmed complete as of this log entry.
+
+### 2026-09-02 -- Stage 4: the multiprocessing driver retired for the rest of this batch --
+FastMspec's timeouts kept spreading, and single-taper (assumed safe) turned out to be the worst
+offender
+
+While Mspec's plain-driver fixup (job 31344741) ran cleanly in the background, a routine sanity
+sweep across the other three still-running mp-driver jobs (`sacct -j <job> --format=State -X | sort
+| uniq -c`) turned up a much bigger problem than expected:
+
+| Job (technique) | Completed | Timed out | Failure rate |
+|---|---|---|---|
+| 31344561 (FastMspec) | 45 | **25** (was 8 at last count) | ~36% of attempted |
+| 31344563 (MspecBestK) | 66 | 2 | ~3% of attempted |
+| 31344560 (single-taper) | 1 | **17** | **~89% of attempted** |
+
+**FastMspec had kept failing even at the 2-hour extension.** The `scontrol update TimeLimit=02:00:00`
+applied earlier (successfully, for then-pending tasks) was not enough -- 17 *more* tasks (`21, 23,
+26, 28, 31, 33, 36, 38, 41-45, 51, 55, 58, 67`) timed out at `02:00:xx`, not just `01:00:xx`. Chunk=3
+under real contention plus this technique's already-documented runtime variance (up to 3270s for a
+single pair) can apparently exceed even a doubled budget when an unlucky combination of slow pairs
+lands in the same chunk.
+
+**Single-taper -- assumed the safe, fast case (2.47s in the Stage 3 pilot) -- was actually the
+worst.** Its one successful task's own log (`mp_31344560_14.out`) shows why: real per-pair total
+cost (cross-spectrum + the 33-template picking scan) ranged **186.6s to 984.8s**, not the 2.47s
+pilot number -- that pilot only ever timed the raw cross-spectrum step in isolation, never the
+picking/template-scan step that turns out to dominate total cost for every technique, single-taper
+included. With `chunk=20`/`cpus-per-task=20` (real 20-way contention on one node) and a `00:30:00`
+budget sized off the wrong (cross-spectrum-only) number, 17 of 19 tasks blew through it.
+
+**Conclusion, not just a bigger patch:** the multiprocessing driver's core assumption --
+same-node contention across `chunk` concurrent units, one shared time budget -- is unsafe for
+*every* technique in this dataset, not only the expensive ones, because per-pair picking cost has
+real, hard-to-predict variance no pilot sample fully captured. The plain driver (one work unit,
+one dedicated task, one time budget) is structurally immune to this specific failure mode: a slow
+pair costs only its own task's budget, never a neighbor's.
+
+**Action taken**: retired the mp driver for all remaining/lost work across all four techniques,
+funneling everything through `submit_plain.sbatch` from here on:
+- Cancelled FastMspec's remaining pending mp tasks (`scancel 31344561_66 31344561_[73-126]`,
+  before they could repeat the same failure) and let its 2 still-running tasks finish naturally.
+- Cancelled MspecBestK's remaining pending mp tasks (`scancel 31344563_[73-126]`) pre-emptively --
+  its failure rate was still low (~3%), but FastMspec looked fine early too (2 known losses) before
+  ballooning to 25, so the same caution was applied rather than waiting for it to degrade the same
+  way.
+- Computed each technique's true missing-work-unit set directly (`build_work_units()` + checking
+  `results/` for `work_unit_id + '.json'` -- **caught and fixed a bug in this exact check along the
+  way**: an earlier draft of the script reconstructed the result filename from `pair.stn1`/
+  `pair.stn2` directly, which lack the network-code prefix (`KIRI` vs. the real `XVKIRI`) that
+  `work_unit_id` already carries correctly -- silently returned "380/380 missing" for FastMspec
+  when 198 genuinely existed. Fixed by using `work_unit_id` directly; re-verified against a raw
+  `ls results/*__FastMspec.json | wc -l` count (198) before trusting the corrected numbers.
+- Resubmitted each technique's real missing set as one `submit_plain.sbatch` job, sized per
+  technique from what's now known about its real cost:
+
+| Technique | Missing | Job | `--time` | Notes |
+|---|---|---|---|---|
+| FastMspec | 182 | 31345341 | 02:00:00 | indices <1001, no offset needed |
+| single-taper | 186 | 31345343 | 01:00:00 | indices <1001, no offset needed |
+| MspecBestK | 168 | 31345366 | 01:00:00 | `IDX_OFFSET=1140` (indices exceed `MaxArraySize=1001`) |
+| Mspec | (already running) | 31344741 | 03:00:00 | `IDX_OFFSET=760`, 0 failures so far |
+
+All four now converging toward completion via the plain driver; none yet confirmed fully done as
+of this log entry. **Follow-up for Stage 5**: the picking/template-scan step, not the cross-spectrum
+computation, dominates real per-pair cost across every technique -- worth stating plainly in the
+notebook's methods description rather than leaving the misleading impression (from the Stage 3
+pilot table) that cross-spectrum cost alone characterizes technique expense.
