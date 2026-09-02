@@ -139,6 +139,16 @@ def process(pair: Pair, technique: str, ref_curve_path: Path) -> WorkUnitResult:
     try:
         raw = loadmat(pair.matched_data_path, simplify_cells=True)
         s1, s2 = raw["S1_data_mat"], raw["S2_data_mat"]
+        # Pairs with only a single day of overlapping data collapse to a 2D (n_window, n_samples)
+        # array in the .mat file (scipy/MATLAB drop the singleton day axis) instead of the usual
+        # 3D (n_day, n_window, n_samples) -- found live, on GFOMA_XVLONA/GFOMA_XVMMBE (both ~2.4MB
+        # files, vs. ~250MB+ for the heavily-sampled pairs tested so far), which crashed with
+        # IndexError at s1.shape[2] before this fix. Restore the day axis explicitly rather than
+        # assume every pair has multiple days.
+        if s1.ndim == 2:
+            s1 = s1[None, :, :]
+        if s2.ndim == 2:
+            s2 = s2[None, :, :]
         n_samples = s1.shape[2]
         dist_km = float(raw.get("stapairsinfo", {}).get("r", pair.dist_km))
 

@@ -436,3 +436,33 @@ FastMspec's already-SLURM-confirmed path). The multiprocessing-vs-plain question
 itself -- deliberately not automatic, presented to the user next as an explicit go/no-go.
 
 Next: present Stage 4's status and the full-batch submission decision to the user.
+
+### 2026-09-02 -- Stage 4: full batch submitted; one real bug found and fixed live
+
+Submitted all 4 techniques' array jobs on `preempt` (job IDs 31344560-31344563; 337 total array
+tasks -- single-taper 19 tasks/chunk=20/24G/00:30:00, FastMspec 127 tasks/chunk=3/120G/01:00:00,
+Mspec 64 tasks/chunk=6/100G/00:45:00, MspecBestK 127 tasks/chunk=3/120G/01:00:00 -- sized from
+Stage 3's timing pilot plus a safety margin, using `run_multiprocessing.py` per the plain-vs-mp
+comparison above). Node specs confirmed live (24 CPUs, 127-189GB RAM) before sizing.
+
+**A real bug surfaced and was fixed while the batch ran**: 6 single-taper work units (all
+involving station `GFOMA`) failed instantly (~0.2-0.4s) with `IndexError: tuple index out of
+range`. Root cause: pairs with only a single day of overlapping data collapse their
+`S1_data_mat`/`S2_data_mat` to a **2D** `(n_window, n_samples)` array in the `.mat` file (scipy/
+MATLAB drop the singleton day axis) instead of the usual 3D `(n_day, n_window, n_samples)` every
+pair tested so far had -- `work_unit.py` assumed 3D unconditionally (`s1.shape[2]`). Checked
+scope before fixing: 11/380 pairs (~2.9%, `filesize_mb < 10`, vs. a dataset mean of ~690MB) are
+small enough to be at risk -- bounded, but real, not a one-off. Fixed by reshaping 2D input to
+`(1, n_window, n_samples)` right after loading, in `work_unit.py`; verified directly against the
+exact failing pair (`GFOMA_XVLONA`) post-fix: real computation completed cleanly (273s,
+`error=None`, a genuine `converged=False` result, not a crash). Deployed the fix to bluehive mid-
+batch; the 6 already-corrupted result files (written by array tasks that started before the fix)
+were deleted and resubmitted as a small, targeted array job (indices `14,15,147,185,234,236`,
+found via `build_work_units()`) -- job 31344579. Array tasks that hadn't started yet when the fix
+was deployed picked it up automatically (fresh Python process per task, reading the updated file
+from disk) -- no other units affected.
+
+Batch is running; monitoring continues. This is exactly the kind of real-scale-only failure mode
+this project has hit before (Stage 3's Mspec-only memory wall was the same pattern) -- a case
+neither hand-written nor small-fixture tests would ever exercise, only found by actually running
+the real, full, heterogeneous dataset.
