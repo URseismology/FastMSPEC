@@ -746,3 +746,93 @@ real pairs) -- confirms pipeline correctness at production scale, not just the o
 SKRH-BAND example. FastMspec: mean **6.38e-3** (0.6%), worst case 9.26% (`ANLA-ZOBE`) -- consistent
 with, not new relative to, the already-documented and intentionally-not-reproduced MATLAB complex-
 floor bug (`ccf_pipeline/NOTES.md`'s "Known upstream bug" section) characterized in Stage 3.
+
+### 2026-09-02 -- Decision: two-round strategy, and what "saving everything" would need
+
+Discussion prompted by a direct concern: this run's raw-data-to-coherence step is by far its most
+expensive stage (memory and compute both), and right now only scalar diagnostics survive per work
+unit -- if that step needs redoing to answer a question raised after the fact, the expensive part
+is redone for nothing. Evaluated (not yet implemented) what a properly rich-data-capturing run
+would need:
+
+- **The real waste isn't the missing arrays, it's the template scan.** `work_unit.py`'s `process()`
+  calls `extract_dispcurve()` up to ~33 times per work unit (once per corridor template,
+  `n_templates_scanned` averages 32.8) and keeps only the best-scoring template's scalar summary --
+  the other ~32 full picker runs vanish entirely, not even their scalars.
+- Within even the kept run: the raw coherence curve (`faxis_pos`/`coh_pos`) is already in hand
+  before the picker is even called (zero extra compute to save it); `zero_crossings` and
+  `bad_quality`/`crossamps`/`peakamps` are computed unconditionally by `get_zero_crossings()`
+  regardless of convergence, but only ever returned on the success path -- meaning failing units
+  (the *majority*, 72-100% depending on technique) currently reveal nothing about why they failed,
+  despite the informative arrays already existing in memory at failure time. All of this is a
+  **zero-additional-compute, pure-I/O** fix.
+- The one genuinely expensive item on the wishlist -- the KDE density grid + ellipse paths needed
+  to regenerate seislib's own diagnostic plot -- only gets computed inside `extract_dispcurve`'s
+  `if plotting:` block, which `work_unit.py` explicitly sets `False`. Capturing it is **real added
+  compute**, not just an I/O change, and was recommended against as a blanket per-unit policy --
+  better done on-demand for specific pairs of interest during Stage 5 (cheap at that scale).
+- Full writeup, including size estimates (~75-230MB total for coherence+crossings+curves at the
+  current 1520-unit scale, vs. 100MB-1.5GB for the KDE grid alone), given directly in conversation,
+  not yet copied into a design doc.
+
+**Decision**: let this run (Round 1) finish as designed -- not disrupted, its ~49%-and-climbing
+progress preserved. Mine everything the *existing* scalar diagnostics can reveal in the meantime
+(see below -- this already produced real findings). Once Round 1 completes, with full knowledge of
+real per-technique timing distributions, the driver-design lessons (mp-driver retirement, the
+`preempt`/`standard` split, `IDX_OFFSET`), and this diagnostics evaluation, design and run a
+**Round 2**: a properly-sized, HPC-informed, rich-data-capturing full re-run, rather than patching
+Round 1 mid-flight and paying for two half-informed runs instead of one well-designed one.
+Rationale, in the user's own words: *"we are still in exploratory stage and compute runs are
+expensive, so trying to understand why what we are doing works (or doesn't work) requires saving
+almost everything. This is the key to debugging, and hypotheses testing."*
+
+**Round 2 requirements (captured now, not yet designed in detail):**
+- `WorkUnitResult` (or a richer sibling type) carries, per template attempt, not just the winner:
+  `converged`, `bad_quality_fraction`, `freq_coverage_fraction`, `n_candidate_crossings`,
+  `n_accepted_picks`, `best_delta_km_s` -- cheap, and answers the picking-stability-vs-reference-
+  curve-choice question directly (see finding 2 below) instead of only via a converged-count proxy.
+- Raw coherence curve, zero crossings (+ branch index), and `bad_quality`/`crossamps`/`peakamps`
+  saved per (pair, technique) -- on both success and failure -- as a compact per-unit array file
+  (`.npz`, not JSON) alongside the existing scalar JSON, matching the size estimates above.
+- Driver: the decoupled persistent-worker/pull-queue architecture discussed for 1e5-1e6 scale
+  (not required at 1520 units, but worth prototyping now while the problem is still small, given
+  Round 2 is the natural place to validate it before it's needed for real).
+- Consider widening the distance-quartile sweep beyond 4 bins, and adding a real
+  convergence-rate-vs-distance figure to Round 2's own validation -- the resolution-bandwidth
+  analysis below suggests it's worth extending, given how cleanly the theory already matches the
+  Round 1 data.
+
+### 2026-09-02 -- Mining the existing scalars, per the two-round decision -- real findings without
+any new data
+
+**1. The resolution-bandwidth criterion (`2W ≲ Δf_zero = c/2r`) is directly confirmed in
+real convergence data, at zero additional cost -- `dist_km` and `converged` were already in the
+manifest.** Convergence rate drops monotonically with distance for every multitaper technique:
+
+| Technique | Nearest quartile | 2nd | 3rd | Farthest quartile |
+|---|---|---|---|---|
+| FastMspec | 65% | 20% | 14% | 0% |
+| Mspec | 60% | 6% | 0% | 0% |
+| MspecBestK | 69% | 20% | 17% | 4% |
+
+Exactly the predicted shape: `Δf_zero` shrinks as distance grows, so a fixed bandwidth `W`
+that resolves a near pair's closely-spaced Bessel zeros becomes too coarse for a far pair. A real,
+quantitative, dataset-derived validation of theory already established earlier in this project,
+not a new claim -- worth a real figure in Stage 5's notebook (convergence-rate-vs-distance, one
+line per technique).
+
+**2. Template-scan stability, from the existing `n_templates_converged` count.** Among units where
+the winning template converged, 40-55% of the ~33 other corridor templates also converged
+(FastMspec 13.8/33, Mspec 18.1/33, MspecBestK 13.2/33) -- when a pair converges at all, it is not a
+single-template fluke. Cannot yet say whether those other converged templates give *similar* or
+*meaningfully different* `best_delta_km_s` values -- exactly the gap Round 2's per-template capture
+(above) is meant to close.
+
+**3. Converged units run ~15-20% longer** than non-converged ones, consistently across all three
+multitaper techniques -- plausibly a richer-data proxy (more traces/longer duration -> both slower
+and better coherence), not demonstrated as causal.
+
+**4. MATLAB mismatch does not meaningfully predict non-convergence** (FastMspec: 0.10% median for
+converged vs. 0.19% for non-converged, both small) -- and single-taper's non-converged units still
+match MATLAB to 2.4e-12, reconfirming (again) that single-taper's 0% rate is a real methodological
+result, not a computational error anywhere in the pipeline.
