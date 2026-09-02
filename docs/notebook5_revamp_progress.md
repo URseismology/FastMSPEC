@@ -836,3 +836,44 @@ and better coherence), not demonstrated as causal.
 converged vs. 0.19% for non-converged, both small) -- and single-taper's non-converged units still
 match MATLAB to 2.4e-12, reconfirming (again) that single-taper's 0% rate is a real methodological
 result, not a computational error anywhere in the pipeline.
+
+### 2026-09-02 -- Stage 4: one more Round-1 driver bug -- MspecBestK OOM on the dataset's largest
+files; a local-machine session hiccup along the way
+
+Picked back up after this machine's own Claude Code process restarted (the prior session's
+background monitors died with it -- the bluehive jobs themselves kept running unattended the whole
+time, unaffected). Briefly suspected a colliding parallel session when the tracker file showed
+substantial content not in this restarted context's memory -- checked via `ListAgents`/
+`SendMessage`: both other local sessions (`claude-sandbox-f7`, idle/unrelated; `claude-sandbox-e8`,
+a different project, LitDiscovery, touching only its own `litdisc_judge_worker_*` jobs on
+`urseismo`) confirmed no bluehive/tracker activity on this task. Root cause was simpler: this
+restarted session's context predated the session's own most recent checkpoint, so the on-disk
+tracker (and `git log`) were simply further along than this context's memory -- resolved by
+re-reading current state and continuing from it, per direct guidance. One real mistake made along
+the way and fixed immediately: an interrupted `Edit` call still partially wrote, corrupting the
+tracker's own title line (`ost # Notebook 5 revamp...`) -- caught via `git diff` before committing
+anything, reverted.
+
+Resynced against real state: `sacct`'s per-job completion counts were reading anomalously low
+across all four active jobs (not chased down -- possibly an accounting-DB windowing quirk on this
+cluster) -- switched to counting `results/*__<technique>.json` directly instead, authoritative and
+cheap. Current split: single-taper 209, FastMspec 216, Mspec 145, MspecBestK 218 -- 788/1520, ~52%.
+
+A sweep of `.err` logs for crash signatures (`Bus error`, `Segmentation`, `Killed`, `OOM`) found one
+live, new failure mode: **`31345366_83` and `31345366_175` (global indices 1223, 1315 --
+`XVANLA_XVMMBE__MspecBestK` and `XVLONA_XVMAJA__MspecBestK`) both hit `Bus error (core dumped)` /
+"Exceeded step memory limit"** against MspecBestK's `--mem=32G` budget. Their raw `.mat` files are
+**1.5GB and 1.7GB** -- well above the dataset's ~690MB mean and bigger than anything Stage 3's own
+timing/memory pilot (267MB SKRH-BAND) exercised, so `32G` was never actually validated against this
+technique's real upper tail. Fixed the same way as every prior memory-sizing gap this stage:
+resubmitted just these 2 indices with `--mem=120G` (already proven safe elsewhere) --
+`sbatch --array=83,175 --time=01:00:00 --mem=120G --cpus-per-task=1 --export=ALL,IDX_OFFSET=1140
+submit_plain.sbatch` -> job 31345552. A third crashed-looking log (`plain_31344555_760.err`,
+`Killed`/OOM) turned out to be stale noise from an early single-pair Mspec smoke test (submitted
+`01:09:52`, well before the real batch) whose pair (`XVKIRI_XVMAGY`) already has a genuine
+completed result from a later run -- confirmed harmless, left alone.
+
+Restarted persistent background monitoring (the prior monitor task IDs died with the session
+restart) with one addition: each tick now also greps all `.err` logs for the same crash signatures
+and reports a count, so a new OOM/segfault surfaces automatically rather than needing another
+manual sweep to find.
