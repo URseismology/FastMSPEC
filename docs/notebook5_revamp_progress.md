@@ -48,6 +48,23 @@ next stage.
   this project's established ethic of grounding findings in the literature, not just describing
   them. Not implemented yet -- real Stage 5 design work, deliberately not rushed alongside Stage
   4's live cluster jobs.
+  - **Update, same session**: rather than the full Percival & Walden 1993 book, followed Karnik
+    et al. (2022)'s own citation trail (per direct guidance) and pulled three more directly
+    targeted papers into `docs/references/` (provenance/summary there): **Walden (2000, Biometrika)**
+    -- the real find, a unified multitaper *multivariate* (cross-spectral/coherence) estimator
+    theory paper, whose own Section 6 numerical example (60 real seismic time series) shows
+    Slepian multitaper coherence bias staying below ~0.2 at a frequency with known-zero true
+    coherence, vs. up to ~0.6 for a lower-quality lag-window estimator -- a real, published,
+    quantitative bound on exactly the bias mechanism this project's picking-stability argument
+    needs, from real seismic data, not a synthetic toy case; **Haley & Anitescu (2017, IEEE SPL)**
+    -- a genuine bonus, an actual data-driven *algorithm* (jackknife MSE minimization) for
+    selecting the optimal bandwidth/K automatically, a concrete candidate for replacing this
+    project's currently-hardcoded `Wband=0.001`/`NW=100` constants with a principled choice;
+    **Keding et al. (2024, Frontiers in Neuroscience)** -- found via forward citation search (who
+    cites Karnik et al.), a different-domain (EEG) but methodologically direct treatment of
+    coherence-level bias and spectral peak-shifting bias. Confirmed via each paper's own metadata
+    that citations are correct; full formula-level extraction still deferred to actual Stage 5
+    work, not rushed here.
 - **Stage 4 SLURM design: parallelize at (pair, technique) granularity, not (pair) with all 4
   techniques serial inside one task.** Observed directly during Stage 3's local timing pilot:
   running single-taper/FastMspec/Mspec/MspecBestK serially in one process is slow and
