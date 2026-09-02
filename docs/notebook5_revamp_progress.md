@@ -466,3 +466,76 @@ Batch is running; monitoring continues. This is exactly the kind of real-scale-o
 this project has hit before (Stage 3's Mspec-only memory wall was the same pattern) -- a case
 neither hand-written nor small-fixture tests would ever exercise, only found by actually running
 the real, full, heterogeneous dataset.
+
+The GFOMA fixup (job 31344579) is now confirmed complete: all 6 targeted array tasks (indices
+14, 15, 147, 185, 234, 236) show `COMPLETED, 0:0` in `sacct`, runtimes 4m22s-20m40s, all with real
+`error=None` results -- the 2D-shape bug is fully resolved across the dataset.
+
+### 2026-09-02 -- Stage 4: a second real bug -- FastMspec per-pair runtime variance blows the
+1-hour task time limit
+
+While monitoring the batch, found `XVANTS_XVLONA__FastMspec` (array index 388) and
+`XVBITY_XVLAHA__FastMspec` (index 405) missing after their tasks (job 31344561, array indices 2
+and 8) hit `TIME LIMIT`/`CANCELLED` in their `.err` logs. Checked which of each chunk-of-3's units
+had already written results (via `build_work_units()` to map array index -> work-unit indices,
+then `ls results/`): 4 of the 6 covered units existed, so only these 2 specific units were
+actually lost, not the full 6.
+
+Tried `scontrol update JobId=31344561 TimeLimit=02:00:00` (and the same for 31344563/MspecBestK,
+same risk) to protect everything still in flight before it hit the same wall. This worked for
+pending-but-not-yet-started array indices (now at a 2-hour cap), but returned "Access/permission
+denied" for the 6 tasks already running at that moment (indices 12, 13, 15, 17, 18, 20) --
+apparently SLURM here won't let a user raise the time limit on an array task once it's actively
+running, only while still pending. Those 6 stayed capped at the original 1 hour and were flagged
+as still at risk. Submitted a first fixup for the 2 confirmed-lost units immediately
+(`sbatch --partition=preempt --array=388,405 --time=02:00:00 --mem=120G --cpus-per-task=1
+submit_plain.sbatch` -> job 31344667).
+
+**The 6 flagged-at-risk tasks did then time out**, confirmed via `sacct -j 31344561`:
+
+```
+31344561_12     TIMEOUT      1:0   01:00:29
+31344561_13     TIMEOUT      1:0   01:00:29
+31344561_15     TIMEOUT      1:0   01:00:29
+31344561_17     TIMEOUT      1:0   01:00:29
+31344561_18     TIMEOUT      1:0   01:00:29
+31344561_19   COMPLETED      0:0   00:54:33
+31344561_20     TIMEOUT      1:0   01:00:01
+```
+
+(index 19 finished cleanly at 54m33s -- under the cap by a real but thin margin.) Checked each of
+the 6 timed-out tasks' chunk-of-3 work units against `results/`: this time **all 18 were lost**,
+none of the three per task had finished before the kill (`grep -c 'converged=' logs/mp_31344561_*.
+out` returned 0 for all 6) -- worse than the first pair, not better.
+
+**Root cause, now well evidenced rather than guessed**: FastMspec per-pair runtime has real,
+large variance across the dataset, not the roughly-uniform cost the original chunk=3/1-hour
+sizing assumed. Task 19's own log (the one that *did* finish) shows the spread directly:
+
+```
+XVMAGY_XVZAKA__FastMspec: converged=True  runtime=996.5s
+XVLAHA_XVVATO__FastMspec: converged=False runtime=1040.5s
+GFOMA_XVKIRI__FastMspec:  converged=True  runtime=3269.9s
+```
+
+One pair alone took 3269.9s (~54.5 minutes) -- close to the entire 1-hour task budget by itself,
+running as just one of 3 concurrent workers in that task. Any chunk unlucky enough to contain even
+one pair in this range, especially under any node contention on a preemptible partition, has
+essentially no margin left for its other 2 units. Sizing chunk=3/01:00:00 from Stage 3's pilot
+(which only sampled a small, likely non-representative slice of pair distances/sample counts) was
+too optimistic for the tail of this distribution -- a genuine sizing lesson, not a code bug this
+time.
+
+**Fix applied**: resubmitted all 18 lost units individually (one work unit per task, `submit_plain.
+sbatch`, not the multiprocessing driver, so no other unit's slowness can cost a fast unit its own
+budget) with a much larger margin: `--time=02:00:00 --mem=120G --cpus-per-task=1`, array indices
+`416,417,418,419,420,421,425,426,427,431,432,433,434,435,436,440,441,442` -> job 31344723.
+Combined with the earlier job 31344667 (388, 405, same generous settings), all 20 known-lost
+FastMspec units now have a fixup in flight. Both jobs were still `PENDING` (queued behind
+`preempt`'s `JobArrayTaskLimit`/priority throttling) as of this log entry -- not yet confirmed
+complete.
+
+**Follow-up implication for Stage 5, noted but not acted on yet**: this per-pair runtime spread is
+itself a data point about the dataset (larger/more-windowed pairs cost much more to compute), not
+just an infrastructure nuisance -- worth a passing mention in the notebook's honest-discussion
+section rather than being silently absorbed into "the batch eventually finished."
