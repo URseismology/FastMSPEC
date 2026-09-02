@@ -300,8 +300,33 @@ path is structurally identical to the already-proven techniques (same `process()
 the technique branch differs) -- the real unknown left is resource sizing, not correctness, and
 that can be extrapolated from known per-technique cost ratios rather than re-confirmed live.
 
-**Not yet done**: the local plain-vs-multiprocessing comparison (next, per explicit request), and
-the actual full-batch submission decision -- deliberately not automatic, presented to the user as
-an explicit go/no-go given the real cluster-time and resource commitment involved.
+**Local plain-vs-multiprocessing comparison** (per explicit request): 6 independent single-taper
+work units (all reusing the local SKRH-BAND matched-data file, relabeled -- a fair proxy for N
+independent work units of realistic size, without pulling N x 267MB of new data just for a timing
+test), on this machine (10 physical / 20 logical cores). Plain (fully serial): 827.6s total
+(133-141s each, consistent with earlier numbers). Multiprocessing (8 workers): 209.9s total --
+**3.94x wall-clock speedup** -- even though each individual work unit ran ~1.5x slower under
+contention (202-207s vs ~135s alone, expected: 6 processes sharing 10 physical cores and memory
+bandwidth). Clean, unambiguous answer: multiprocessing is the right call for wall-clock
+throughput on this workload, confirming what was expected but per direct guidance not assumed
+without measuring. `run_multiprocessing.py` is the primary driver for the real batch; `run_plain.py`
+stays available (simpler, maximally fault-isolated) as a fallback/comparison tool, not deleted.
 
-Next: local multiprocessing-vs-plain comparison, then the full-batch submission decision.
+**Open uncertainty, flagged rather than resolved unilaterally**: Mspec/MspecBestK have not been
+smoke-tested via real SLURM execution (only locally). Reasoning for not doing so live: (a) the
+`debug` partition's hard 1-hour cap can't fit Mspec's local baseline (~46.5 min cross-spectrum
+alone) even before applying the observed node slowdown; testing it would mean already committing
+to a `preempt`/`urseismo` submission, not a cheap smoke test; (b) the observed slowdown factor
+was *not* uniform across techniques on the same node (single-taper ~3.36x, FastMspec ~4.78x, both
+on `bhp0001`) -- extrapolating Mspec's real cost from either ratio is a guess, not a measurement,
+and Mspec's much heavier memory footprint (K=80 tapers vs. FastMspec's 13) could plausibly see an
+even worse ratio if it interacts with cgroup memory limits the way FastMspec's near-miss at 32GB
+suggests. Correctness itself is low-risk (identical code path, same `process()` function, only the
+technique branch differs) -- the real open question is resource sizing for a technique that could
+plausibly take on the order of hours per work unit on this cluster, not whether it works at all.
+
+This is the natural decision point for the full-batch submission -- presented to the user rather
+than resolved unilaterally, given the real cluster-time/resource commitment involved (up to 1520
+tasks, with Mspec's own 380-task slice sized from extrapolation rather than direct measurement).
+
+Next: present Stage 4's status and the full-batch submission decision to the user.
