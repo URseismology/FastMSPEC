@@ -539,3 +539,72 @@ complete.
 itself a data point about the dataset (larger/more-windowed pairs cost much more to compute), not
 just an infrastructure nuisance -- worth a passing mention in the notebook's honest-discussion
 section rather than being silently absorbed into "the batch eventually finished."
+
+Both FastMspec fixups (job 31344667: indices 388, 405; job 31344723: the 18 indices from the
+6-task loss) are now confirmed `COMPLETED` -- all 20 previously-lost FastMspec units recovered.
+
+### 2026-09-02 -- Stage 4: a third bug -- Mspec's *entire* technique was mis-sized, not just its
+tail (100% task failure), plus a real SLURM array-index limit discovered along the way
+
+While the FastMspec fixups above were in flight, checked on Mspec (job 31344562, the classical
+K=80 technique) and found something categorically worse than the FastMspec case: **every single
+attempted task had timed out.** `sacct -j 31344562` showed indices 0-28 (29 tasks) all `TIMEOUT`
+at almost exactly 45:xx minutes -- the task's own `--time=00:45:00` limit -- and the two still
+`RUNNING` (29, 30) went on to time out identically a few minutes later. Checked `results/` against
+every one of the 31 attempted tasks' work-unit ranges (`[760,766)` through `[934,946)`, from each
+task's own `Processing N work units [...)` log line): **zero results existed.** Not one of the 31
+attempted tasks' 186 work units had finished, let alone the untried remainder -- effectively 0/380
+Mspec pairs done.
+
+**This is not tail variance like the FastMspec case -- it's the whole technique undersized.** Stage
+3's own timing pilot had already measured this, in fact: `2688.5s` (44.8 minutes) for a *single*
+Mspec cross-spectrum computation on one pair (SKRH-BAND), recorded plainly in this file's own
+Stage-3 log table. A task budgeted for `00:45:00` running *6 such pairs concurrently* (chunk=6,
+`run_multiprocessing.py`) was never going to finish even its fastest unit with real margin, let
+alone all 6 under node contention -- that pilot number should have driven the original sizing and
+didn't. (For comparison, the plain-driver script's own header comment already had a more
+realistic per-pair Mspec suggestion, `--time=02:00:00`, sitting right there unused -- the actual
+submission for Mspec used the multiprocessing driver with a much tighter, inconsistent budget.)
+
+**Fix, part 1 -- stop the bleeding.** Cancelled the 33 still-`PENDING` Mspec array indices
+(`scancel 31344562_[31-63]`) before they repeated the identical failure; let the 2 already-running
+tasks finish naturally (they too then timed out, as expected).
+
+**Fix, part 2 -- resubmit properly: individual work units (plain driver, no shared-node
+contention), a real time margin, via `submit_plain.sbatch`.** Attempting this surfaced a fourth,
+independent, previously-unknown constraint: `sbatch --array=760-1139 ...` failed outright with
+`"Invalid job array specification"` -- turned out to be this cluster's `MaxArraySize=1001`
+(`scontrol show config`), which caps the raw array *index value*, not the count of tasks. Mspec's
+real global work-unit indices (760-1139) and MspecBestK's (1140-1519) both exceed that on their
+own -- a constraint the original plan never anticipated (it only ever indexed small technique-
+local ranges via `run_multiprocessing.py`'s own internal offsetting, so this never surfaced until
+the plain driver was pointed at Mspec/MspecBestK's real global range directly).
+
+Fixed generally, not just worked around for this one case: added an `IDX_OFFSET` environment
+variable to `submit_plain.sbatch` (default `0`, backward compatible -- every prior single-taper/
+FastMspec submission this session used raw indices under 1001 and is unaffected), added to
+`$SLURM_ARRAY_TASK_ID` before being passed to `run_plain.py`. Also corrected the script's own
+header-comment usage example, which had been silently wrong since it was written (claiming a
+`submit_plain.sbatch Mspec` positional technique argument that `run_plain.py` never accepted --
+never caught earlier because this script had never actually been invoked at indices >1001 until
+now). Deployed via `scp` (this file lives in the repo, not just on bluehive).
+
+Resubmitted all 380 Mspec work units as one job, individually, generously sized:
+`sbatch --partition=preempt --array=0-379%15 --time=03:00:00 --mem=120G --cpus-per-task=1
+--export=ALL,IDX_OFFSET=760 submit_plain.sbatch` -> job 31344741. Verified the offset mechanism
+directly once the first task ran: local index 0 + `IDX_OFFSET=760` -> global index 760 ->
+`XVKIRI_XVMAGY__Mspec` -- correctly resolved to the *Mspec* technique, not single-taper, ruling out
+an off-by-offset corruption risk before letting the rest run unattended. (That first task's log
+read `skip (already done)` -- not a bug: `run_plain.py`'s own idempotency guard, most likely
+tripped by a preemption/requeue cycle on `preempt`'s `PreemptMode=REQUEUE`, exactly the documented
+behavior of that guard.)
+
+Also hit, and want to flag rather than silently absorb: partway through this investigation,
+`squeue` itself returned `slurm_receive_msg: Socket timed out` for several minutes (affecting both
+manual checks and the persistent background monitor, which had been declaring `ALL_JOBS_DONE` off
+of a misread empty/error `squeue` response -- a false positive, caught by cross-checking
+`results_so_far` against the known 1520 total before trusting it). Replaced that monitor with a
+version that treats a `squeue` error as "skip this tick," not "zero jobs," and additionally
+requires `results_so_far >= 1520` before ever declaring completion.
+
+Job 31344741 (380 Mspec units) is running; not yet confirmed complete as of this log entry.

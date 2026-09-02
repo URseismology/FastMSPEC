@@ -5,13 +5,19 @@
 #
 # Submit once per technique, from the deployed location on bluehive (NOTES.md "Deploying to
 # bluehive"), overriding --array/--time/--mem/RESULTS_DIR at submission time, e.g.:
-#   sbatch --array=0-379%20   --time=00:15:00 --mem=8G  submit_plain.sbatch single-taper
-#   sbatch --array=380-759%20 --time=00:30:00 --mem=16G submit_plain.sbatch FastMspec
-#   sbatch --array=760-1139%10 --time=02:00:00 --mem=32G submit_plain.sbatch Mspec
-#   sbatch --array=1140-1519%20 --time=00:30:00 --mem=16G submit_plain.sbatch MspecBestK
-# (index ranges from manifest.technique_index_ranges(); %N caps concurrent tasks, out of
-# consideration for other users on the shared partition -- raise once a first small run confirms
-# this behaves well; the values above are provisional starting points, not tuned.)
+#   sbatch --array=0-379%20   --time=00:15:00 --mem=8G  submit_plain.sbatch
+#   sbatch --array=380-759%20 --time=00:30:00 --mem=16G submit_plain.sbatch
+# (index ranges from manifest.technique_index_ranges(); the work unit's technique is derived from
+# its global index by run_plain.py itself -- there is no separate technique argument, despite what
+# an earlier version of this comment claimed; %N caps concurrent tasks, out of consideration for
+# other users on the shared partition.)
+#
+# This cluster's MaxArraySize is 1001, i.e. a raw --array index must stay < 1001 (found live,
+# 2026-09-02, trying to resubmit lost Mspec work units at their real global indices 760-1139:
+# "Invalid job array specification"). Mspec (760-1139) and MspecBestK (1140-1519) can exceed that
+# on their own -- for those, submit with small array indices (e.g. --array=0-379) and set
+# IDX_OFFSET to the technique's range start, e.g.:
+#   sbatch --array=0-379%15 --time=03:00:00 --mem=120G --export=ALL,IDX_OFFSET=760 submit_plain.sbatch
 #
 #SBATCH --job-name=dispcurve_plain
 #SBATCH --partition=preempt
@@ -26,6 +32,7 @@ conda activate fastmspec_batch
 MANIFEST_CSV="${MANIFEST_CSV:-data/madagascar_stn_conn_ccflist.csv}"
 REF_CURVE="${REF_CURVE:-data/SDISPL.ASC}"
 RESULTS_DIR="${RESULTS_DIR:-results}"
+IDX_OFFSET="${IDX_OFFSET:-0}"
 DEPLOY_ROOT="/scratch/tolugboj_lab/FastMSPEC_dispcurve_batch"
 
 mkdir -p "$DEPLOY_ROOT/logs" "$DEPLOY_ROOT/$RESULTS_DIR"
@@ -34,4 +41,4 @@ python3 -m dispcurve_pick_batch.run_plain \
     "$DEPLOY_ROOT/$MANIFEST_CSV" \
     "$DEPLOY_ROOT/$REF_CURVE" \
     "$DEPLOY_ROOT/$RESULTS_DIR" \
-    "$SLURM_ARRAY_TASK_ID"
+    "$((SLURM_ARRAY_TASK_ID + IDX_OFFSET))"
