@@ -675,3 +675,28 @@ of this log entry. **Follow-up for Stage 5**: the picking/template-scan step, no
 computation, dominates real per-pair cost across every technique -- worth stating plainly in the
 notebook's methods description rather than leaving the misleading impression (from the Stage 3
 pilot table) that cross-spectrum cost alone characterizes technique expense.
+
+### 2026-09-02 -- Stage 4: splitting remaining work across `preempt` and `standard`
+
+Every job this whole batch has submitted so far ran on `preempt` (plus the one-off `debug` smoke
+test) -- `standard` was never tried. Prompted by a direct question about this, checked its current
+state: 91 nodes, mostly `mixed`/`allocated` but genuinely in use, 383 tasks queued from all users
+combined and **zero from this account**. By contrast `preempt` had become substantially self-
+congested -- at one point 688 tasks queued, 550 of them this account's own, competing against each
+other under the same fair-share/fifo throttling. Per direct guidance, split the remaining pending
+work in half for each of the four still-running plain-driver jobs: cancelled half of each job's
+still-`PENDING` array indices on `preempt` and resubmitted that exact half as a fresh job on
+`standard`, same per-technique `--time`/`--mem` budget as its `preempt` counterpart (no
+`IDX_OFFSET` change needed -- same local-index/offset scheme, just a different `--partition`):
+
+| Technique | preempt job (kept half) | standard job (moved half) | units moved |
+|---|---|---|---|
+| Mspec | 31344741 | 31345490 | 126 |
+| FastMspec | 31345341 | 31345491 | 90 |
+| single-taper | 31345343 | 31345492 | 93 |
+| MspecBestK | 31345366 | 31345493 | 84 |
+
+393 work units now running on two independent scheduling pools at once rather than one congested
+one. `run_plain.py`'s own idempotency guard (`if out_path.exists(): skip`) means this split carries
+zero risk of duplicate/wasted computation even though the same manifest indices are, in principle,
+now known to two separate jobs.
