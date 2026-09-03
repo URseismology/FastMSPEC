@@ -1013,3 +1013,44 @@ to 30+ real concurrent tasks depending on fair-share/partition congestion) -- at
 10-20 average, that's roughly 8-16 hours, with real risk of stretching past a day if the cluster
 stays as congested as Round 1's worst stretches. Plan for "well under a day if it goes well, budget
 up to ~2 days," not a single number.
+
+### 2026-09-03 -- Speculative (not yet data-confirmed): when does "large NW" hold, and does a
+valid bandwidth window always exist?
+
+A hypothetical extension, worked out from what's already established plus the sweep above, before
+`W_low`'s actual formula exists -- flagged explicitly as derived/speculative, to be checked against
+real data once `K_min` is derived, not treated as settled.
+
+**Confirmed the `r`/`K` asymptotics first, more rigorously**: extended the sweep to NW=800, 1600
+(N=10801): `r` = 22, 24 -- still growing, not plateaued at the earlier NW=200-400 values (20, 20).
+Rules out "the NW=200-400 plateau was just the `epsilon=1e-5` truncation cutting in" -- `r`'s growth
+is genuine, matching classical DPSS/Slepian concentration-problem theory (the eigenvalue-staircase
+transition width is a known `O(log NW)` result, not `O(NW)`). Since `K ~ 2NW` (linear) and
+`r ~ O(log NW)` (much slower), `r/K ~ O(log(NW)/NW) -> 0` -- the asymptotic vanishing of `r/K` is
+real theory, not curve-fit to 7 points.
+
+**Deriving when large NW holds, using only the already-established upper bound** (`R` for station
+distance here, distinct from `FastMultitaper`'s transition-count `r` above -- real notational
+collision worth keeping visually separate going forward): `2W <~ Delta_f_zero = c/(2R)` gives
+`NW_high = N*W_high ~ Nc/(4R)` -- linear in window length `N`, inverse in station distance `R`.
+Both conditions matter and multiply, not just add.
+
+**Reasoning about the lower bound without its formula**: if it's driven by "need `K >= K_min` for
+acceptable coherence bias/variance" (the `~1/K` floor territory, Walden 2000), then via `K~2NW`,
+`NW_low ~ K_min/2` -- roughly a *fixed constant*, independent of `N` and `R` to first order (bias/
+variance of a K-taper estimate is a property of `K`, not of distance or window length directly).
+Honest caveat, not glossed over: this could have a second-order dependence on distance/SNR (a
+noisier/farther pair might need a larger effective `K_min` for the same bias target) -- worth
+testing once `K_min` actually exists, not assumed away.
+
+**The existence threshold this implies**: a valid bandwidth window (`NW_low < NW < NW_high`) exists
+only when `Nc/(4R) > K_min/2`, i.e. `N > 2R*K_min/c` -- a genuine, testable prediction, not just
+"farther is harder." For this dataset's *fixed* window length (`window3hr`, N~10801), this implies
+a hard maximum viable distance `R_max = Nc/(2*K_min)` beyond which no valid `W` exists for *any*
+multitaper technique -- a more mechanistic candidate explanation for Round 1's already-observed
+convergence-vs-distance collapse (0% at the farthest quartile, every multitaper technique) than
+"resolution just gets tighter": possibly a real cliff at `R_max`, not a gradual decline. Directly
+checkable against the real Round 1 data once `K_min` is derived. Also yields a genuine, actionable
+(if not immediately actionable on the *existing* dataset) lever: pushing `R_max` outward needs
+longer windows, not a better algorithm -- a data-collection recommendation, not an algorithmic one,
+worth naming even though it can't be exploited by reprocessing the existing `.mat` files.
