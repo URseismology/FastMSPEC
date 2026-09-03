@@ -925,3 +925,61 @@ already-proven-safe `--mem=120G`: `sbatch --array=<141 offset indices> --time=01
 --cpus-per-task=1 --export=ALL,IDX_OFFSET=1140 submit_plain.sbatch` -> job 31346905. No similar
 crash signatures found for single-taper (still at `32G`) as of this check -- watching, not yet
 assumed safe, given MspecBestK looked fine at the same budget for its own first ~39 attempts too.
+
+### 2026-09-03 -- Why FastMspec doesn't need K-chunking, verified against the real code -- this
+is the headline architectural argument for Stage 5, not just an empirical convenience
+
+Prompted by a direct question: is "FastMspec never needed the K-chunking fix Mspec needed" a real,
+citable architectural claim worth foregrounding in Stage 5, or just an empirical accident of this
+project's parameter choices? Checked against the actual source rather than assumed.
+
+**The mechanism** (`python/thomson_multitaper/fast_multitaper.py`, translated directly from
+Santhosh Karnik's own `FastMultitaper.m`, 2019): classical `classical_spectrum_batch` (Mspec/
+MspecBestK) does the obvious thing -- multiply data by all `K` tapers, FFT each, average. Memory
+scales `O(N x n_traces x K)` by construction, exactly why K=80 pushed Mspec past 55GB before the
+K-chunking fix. FastMspec instead splits the multitaper average into two pieces: `z0`, a *single*
+FFT-based sinc-kernel convolution of the plain periodogram that analytically stands in for every
+"well-concentrated" taper (DPSS eigenvalue ~1) at once, `O(N log N)` cost, never materialized
+individually; and `z1`, an explicit correction over only the tapers in the DPSS eigenvalue
+*transition region* (neither cleanly concentrated nor cleanly rejected) -- the code calls this
+count `r` (`self.r = len(eig_weights)` in `fast_multitaper.py`), and it is a property of how wide
+that transition band is, not of `K`.
+
+**Confirmed `r` really does stay small/flat while `K` grows, rather than tracking it** (ran
+`FastMultitaper` directly at N=10801 for several NW values):
+
+| NW | K (full taper count) | r (transition-region correction) | r/K |
+|---|---|---|---|
+| 10.8 (this project's actual FastMspec bandwidth, `Wband=0.001`) | 15 | 13 | 87% |
+| 50 | 92 | 16 | 17% |
+| 100 (~ Mspec's own `K=80` setting) | 191 | 18 | **9%** |
+
+**The honest nuance, stated explicitly rather than glossed over**: at this project's own narrow
+bandwidth, `r` isn't dramatically smaller than `K` (13 vs 15) -- part of why Mspec looks so much
+worse here isn't purely algorithmic, it's also that Mspec is configured with a much larger `K=80`
+(`NW=100`) as a deliberately heavier classical baseline, not matched to FastMspec's resolution-
+optimal bandwidth. Two effects, both real, worth separating in Stage 5:
+1. **Architectural** (general, provably true at any bandwidth, the one to feature): `r` grows far
+   slower than `K` -- the 9% ratio at NW=100 shows this isn't a narrow-bandwidth artifact, it holds
+   *more* strongly as `K` grows, i.e. gets stronger exactly where memory would otherwise be worst.
+   Traceable directly to Karnik et al.'s own method, not an empirical convenience of this project's
+   choices.
+2. **Configuration** (specific to this project's parameters, the honest caveat): Mspec's `K=80` is
+   itself a larger taper count than FastMspec's own resolution-matched `Wband=0.001` implies, so
+   the two techniques aren't only running different algorithms -- they're also targeting different
+   taper counts. Keeps the architectural claim from overclaiming.
+
+**Round 2 timing estimate, from Round 1's own real per-unit runtimes** (already representative --
+solo, plain-driver, no shared-node contention):
+
+| Technique | n sampled | mean | median | p90 | max | Full-380-pair total |
+|---|---|---|---|---|---|---|
+| single-taper | 239 | 474.8s | 457.1s | 758.2s | 1235.6s | ~50 CPU-hours |
+| FastMspec | 258 | 1032.8s | 1033.1s | 1507.1s | 3269.9s | ~109 CPU-hours |
+
+~159 CPU-hours total for Round 2's 760 work units (380 pairs x 2 techniques). Wall-clock depends
+entirely on achievable concurrency, which Round 1 showed varies wildly on this shared cluster (2
+to 30+ real concurrent tasks depending on fair-share/partition congestion) -- at a realistic
+10-20 average, that's roughly 8-16 hours, with real risk of stretching past a day if the cluster
+stays as congested as Round 1's worst stretches. Plan for "well under a day if it goes well, budget
+up to ~2 days," not a single number.
