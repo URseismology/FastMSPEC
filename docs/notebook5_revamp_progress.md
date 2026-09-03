@@ -812,6 +812,21 @@ almost everything. This is the key to debugging, and hypotheses testing."*
   convergence-rate-vs-distance figure to Round 2's own validation -- the resolution-bandwidth
   analysis below suggests it's worth extending, given how cleanly the theory already matches the
   Round 1 data.
+- **Scope decision (2026-09-03), while Round 1 was still running): Round 2 tests only
+  `single-taper` and `FastMspec`, dropping `Mspec`/`MspecBestK`.** Rationale, confirmed against
+  Round 1's own data rather than assumed: FastMspec *is* Karnik/Romberg/Davenport's own algorithm
+  (this project's actual reference implementation); Mspec/MspecBestK are Sayan's classical-
+  multitaper comparison baselines, not a second "faithful" candidate. FastMspec is also the
+  cheapest by construction (Mspec needed the K-chunking architectural fix mid-Round-1 and still
+  drove most of this stage's memory/timeout bugs; MspecBestK's smaller-but-still-real K hit the
+  same OOM class on the dataset's largest files, fixed twice this session). One refinement to the
+  original reasoning ("all mspec techniques yield the same convergence rate"): they don't, quite --
+  the distance-quartile table above shows Mspec notably underperforming FastMspec/MspecBestK at
+  mid-range and MspecBestK slightly ahead at long-range -- doesn't change the choice (FastMspec
+  still wins on both real criteria), just worth being precise about. Bonus reinforcement, from a
+  different angle: `single-taper`/`FastMspec` are the *only* two techniques with real MATLAB
+  cross-validation ground truth in this pipeline (`MATLAB_TECHNIQUE_DIRS` never covered Mspec/
+  MspecBestK) -- this scope cut maximizes Round 2's validation power, not just its speed.
 
 ### 2026-09-02 -- Mining the existing scalars, per the two-round decision -- real findings without
 any new data
