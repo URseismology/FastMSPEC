@@ -34,6 +34,23 @@ next stage.
   FastMspec's fused equivalent) are hand-picked, not derived from either bound. This is the first
   thing to review next session, once Round 1's results are in hand to check any candidate lower-
   bound criterion against real convergence/bad-quality-fraction data, before Round 2 is designed.
+  - **Update (2026-09-03): the upper/lower-bound derivation and the memory-architecture argument
+    are coupled, not independent -- and this decouples Stage 5's bandwidth search from any memory
+    concern before it's even done.** Per direct guidance: whatever principled `W` eventually falls
+    out of the resolution upper bound and the (not yet derived) bias-variance lower bound, it will
+    land somewhere between them -- and separately verified (`FastMultitaper` run directly across
+    NW=5 to NW=400 at N=10801) that FastMspec's transition-region correction count `r` stays
+    essentially bounded (11-20) across that *entire* range while `K` grows linearly the whole way
+    (5 to 790) -- see the K-chunking writeup below for the full table. So this isn't "FastMspec
+    happens to be cheap at today's ad-hoc `Wband=0.001`" -- it's "FastMspec will be cheap at
+    whatever `W` Stage 5's principled search lands on," because `r`'s boundedness is a DPSS
+    transition-region property independent of where in that range `NW` falls. Practical
+    consequence for Stage 5: the bandwidth search can be run purely on statistical grounds
+    (resolution vs. bias-variance), without needing to separately re-validate memory/chunking
+    strategy for whatever `W` it recommends -- FastMspec absorbs that automatically, which
+    classical Mspec/MspecBestK structurally cannot (their memory scales with `K` directly, so a
+    revised `W` mid-design would mean a revised memory budget too). This is now the headline
+    architectural argument for FastMspec in Stage 5, not merely a secondary efficiency note.
 - **Stage 5 design: ground picking stability in actual multitaper coherence estimator theory, not
   just empirical/heuristic QC signals.** Per direct guidance: the current quality diagnostics
   (`bad_quality_fraction`, `freq_coverage_fraction`, `mean_amp_ratio`) are all seislib's own
@@ -950,9 +967,22 @@ that transition band is, not of `K`.
 
 | NW | K (full taper count) | r (transition-region correction) | r/K |
 |---|---|---|---|
+| 5 | 5 | 11 | 220% |
 | 10.8 (this project's actual FastMspec bandwidth, `Wband=0.001`) | 15 | 13 | 87% |
+| 20 | 33 | 14 | 42% |
 | 50 | 92 | 16 | 17% |
 | 100 (~ Mspec's own `K=80` setting) | 191 | 18 | **9%** |
+| 200 | 390 | 20 | 5% |
+| 400 | 790 | 20 | 3% |
+
+Extended afterward (2026-09-03) across a wider NW=5-400 sweep: `r` stays essentially bounded
+(**11-20**) across nearly two orders of magnitude of `NW`, while `K` grows linearly the whole way
+(5 to 790). There's a crossover around `NW~10-20` -- coincidentally close to where this project's
+current ad-hoc bandwidth already sits -- below which `r` can exceed `K` (the correction dominates,
+no memory savings yet, though `r` itself is still trivially small in absolute terms), and above
+which `r/K` collapses toward zero. This is the basis for the "coupled to the bandwidth search"
+argument recorded in the deferred/requirement log above: wherever Stage 5's principled `W` search
+lands, FastMspec's memory story is already settled.
 
 **The honest nuance, stated explicitly rather than glossed over**: at this project's own narrow
 bandwidth, `r` isn't dramatically smaller than `K` (13 vs 15) -- part of why Mspec looks so much
