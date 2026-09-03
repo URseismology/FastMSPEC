@@ -132,6 +132,71 @@ next stage.
   validated at full 380-pair scale: design an analogous, principled quality criterion for M/N
   before reconsidering a 3-way barcode. Not in scope this round.
 
+## Round 2 design (staged summary)
+
+Everything below was derived/decided across several Log entries dated 2026-09-02/03 (linked
+inline); this section exists so Round 2's design doesn't have to be reconstructed by reading the
+whole chronological Log. Not yet executed -- final subset selection and submission wait for Round
+1 to fully complete, per the two-round decision.
+
+**Scope**: `single-taper` + `FastMspec` only, dropping `Mspec`/`MspecBestK` (see "Round 2 requirements"
+above for the full rationale -- FastMspec is Karnik et al.'s own algorithm, not one of three equally-
+faithful options, and it's the cheaper, MATLAB-validated one).
+
+**The architectural argument this all rests on**: FastMspec's memory footprint is decoupled from
+`K`/`NW` by construction -- it decomposes the multitaper average into an `O(N log N)` bulk sinc-
+convolution term plus a small correction over only the DPSS eigenvalue transition-region tapers
+(`r`), which stays bounded (11-24) across NW=5-1600 while `K` grows linearly the whole way. Verified
+against the real source (`fast_multitaper.py`, Karnik's own `FastMultitaper.m`), not assumed --
+full derivation and tables in the 2026-09-03 "Why FastMspec doesn't need K-chunking" entry.
+
+**The main run**: full 380 pairs, both techniques, at today's fixed `Wband=0.001` -- unchanged from
+Round 1's own convention, for direct comparability. ~159 CPU-hours (50 single-taper + 109
+FastMspec, from Round 1's real per-unit runtimes).
+
+**The NW sweep (the new experiment)**: a 60-pair subset (15 per distance quartile, same quartiles
+Round 1's convergence table uses) run at 5 additional FastMspec bandwidths each, +~86 CPU-hours.
+**Total Round 2: ~245 CPU-hours.**
+
+- Each pair's bandwidth ceiling `NW_high(R)` is computed *per pair*, not from one shared value --
+  `NW_high(R) ~ N*c_min/(4R)`, where `c_min` is the *minimum* phase velocity over the pair's
+  analysis band (not the mean or the range's upper bound -- the resolution constraint is tightest
+  wherever `c(f)` is smallest, so using the mean/max would silently under-resolve part of the
+  band). `c_min` is sourced from that pair's own Round 1 converged pick where one exists
+  (`c_ref(f) + best_delta_km_s`), falling back to the bare reference curve for pairs with no
+  converged pick -- deliberately not excluding those pairs, since the far/currently-failing
+  quartiles are exactly what the sweep needs to include.
+- **Today's fraction grid -- `[1.5, 1.0, 0.7, 0.45, 0.25] x NW_high(R)` -- is a placeholder at its
+  lower end, not a principled choice, and should be read that way.** The `0.25x` floor is an
+  arbitrary, roughly-log-spaced guess, standing in for the still-undetermined, bias-variance-
+  derived `NW_low` (the K-lower-bound question in the deferred/requirement log above). Once
+  `NW_low(R)` has an actual formula, the grid should be revisited -- several genuinely different
+  ways to do that, worth choosing between deliberately rather than defaulting to whichever is
+  listed first:
+  1. **Span-based replacement**: drop the multiplicative-fraction structure entirely and space
+     points across the pair's actual known-valid range, `[NW_low(R), NW_high(R)]` (plus one point
+     above `NW_high` for the over-smoothing edge) -- ties the grid directly to that pair's real
+     wiggle room instead of an arbitrary fraction that might overshoot past `NW_low` (wasted,
+     uninformative sub-floor points) or undershoot it (missing the interesting boundary entirely).
+  2. **Surgical floor replacement**: keep today's multiplicative structure, just swap the `0.25`
+     constant for the pair-specific computed ratio `NW_low(R)/NW_high(R)` -- smaller change, same
+     grid shape, principled floor.
+  3. **Density reallocation near the boundary**: keep the span from (1) but concentrate more points
+     near `NW_low` specifically, since that's where the predicted convergence cliff/transition is
+     expected to live, rather than spacing points evenly across the whole valid range.
+  4. **Staged/adaptive two-pass**: run today's coarse placeholder grid first, see empirically where
+     convergence actually starts failing, then add a denser follow-up sweep bracketing wherever
+     that boundary falls -- doesn't require trusting the theoretical `NW_low(R)` formula's exact
+     value up front, useful if theory and observation don't line up cleanly.
+
+  No decision yet on which of these four to use -- correctly deferred until `NW_low`'s derivation
+  exists (Stage 5 work), not something to guess at now.
+
+**A result already visible before Round 2 runs**: the subset-selection test run (partial Round 1
+data) showed quartile-4 pairs (780-1030km) have `NW_high(R) ~ 3.2-5.1` -- *below* today's fixed
+`NW~10.8` -- a direct, quantitative explanation for their observed ~0% convergence, not just a
+plausible story.
+
 ## Log
 
 ### 2026-09-01 -- Stage 0
