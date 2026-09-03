@@ -888,3 +888,25 @@ Restarted persistent background monitoring (the prior monitor task IDs died with
 restart) with one addition: each tick now also greps all `.err` logs for the same crash signatures
 and reports a count, so a new OOM/segfault surfaces automatically rather than needing another
 manual sweep to find.
+
+### 2026-09-03 -- Stage 4: MspecBestK's `32G` budget was too small in general, not just for 2
+outlier pairs
+
+The crash-signature counter added above did its job: after another local session restart dropped
+the background monitor again (bluehive jobs unaffected, as before), resyncing found the counter at
+14, not the expected 3 -- 11 new crashes, all `Bus error`/OOM, all in job `31345366` (the original
+MspecBestK plain-driver job, still at `--mem=32G`). So the fix for indices 1223/1315 two entries
+ago was necessary but not sufficient -- `32G` was never actually a safe general budget for this
+technique, just one that happened to survive the first ~39 attempts before hitting its next
+large-file pair. `sacct -j 31345366` confirmed: 13 `FAILED` (the original 2 plus these 11) against
+only 25 `COMPLETED` -- a ~34% failure rate on this job's attempted tasks, not a rare tail.
+
+Fixed the same way as every prior mis-sizing this stage, and by now a routine move: cancelled every
+remaining pending MspecBestK task at the old budget (`scancel 31345493_[296-379] 31345366_[250-
+295]`, covering both the `preempt` and `standard` copies), recomputed the technique's true missing
+set directly against `results/` (141 work units -- confirms the cancelled range was still mostly
+unattempted, not wasted partial progress), and resubmitted all 141 in one job at the
+already-proven-safe `--mem=120G`: `sbatch --array=<141 offset indices> --time=01:00:00 --mem=120G
+--cpus-per-task=1 --export=ALL,IDX_OFFSET=1140 submit_plain.sbatch` -> job 31346905. No similar
+crash signatures found for single-taper (still at `32G`) as of this check -- watching, not yet
+assumed safe, given MspecBestK looked fine at the same budget for its own first ~39 attempts too.
