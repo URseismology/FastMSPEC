@@ -160,8 +160,30 @@ closed form in $K$ alone (via the trigamma function $\psi'$),
 \end{equation}
 requiring only $K$ (or FastMspec's effective transition-region taper count, denoted $r_{\rm
 trans}$ to avoid collision with the distance symbol $r$ above), not per-taper recomputation.
-This keeps the memory-decoupling argument for FastMspec (Section~\ref{sec:fastmspec}) fully
-intact even while computing variance.
+
+\textbf{Update (2026-09-03), a real correction found by testing Eq.~\ref{eq:jk-expected} against
+a literal Eq.~23 jackknife computed from real per-taper cross-spectra (SKRH--BAND pair, Mspec's
+classical materialized-per-taper approach): Eq.~\ref{eq:jk-expected} is not distribution-free,
+and it does not transfer cleanly to cross-spectra.} Its derivation assumes each per-taper
+quantity is $\chi^2(2)$-distributed --- true for an auto-spectrum (the squared magnitude of one
+complex Gaussian) but not for a cross-spectrum per-taper term (the product of \emph{two}
+correlated complex Gaussians), whose distribution near a coherence null is qualitatively
+different --- the same $\sim 1/K$ near-null instability documented in Walden (2000). Binning
+the literal jackknife variance by per-taper magnitude (a proxy for proximity to a null) on real
+data shows the lowest-magnitude quartile has jackknife variance roughly $20$--$30\times$ the
+middle quartiles, and the literal-vs-closed-form ratio grows with $K$ (1.9$\times$ at $K=5$,
+8.3$\times$ at $K=33$) rather than converging --- Eq.~\ref{eq:jk-expected} systematically
+underestimates variance exactly where the picker's crossing decisions are made.
+
+\textbf{Revised recommendation}: use Eq.~\ref{eq:jk-expected} away from candidate zero-crossings,
+where its assumptions are closer to valid and FastMspec's memory-decoupling argument stays
+intact, but fall back to a literal per-crossing jackknife (or a genuinely cross-spectral closed
+form --- Walden (2000)'s Wishart-based multivariate treatment \cite{walden2000} is the right
+place to check, not Haley \& Anitescu's univariate theory) in the neighborhood of each candidate
+crossing specifically. This is a bounded cost (a handful of crossings per pair, not the whole
+band), not a full retreat from Section~\ref{sec:fastmspec}'s argument -- but it does mean
+Eq.~\ref{eq:jk-expected} alone is not sufficient at the frequencies that matter most, and should
+not be presented as though it were.
 
 \subsection{Record level (a real complication, not glossed over)}
 
@@ -242,6 +264,10 @@ mechanism for computing this empirically once real per-fraction convergence/qual
     Bessel structure alone, or needs correction for multi-mode contamination, matching the same
     caveat already carried by the Love-wave Bessel-model simplification in
     \texttt{coherence\_barcode\_design.tex}.
+  \item \emph{Tested, not fully resolved}: the extent of the near-null breakdown documented in
+    Section~\ref{sec:variance}'s update -- confirmed present and large on one real pair (SKRH--
+    BAND), not yet checked across the dataset's real distance/coherence range, nor against a
+    genuinely cross-spectral closed-form alternative.
 \end{itemize}
 
 \begin{thebibliography}{9}

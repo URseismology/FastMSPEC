@@ -1203,3 +1203,40 @@ confirmed; Round 2 will show whether it does.
 
 Final subset selection (real, not the partial-data test run above) still deferred until Round 1
 fully completes, per the established two-round rationale.
+
+### 2026-09-03 -- Stage 5 theory tested against real data, locally, while Round 2 was still
+queuing -- Eq. 24 does not transfer cleanly from auto-spectra to cross-spectra, a real correction
+
+Per direct request, ran a local test (this machine) of `docs/stage5_bandwidth_theory.tex`'s
+proposed variance term before trusting it: confirmed the trigamma function itself is trivially
+computable (`scipy.special.polygamma(1, t)`, `polygamma(1,1)=pi^2/6` matches the known exact
+value), then checked whether the Eq. 24 closed form actually approximates the literal Eq. 23
+jackknife when computed from **real per-taper cross-spectra** (SKRH-BAND, via Mspec's classical
+materialized-per-taper approach, kept as ground truth) rather than assumed to transfer from
+Haley & Anitescu's auto-spectrum derivation.
+
+**It doesn't, and the gap grows with `K` rather than shrinking**: literal-vs-closed-form ratio
+1.9x at K=5, 1.5x at K=13, 8.3x at K=33. Prompted by a direct question about whether auto-spectrum
+theory should even be assumed to carry over to cross-spectra -- checked, and it's the real root
+cause: Eq. 24's derivation assumes each per-taper term is `chi^2(2)`-distributed, true for an
+auto-spectrum (squared magnitude of one complex Gaussian) but not for a cross-spectrum term (the
+product of two correlated complex Gaussians), which behaves qualitatively differently near a
+coherence null -- the same `~1/K` near-null instability from Walden (2000). Binning the literal
+jackknife variance by per-taper magnitude (a proxy for null-proximity) at K=33 confirmed this
+directly: the lowest-magnitude quartile has variance ~20-30x the middle quartiles (0.037 vs.
+0.001-0.002) -- not a marginal effect, and concentrated exactly where a picker's crossing
+decisions get made.
+
+**Fix**: revised `docs/stage5_bandwidth_theory.tex` (Section 5.1) rather than leaving the
+now-known-incomplete version live -- Eq. 24 stays valid as a cheap, FastMspec-compatible variance
+proxy *away* from candidate crossings, but needs a literal per-crossing jackknife (or a
+genuinely cross-spectral closed form -- Walden (2000)'s Wishart-based multivariate treatment is
+the next place to check, not Haley & Anitescu's univariate theory) specifically near candidate
+crossings. A bounded cost (a handful of crossings per pair), not a retreat from the
+memory-decoupling argument. New `Open Questions` item added marking this "tested, not fully
+resolved" -- confirmed on one real pair, not yet checked across the dataset's real distance range.
+
+Validation script + provenance committed as
+[`verification/jackknife_variance_check/`](../verification/jackknife_variance_check/), matching
+`verification/skrh_band_real_data/`'s convention (same source `.mat` file, not committed, real
+retrieval command documented in its own README).
