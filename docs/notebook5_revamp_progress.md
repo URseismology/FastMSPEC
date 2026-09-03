@@ -51,6 +51,46 @@ next stage.
     classical Mspec/MspecBestK structurally cannot (their memory scales with `K` directly, so a
     revised `W` mid-design would mean a revised memory budget too). This is now the headline
     architectural argument for FastMspec in Stage 5, not merely a secondary efficiency note.
+  - **Update (2026-09-03): the lower-bound gap is now closed at the theory level, written up in
+    full in `docs/stage5_bandwidth_theory.tex`.** Following Haley & Anitescu (2017)'s MSE
+    framework (minimize bias^2 + variance over `NW`, per direct guidance -- their supplement
+    (retrieved from `repovibranium/core_papers`, author corrected from an NAS filename typo
+    "Haney" to the real "Haley") gave Eq. 23/24 for the jackknife variance and Eq. 15/16 for the
+    overall MSE-minimization recipe), two project-specific adaptations replace the pieces that
+    don't transfer directly:
+    - **Bias, closed form instead of a spline fit to noisy data.** Proved (not just argued by
+      analogy) that Haley & Anitescu's generic bias formula `B_W(f) ~ (W^2/6)S''(f)` holds
+      *exactly* at a true zero-crossing `f_n` -- a symmetric smoothing kernel's first-derivative
+      contribution vanishes identically there (odd integrand over a symmetric window), leaving
+      exactly the curvature term. Since the true coherence is `J_0(2*pi*f*r/c(f))` (Aki 1957),
+      `gamma''(f_n)` is then computable in closed form from the known Bessel-zero structure --
+      `gamma''(f_n) = J_1(x_n)*[(x'(f_n))^2/x_n - x''(f_n)]` -- using only the exact station
+      distance and the picked/reference curve's local derivatives, no fitting to noisy data at
+      all. Full derivation in the tex doc's Section 3.
+    - **Variance, a two-tier jackknife.** Haley & Anitescu's variance theory is single-record
+      (K tapers of one series); this project stacks `coh_num` (~hundreds-1600) independent day/
+      window traces on top of that, a second layer their paper doesn't address. Resolved as: (i)
+      taper-level variance via Eq. 24's *closed-form expected value* (a function of `K` alone, no
+      per-taper recomputation) -- deliberately chosen over the literal delete-one jackknife (Eq.
+      23) specifically because that would require materializing per-taper spectra, in tension
+      with FastMspec's whole non-per-taper-materializing architecture (see the memory-argument
+      update above); (ii) record-level variance via plain sample variance across the `coh_num`
+      per-trace estimates, following the *precedent* found in Park & Levin (2016) (already in
+      `docs/references/`) -- checked directly, and it turns out they jackknife over records/
+      events in exactly this bin-averaging situation (citing Efron 1982), confirming this is
+      established practice, not a novel move needing separate justification.
+    - **A genuine diagnostic falls out of the two-tier split, not just a variance number**:
+      `SampleVar_across-days - E{jackknife variance}` estimates the *excess* variance from real
+      day-to-day non-stationarity (storms, source shifts), separated from pure estimation noise.
+      Computed as a function of frequency, this flags where bandwidth tuning cannot help at all
+      (the instability there is physical, not an estimator artifact) -- a sharper diagnostic than
+      "is this stable," and one the MSE-optimization recipe should defer to rather than silently
+      contradict.
+    - Not yet implemented or checked against real data -- this is the theory Round 2's NW sweep
+      is designed to test empirically, not a substitute for running it. Open questions (local
+      dispersion-derivative reliability, independence of the two variance sources, multi-mode
+      contamination near the bias formula) recorded in the tex doc's own closing section rather
+      than glossed over.
 - **Stage 5 design: ground picking stability in actual multitaper coherence estimator theory, not
   just empirical/heuristic QC signals.** Per direct guidance: the current quality diagnostics
   (`bad_quality_fraction`, `freq_coverage_fraction`, `mean_amp_ratio`) are all seislib's own

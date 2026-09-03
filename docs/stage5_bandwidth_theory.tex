@@ -1,0 +1,278 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\newtheorem{definition}{Definition}
+
+\title{A Principled Bandwidth for Multitaper Coherence Estimation: \\
+Bias from Bessel Zeros, Variance from a Two-Tier Jackknife}
+\author{FastMSPEC project design document}
+\date{2026-09-03}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Stage 4's batch run confirmed a deterministic \emph{upper} bound on the multitaper
+half-bandwidth $W$ (equivalently the time-bandwidth product $NW$, via $K\approx 2NW$): the
+resolution criterion $2W \lesssim \Delta f_{\rm zero} = c_{\min}/(2r)$, where $\Delta f_{\rm
+zero}$ is the local spacing between the true coherence's Bessel-function zero-crossings.
+What has been missing is a principled \emph{lower} bound --- how small $NW$ can go before the
+coherence estimator's own bias/variance behavior, not resolution, degrades picking. This
+document works out that lower bound following Haley \& Anitescu's (2017) mean-squared-error
+(MSE) framework for multitaper bandwidth selection, adapted in two ways specific to this
+project: (i) the bias term is derived in closed form from the known Bessel-zero structure of
+the theoretical coherence, rather than estimated by fitting a spline to noisy data, and (ii) the
+variance term is decomposed into two tiers --- a taper-level term computable in closed form
+(compatible with FastMspec's non-per-taper-materializing architecture) and a record-level term
+that separates genuine estimation noise from real day-to-day non-stationarity. Standalone
+reference, independent of the conversation history that produced it.
+\end{abstract}
+
+\tableofcontents
+
+\section{Motivation}
+
+Ambient-noise interferometry estimates the coherence between two seismic stations, whose real
+part follows Aki's (1957) spectral formulation,
+\begin{equation}
+  \gamma(f) \approx J_0\!\left(\frac{2\pi f r}{c(f)}\right),
+  \label{eq:aki}
+\end{equation}
+matching the convention of \texttt{coherence\_barcode\_design.tex} ($r$: interstation distance,
+$c(f)$: phase velocity). The FastMSPEC picker extracts a dispersion curve by tracking this
+function's zero-crossings; the multitaper bandwidth $W$ used to estimate $\gamma(f)$ from noisy
+data controls, as always in nonparametric spectral estimation, a bias--variance tradeoff.
+
+\textbf{The upper bound is already established.} A bandwidth too wide smears adjacent
+zero-crossings together; the resolution criterion
+\begin{equation}
+  2W \lesssim \Delta f_{\rm zero}(f) = \frac{c(f)}{2r}
+  \label{eq:resolution}
+\end{equation}
+gives $NW_{\rm high}(r) \approx Nc_{\min}/(4r)$ for a window of $N$ samples, where $c_{\min}$ is
+the \emph{minimum} phase velocity over the analysis band (not the mean or the range's upper
+bound --- the constraint is tightest wherever $c(f)$ is smallest). This was confirmed directly
+against Round 1's real data: quartile-4 pairs (780--1030\,km) have $NW_{\rm high}\approx
+3.2$--$5.1$, already below the project's fixed operating point of $NW\approx 10.8$, a
+quantitative explanation for their observed near-zero convergence rate.
+
+\textbf{The lower bound is not.} Today's $NW$ values (13--15 for MspecBestK, 80 for Mspec,
+FastMspec's much smaller effective taper count) are hand-picked, not derived. This document
+addresses that gap.
+
+\section{The MSE Framework (Haley \& Anitescu, 2017)}
+
+Haley \& Anitescu \cite{haley2017} give a systematic method for multitaper bandwidth selection:
+minimize the estimated MSE of the log spectrum,
+\begin{equation}
+  \hat\Lambda(f; N, W) = \frac{W^4}{36}\left[\frac{S''(f)}{\bar S(f)}\right]^2 +
+  \hat\sigma_J^2(f),
+  \label{eq:mse}
+\end{equation}
+summed over a frequency grid, where the first term is squared bias (from a second-order Taylor
+expansion of the true spectrum, Section~\ref{sec:bias}) and $\hat\sigma_J^2(f)$ is a jackknife
+variance estimate (Section~\ref{sec:variance}). The optimal $NW$ minimizes the sum. Two features
+of their method do not transfer directly to this project and are addressed below: (i) their bias
+term is estimated from a spline fit to the \emph{observed}, noisy multitaper spectrum itself
+--- appropriate when nothing more is known about the true spectrum, but this project has a much
+stronger prior, the known Bessel-zero structure of Equation~\ref{eq:aki}; and (ii) their variance
+theory is for a single-record auto-spectrum, whereas this project's coherence estimate is a
+cross-spectral quantity additionally stacked over many independent day/window records
+(\texttt{coh\_num}, often hundreds to $\sim$1600) --- a second averaging layer their paper does
+not address.
+
+\section{Bias: A Closed Form from the Bessel-Zero Structure}
+\label{sec:bias}
+
+Haley \& Anitescu's local bias term (their Eq.~10, here Eq.~\ref{eq:mse}'s bias piece) is
+\begin{equation}
+  B_W(f) \approx \frac{W^2}{6}S''(f),
+  \label{eq:bias-generic}
+\end{equation}
+the residual left by a symmetric smoothing kernel acting on the true spectrum's local curvature.
+We show this applies \emph{exactly} at a true zero-crossing $f_n$ of Equation~\ref{eq:aki}, not
+merely by analogy, and that $\gamma''(f_n)$ is computable in closed form.
+
+\subsection{The bias formula holds exactly at $f_n$}
+
+Write the true coherence near its zero at $f_n$ as $\gamma(f) \approx \gamma'(f_n)(f-f_n) +
+\tfrac12\gamma''(f_n)(f-f_n)^2$. Smoothing with a symmetric kernel $K_W$ (the multitaper spectral
+window, Eq.~7 of the Haley--Anitescu supplement):
+\begin{equation}
+  \bar\gamma(f_n) = \int K_W(f_n-\nu)\gamma(\nu)\,d\nu \approx
+  \gamma'(f_n)\underbrace{\int K_W(u)u\,du}_{=0} +
+  \tfrac12\gamma''(f_n)\int K_W(u)u^2\,du.
+\end{equation}
+The first-derivative (slope) term vanishes identically for any symmetric kernel --- an odd
+integrand over a symmetric window. What remains is exactly Eq.~\ref{eq:bias-generic}, evaluated
+at $f_n$: the smoothed estimate does not sit at zero, it sits at a spurious offset set purely by
+local curvature. This spurious residual is what a picker can mistake for a shifted or missing
+crossing.
+
+\subsection{Closed-form $\gamma''(f_n)$}
+
+With $\gamma(f) = J_0(x(f))$, $x(f) = 2\pi f r/c(f)$, and the Bessel recurrence $J_1'(x) = J_0(x)
+- J_1(x)/x$: at a zero $x_n$ of $J_0$ (where $J_0(x_n)=0$),
+\begin{equation}
+  \gamma''(f_n) = J_1(x_n)\left[\frac{(x'(f_n))^2}{x_n} - x''(f_n)\right].
+  \label{eq:gamma-pp}
+\end{equation}
+Every term is computable without new data: $x_n$ is the $n$-th zero of $J_0$ (exact,
+\texttt{scipy.special.jn\_zeros}); $J_1(x_n)$ is a standard special-function evaluation, never
+zero at $x_n$ by Bessel zero-interlacing; $x'(f_n)$, $x''(f_n)$ are derivatives of $2\pi f
+r/c(f)$, using the exact station distance $r$ and $c(f)$'s local derivatives from the reference
+or picked curve already used for $c_{\min}$ in the Round 2 subset-selection script
+(\texttt{c\_ref(f) + best\_delta\_km\_s}).
+
+\textbf{Assumption, stated explicitly}: this requires $c(f)$ to be locally well-behaved enough
+near each $f_n$ for its derivatives to be meaningfully estimated from the picked curve --- weaker
+than a globally constant $c$ (already rejected for the $c_{\min}$ correction), but not
+guaranteed, especially in a rapidly-dispersive band. Worth checking empirically, not assumed.
+
+\subsection{Payoff}
+
+This replaces Haley \& Anitescu's self-referential spline-on-noisy-data bias estimate with a
+closed-form bias term derived from known physics, evaluated exactly where it matters (the
+zero-crossings themselves). No fitting step, no dependence on the very estimate whose quality
+it's meant to characterize.
+
+\section{Variance: A Two-Tier Jackknife}
+\label{sec:variance}
+
+\subsection{Taper level (compatible with FastMspec's architecture)}
+
+The delete-one jackknife variance of the log spectrum over $K$ tapers (Haley--Anitescu
+supplement Eq.~23) needs each individual per-taper spectrum --- straightforward for classical
+Mspec (which already materializes per-taper spectra, chunked over $K$), but in tension with
+FastMspec's deliberately non-per-taper-materializing architecture (Section~\ref{sec:fastmspec}).
+The supplement's Eq.~24 resolves this: the \emph{expected value} of the jackknife variance is a
+closed form in $K$ alone (via the trigamma function $\psi'$),
+\begin{equation}
+  E\{\hat\sigma_J^2(f)\} = \frac{(K-1)^3}{K\binom{K-1}{2}}\left[\frac{2}{(K-2)^2} +
+  \frac12\left(\psi'\!\left(\frac{K-1}{2}\right) - \psi'\!\left(\frac{K-2}{2}\right)\right)\right],
+  \label{eq:jk-expected}
+\end{equation}
+requiring only $K$ (or FastMspec's effective transition-region taper count, denoted $r_{\rm
+trans}$ to avoid collision with the distance symbol $r$ above), not per-taper recomputation.
+This keeps the memory-decoupling argument for FastMspec (Section~\ref{sec:fastmspec}) fully
+intact even while computing variance.
+
+\subsection{Record level (a real complication, not glossed over)}
+
+Haley \& Anitescu's theory is single-record. This project stacks \texttt{coh\_num} independent
+day/window traces on top of the $K$-taper average --- a second layer their paper never addresses.
+Following the precedent in Park \& Levin (2016) \cite{parklevin2016}, who jackknife over
+\emph{events} in a bin-average (not tapers) for exactly this multi-record situation (``a
+bin-average with 10 events leads to 10 different RF estimates,'' via the delete-one method of
+Efron 1982), decompose the per-trace estimates $X_i(f)$ (log- or Fisher-transformed) as
+\begin{equation}
+  X_i(f) = \mu(f) + \delta_i(f) + \varepsilon_i(f),
+\end{equation}
+where $\delta_i$ is genuine day-to-day physical variation (non-stationarity: storms, source
+shifts) and $\varepsilon_i$ is that day's own $K$-taper estimation noise. Then
+\begin{equation}
+  \widehat{\mathrm{Var}}(\delta; f) \approx \mathrm{SampleVar}_{i}(X_i(f)) -
+  E\{\hat\sigma_J^2(f)\},
+  \label{eq:excess-variance}
+\end{equation}
+using Eq.~\ref{eq:jk-expected} as the estimation-noise baseline (cheap, FastMspec-compatible) and
+the plain sample variance across traces as the empirical total (Haley \& Anitescu's jackknife
+motivation, statistical efficiency for a \emph{small} number of independent samples, applies most
+naturally at the $K$-taper tier; at \texttt{coh\_num} scale, already in the hundreds, plain sample
+variance is simpler and no less appropriate).
+
+\textbf{This is a diagnostic, not just a variance estimate.} Computing
+Equation~\ref{eq:excess-variance} as a function of frequency identifies where the coherence
+estimate is unstable for a \emph{physical} reason (real non-stationarity) rather than an
+estimator-tunable one (insufficient tapering). At frequencies where $\widehat{\mathrm{Var}}
+(\delta; f)$ dominates, no choice of $NW$ will stabilize picking --- the MSE-minimization
+machinery of Section~\ref{sec:mse-recipe} is the wrong tool there, and that should be stated
+plainly in any picking-reliability discussion rather than attributed to a suboptimal bandwidth.
+
+\section{Why FastMspec's Architecture Survives This Analysis}
+\label{sec:fastmspec}
+
+FastMspec (Karnik, Romberg \& Davenport's algorithm \cite{karnik2022}, translated in
+\texttt{fast\_multitaper.py}) decomposes the multitaper average into an $O(N\log N)$ bulk
+sinc-convolution term plus a small correction over only the DPSS eigenvalue transition-region
+tapers, whose count $r_{\rm trans}$ stays bounded ($11$--$24$) across $NW=5$--$1600$ while $K$
+grows linearly the whole way. This means (i) the memory argument for FastMspec over classical
+Mspec/MspecBestK holds regardless of where the bandwidth search in this document lands, and (ii)
+the taper-level variance term above (Eq.~\ref{eq:jk-expected}) never needs FastMspec's fused
+computation broken open --- $K$ alone (or $r_{\rm trans}$, if the transition-region-only variance
+is preferred) is sufficient.
+
+\section{Putting It Together}
+\label{sec:mse-recipe}
+
+The full recipe, combining Sections~\ref{sec:bias}--\ref{sec:variance} with the already-derived
+upper bound (Equation~\ref{eq:resolution}):
+\begin{enumerate}[nosep]
+  \item Compute $NW_{\rm high}(r)$ per pair from its own $c_{\min}$ (Round 2 subset-selection
+    script).
+  \item At each candidate $NW$ in the sweep, compute the closed-form bias
+    (Equation~\ref{eq:gamma-pp}) at the theoretical zero-crossing frequencies, and the closed-form
+    taper-level variance (Equation~\ref{eq:jk-expected}).
+  \item Minimize $\hat\Lambda(NW) = \mathrm{bias}^2 + \mathrm{variance}$, restricted to $NW \le
+    NW_{\rm high}(r)$ (the resolution bound is a hard ceiling on catastrophic failure, not part
+    of the smooth tradeoff; the true optimum can sit well inside it, as in Haley \&
+    Anitescu's own Lorentzian example, $NW=14.5$ against a much larger ceiling).
+  \item Separately compute the excess-variance diagnostic (Equation~\ref{eq:excess-variance}) to
+    flag frequencies where bandwidth tuning cannot help at all.
+\end{enumerate}
+Round 2's NW sweep (60-pair stratified subset, 5 fractions of $NW_{\rm high}(r)$ each) is the
+mechanism for computing this empirically once real per-fraction convergence/quality data exists
+--- this document gives the theory the sweep is meant to test, not a substitute for running it.
+
+\section{Open Questions}
+
+\begin{itemize}[nosep]
+  \item Whether $c(f)$'s local derivatives, needed for Equation~\ref{eq:gamma-pp}, are reliably
+    estimable from the picked/reference curve in rapidly-dispersive bands, or need their own
+    smoothing/regularization.
+  \item Whether $\delta_i$ and $\varepsilon_i$ (Section~\ref{sec:variance}) are actually
+    independent, as assumed in Equation~\ref{eq:excess-variance} --- untested against real data.
+  \item Whether the closed-form bias (Section~\ref{sec:bias}) should use the fundamental-mode
+    Bessel structure alone, or needs correction for multi-mode contamination, matching the same
+    caveat already carried by the Love-wave Bessel-model simplification in
+    \texttt{coherence\_barcode\_design.tex}.
+\end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{aki1957}
+Aki, K. (1957). Space and time spectra of stationary stochastic waves, with special reference to
+microtremors. \textit{Bulletin of the Earthquake Research Institute}, 35, 415--456.
+
+\bibitem{haley2017}
+Haley, C.\ L., \& Anitescu, M.\ (2017). Optimal bandwidth for multitaper spectrum estimation.
+\textit{IEEE Signal Processing Letters}, 24(11), 1696--1700.
+\url{https://doi.org/10.1109/LSP.2017.2719943}
+
+\bibitem{karnik2022}
+Karnik, S., Romberg, J., \& Davenport, M.\ A.\ (2022). Multitaper spectral estimation revisited:
+fast algorithms and generalized approaches. Preprint. (FastMSPEC project reference:
+\texttt{Multitaper\_Revisited\_Karnik.pdf}.)
+
+\bibitem{parklevin2016}
+Park, J., \& Levin, V.\ (2016). Statistics of multiple-taper receiver functions. \textit{Geophysical
+Journal International}, 207(1), 512--527. \url{https://doi.org/10.1093/gji/ggw291}
+
+\bibitem{walden2000}
+Walden, A.\ T.\ (2000). A unified view of multitaper multivariate spectral estimation.
+\textit{Biometrika}, 87(4), 767--788. \url{https://doi.org/10.1093/biomet/87.4.767}
+
+\bibitem{ekstrom2009}
+Ekstr\"om, G., Abers, G.\ A., \& Webb, S.\ C.\ (2009). Determination of surface-wave phase
+velocities across USArray from noise and Aki's spectral formulation. \textit{Geophysical Research
+Letters}, 36(18), L18301. \url{https://doi.org/10.1029/2009GL039131}
+
+\end{thebibliography}
+
+\end{document}
