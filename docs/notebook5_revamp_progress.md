@@ -1054,3 +1054,47 @@ checkable against the real Round 1 data once `K_min` is derived. Also yields a g
 (if not immediately actionable on the *existing* dataset) lever: pushing `R_max` outward needs
 longer windows, not a better algorithm -- a data-collection recommendation, not an algorithmic one,
 worth naming even though it can't be exploited by reprocessing the existing `.mat` files.
+
+### 2026-09-03 -- Round 2 sizing finalized + preparation started; the `NW_high(R)` prediction
+already matches Round 1's observed collapse, before Round 2 has even run
+
+**Correction to the `NW_high` derivation, per direct guidance**: the earlier derivation implicitly
+assumed a single scalar `c`, wrong for a dispersion-based method by definition. `Delta_f_zero(f) =
+c(f)/(2R)` is smallest (tightest) wherever `c(f)` is smallest in the analysis band, so the
+conservative, correct reference is `c_min` over the band -- not the mean (safe only at the mean)
+and not the range's upper bound (the most over-optimistic choice, guaranteeing under-resolution
+below it). Per direct guidance, `c_min` is sourced from the pair's own analysis band using Round
+1's real converged picks where available (the winning template curve, `c_ref(f) + best_delta_km_s`)
+rather than an assumed constant.
+
+**Round 2 sizing, finalized**: 60-pair stratified subset (15 per distance quartile, same quartiles
+Round 1's own convergence table uses), each run at 5 NW values -- `[1.5, 1.0, 0.7, 0.45, 0.25] x
+NW_high(R)` -- computed *per pair* from its own `c_min`, not a shared global value. 300 additional
+FastMspec work units, ~86 CPU-hours at Round 1's real median runtime (1033.1s), on top of the
+unchanged 380-pair baseline run (~109hr) and single-taper (~50hr): **~245 CPU-hours total for
+Round 2**, versus the original ~159hr single-pass estimate.
+
+**Preparation started**: `python/dispcurve_pick_batch/round2_prep.py` (new) -- computes each
+candidate pair's `c_min`/`NW_high(R)` from Round 1 results and selects the stratified subset.
+Tested against Round 1's current partial results (not the final selection -- to be regenerated
+once Round 1 fully completes) and caught one real design flaw before it became a data gap: gating
+`c_min` on "pair has a converged Round 1 pick" silently starved the far quartiles of candidates
+(quartile 3 had only 8 eligible pairs, quartile 4 only 1) -- exactly the quartiles the sweep most
+needs to include, since they're where convergence is currently ~0-4%. Fixed with an explicit
+fallback: pairs without a converged pick use the bare reference curve (`delta=0`) for `c_min`
+instead of being excluded -- less precise for that pair specifically, but available for every pair
+regardless of Round 1 outcome, and the whole point is testing pairs that currently fail. Re-ran
+after the fix: 15/15/15/15 across all four quartiles.
+
+**An unplanned, already-visible confirmation of the theory, from the test run's own output**:
+quartile 4 (farthest, 780-1030 km) pairs come out with `NW_high(R) ~ 3.2-5.1` -- *below* the
+project's current fixed operating point (`NW~10.8` at `Wband=0.001`). That means today's single
+fixed bandwidth isn't just suboptimal for these pairs, it's genuinely violating the resolution
+criterion for their actual distances -- a direct, quantitative, mechanistic explanation for Round
+1's observed ~0% convergence there, visible before Round 2 has run a single sweep. Directly
+motivates the fraction grid's low end (0.25x, 0.45x): if shrinking NW down to match these pairs'
+*true* resolution ceiling actually rescues convergence, that's the sweep's central hypothesis
+confirmed; Round 2 will show whether it does.
+
+Final subset selection (real, not the partial-data test run above) still deferred until Round 1
+fully completes, per the established two-round rationale.
