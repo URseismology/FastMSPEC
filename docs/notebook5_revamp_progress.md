@@ -19,6 +19,12 @@ next stage.
 - [x] **Stage 3** -- Validate against Sayan's SKRH-BAND result; 4-technique timing pilot
 - [x] **Stage 4** -- bluehive batch pipeline, full 380 pairs x 4 techniques (Round 1 complete;
       Round 2 -- NW sweep, 300 points, complete)
+- [ ] **Stage 4.5** -- Reference-curve accuracy & wave-polarization correction (new work stream,
+      inserted ahead of Stage 5 -- see log 2026-09-04 entries): (a) fix/quantify the
+      `horizontal_polarization` Love-wave bug in the picker, (b) build a hybrid ADAMA (5-40s) +
+      GDM52 (>40s) per-pair reference curve replacing the single generic `SDISPL.ASC`, (c) compare
+      our correlations against ADAMA's raw `cf`/`co` products (AkiEstimate, Hawkins & Sambridge
+      2019) as an independent check
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
 - [ ] **Stage 6** -- Packaging + docs cleanup, Notebook 3 Section 4 ref_curve fix
 
@@ -1441,3 +1447,110 @@ missing check -- not yet done, named explicitly as a next step rather than assum
 
 Also fixed a real gap raised directly: the four example figures' captions didn't state which
 bandwidth (`NW`) each one used. Added the exact `NW`/`W` values to all four captions.
+
+### 2026-09-04 (cont.) -- Two direct mechanistic tests, both genuine negatives; FastMspec-vs-
+single-taper overlay delivered
+
+Built and ran three real, data-grounded tests on the four report examples (bluehive):
+
+- **FastMspec-vs-single-taper overlay** (`gen_overlay_figures.py`): real coherence, both
+  techniques, full 0-0.35 Hz band, same 4 pairs/NW as the report. Visually confirms FastMspec
+  smooths through single-taper's noise cleanly in every quartile, including Q4 -- answers the
+  report's own named gap. Also **corrects an earlier overclaim**: viewed over the full band (not
+  the picker's own cropped diagnostic plot), quartile 4's coherence has a real, strong, multi-lobed
+  envelope (main burst 0.09-0.13 Hz) -- not "unstructured noise throughout" as the report first
+  said. Quartile 3 shows a comparably multi-lobed envelope and still converges, so this alone
+  doesn't explain the Q4 gap.
+- **Branch-continuity test** (`branch_continuity_test.py`): tracked the nearest-to-reference
+  Bessel-branch id vs. frequency for all 4 pairs, testing whether beat-envelope nulls cause
+  cycle-slip fragmentation. **Not supported**: branch id increases smoothly and monotonically
+  across the whole band in both Q1 and Q4, no scatter. What's real: `bad_quality_fraction` is
+  genuinely much higher for Q4 (0.888 vs. 0.41-0.56), and many Q4 flags land even where
+  `crossamps~=peakamps` (no amplitude collapse) -- pointing at criteria 1/3, not the
+  amplitude-collapse criterion 2.
+- **Walk-reseeding test** (`reseed_test.py`): raised `freqmin` to the frequency of peak local
+  amplitude within the low-frequency half of the band, unmodified picker otherwise. **Makes things
+  worse**: every previously-converging Q1-Q3 pair fails outright (coverage 0.00). A single-pair
+  debug run confirmed `n_accepted_picks=0`, not a smaller coverage denominator -- the walk finds
+  crossings but accepts none. Not fully diagnosed; flagged as the walk's own bootstrapping logic,
+  not a property of the record.
+
+All three folded into `docs/round2_hypothesis_evaluation.tex` (Section 5, Synthesis), reported
+honestly as negative results that narrow the next step rather than confirming the hypotheses that
+motivated them. Compiled clean on bluehive, pushed to `notebook5-phase-velocity-revamp`
+(`9e8d365`, `cb0c75b`).
+
+### 2026-09-04 (cont.) -- A real methodology gap found: the picker has never been told our data
+is Love-wave
+
+Checked directly (not assumed): our data path is `processed_data/love/madagascar/...` and
+`data/reference/README.md` states `SDISPL.ASC` is a Love-wave curve. But
+`python/dispcurve_pick_batch/work_unit.py`'s only `extract_dispcurve` call site has
+`horizontal_polarization=False` hardcoded, unconditionally, for every pick this project has ever
+made (Round 1's 1520, Round 2's 300, every diagnostic script above). Per the picker's own
+docstring, `False` uses pure J0 zeros (correct for vertical-Rayleigh); `True` uses J0-J2
+(correct for Love and radial-Rayleigh, per Kastle et al. 2016) -- so every pick has used the wrong
+Bessel model.
+
+**Quantified, not just flagged**: verified numerically that J0 and J0-J2 zero locations differ by
+~23% at the first zero (`x=2*pi*f*r/c` small, near field) but converge to <0.1% by the 20th zero
+(far field). Mapped onto our own data: Q1 (223 km) sits at `x~3.8` at the pick band's lowest
+frequency (0.01 Hz) -- squarely in the bad regime -- but is safely far-field (`x=19-38`) by
+0.05-0.1 Hz. Q4 (783 km) is far-field (`x>=13`) almost everywhere in the band. So the bug's
+practical impact is concentrated at **near pairs, longest periods** specifically -- a real,
+previously unquantified error source there, but not implicated in Q4's convergence failure.
+Fix + before/after test not yet done -- named as the first item in the new Stage 4.5.
+
+### 2026-09-04 (cont.) -- Stage 4.5 scoped: a hybrid ADAMA + GDM52 reference curve, replacing the
+single generic `SDISPL.ASC`
+
+User-directed investigation into replacing the current single generic reference curve with a
+physically-grounded, per-pair one, prompted by today's reference-curve-dependence finding.
+Checked three candidate sources directly (not from descriptions):
+
+- **`ADAMA-D1` pair-level products** (`repovibranium:/volume1/web/ADAMA-D1/`, `ADAMA_clean/*.txt`,
+  Ekstrom USANT15 format): confirmed 28/30 of our Madagascar stations appear somewhere in ADAMA's
+  own XV-network measurements, but **0/380 of our exact station pairs match** (verified directly,
+  not just in aggregate) -- ADAMA's pairing strategy (continental-scale, mixes XV with dozens of
+  other networks, shortest XV-XV baseline 202 km) essentially never reconstructs our specific pair
+  list. Read `Olugboji & Xue (2022, SRL)` -- ADAMA1 -- directly: confirms `XV` is network #36 of 62
+  in ADAMA's original catalog and Madagascar is named as a region with improved sampling, so this
+  dataset genuinely is a subset of ADAMA's collection, not independently overlapping.
+  `ADAMAraw_co_love.h5`/`_ral.h5` (the full ~114,000-pair raw catalog, not just the small `clean`
+  sample) are being pulled to bluehive for a complete pair-level check -- in progress.
+- **`ACE_ADAMA/ADAMA_Maps`** (github.com/URseismology/ACE_ADAMA): a real, already-built gridded
+  tomographic map product -- Love and Rayleigh, phase and group velocity, periods 5-40 s exactly
+  matching ADAMA1's catalog, `.mat` format. This is the workable path (map + path-integration,
+  not pair-matching): **deep-verified directly**, not from the README --
+  - Grid registration confirmed from the actual axis files (`a_latgrid_2Dgrid.txt`,
+    `a_longrid_2Dgrid.txt`, since `plotpara.mat`, the file the plotting scripts load it from, isn't
+    in the repo): 297x324, regular 0.25x0.25 degree, lat -33.92 to 40.08 (row 0 = south), lon
+    -23.20 to 57.55 (col 0 = west).
+  - Cross-format validation: `.mat` and `.txt` exports of the same map (`L10_P`) agree to 5e-15
+    (floating-point noise) -- real confirmation the data isn't corrupted between formats.
+  - **A real gap caught**: the raw `.mat` has no ocean/landmask applied (96,228 finite cells,
+    including implausible values down to 0.31 km/s); the `.txt` export does (41,030 finite cells,
+    plausible 3-5 km/s mean). Masking must be applied explicitly before any per-pair lookup, not
+    assumed already done.
+  - **A caveat, not a validation**: ADAMA's own checked-in `SDISPL.ASC`
+    (`ACE_ADAMA/Plotting/Plotting_Data/SDISPL.ASC`) is NOT identical to ours -- same format/header,
+    different velocities at the same periods (3.48 vs. 1.22 km/s at T=2s). Different path-average
+    1D models, not the same file; noted plainly rather than claimed as a free validation.
+  - GDM52's Love-specific product and grid still need the same deep-verification pass -- not done.
+- **`ADAMA_Models/LITHO_txt`**: confirmed litho1.0-derived comparison maps exist in this same repo
+  too, addressing the litho1/crust1 half of the original scoping question.
+
+**Plan**: hybrid curve per pair -- ADAMA's Love map (5-40 s) + GDM52's Love product (>40 s, to
+250 s) -- sampled along each pair's great-circle path, replacing the single `SDISPL.ASC` family.
+Not yet built.
+
+### 2026-09-04 (cont.) -- Pairwise comparison redirected: correlations, not dispersion curves
+
+User feedback, grounded by reading ADAMA1 directly: ADAMA's dispersion curves come from
+**AkiEstimate (Hawkins & Sambridge, 2019)** -- a nonlinear waveform-fitting method using the
+*entire* NCF amplitude plus an a priori path-average model, explicitly contrasted in the paper
+against simple automated zero-crossing (Ekstrom 2009, our method's own family). Comparing our
+picked dispersion curves against ADAMA's would conflate "do the data agree" with "do the two
+picking methods agree" -- comparing raw correlations (`ADAMAraw_cf_love.h5`, being pulled) against
+ours sidesteps that confound and is the right comparison. Not yet done -- next step once the `cf`
+transfer completes.
