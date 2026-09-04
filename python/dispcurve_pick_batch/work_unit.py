@@ -66,19 +66,29 @@ class WorkUnitResult:
     matlab_rel_l2_error: float | None
     runtime_s: float
     error: str | None
+    wband_used: float | None = None  # Round 2 NW-sweep only; None means "the module default,
+    # WBAND" -- added after Round 1 shipped, so every existing result JSON simply lacks this key
+    # rather than carrying a wrong value (dataclass default keeps `process()`'s Round-1 call
+    # sites, which never pass wband_override, producing byte-identical rows otherwise).
 
     def as_dict(self) -> dict:
         return asdict(self)
 
 
-def _coherency(s1_data_mat: np.ndarray, s2_data_mat: np.ndarray, technique: str):
+def _coherency(s1_data_mat: np.ndarray, s2_data_mat: np.ndarray, technique: str,
+               wband_override: float | None = None):
     """Returns (coh_sum, coh_num) for the given technique. single-taper needs detrend + 5% cosine
     taper BEFORE the plain-FFT coherency (this project's established "5% Cosine Single-Taper"
     technique -- confirmed against real MATLAB output to 4.8e-9 relative error in Stage 3; skipping
     this preprocessing gives a misleading ~46% mismatch that looks like a bug but isn't one). The
     other three techniques use the un-preprocessed matched data directly, matching the production
     driver's IsDetrend=0/IsTaper=0 config for the IsMspec path.
+
+    wband_override: Round 2's NW-sweep hook -- FastMspec only, per-pair candidate bandwidth
+    instead of the fixed module-level WBAND. None (the Round-1 default) means "use WBAND",
+    backward compatible with every existing call site.
     """
+    wband = WBAND if wband_override is None else wband_override
     if technique == "single-taper":
         s1p = pp.ccf_cos_taper_3dim(pp.ccf_detrend_3dim(s1_data_mat))
         s2p = pp.ccf_cos_taper_3dim(pp.ccf_detrend_3dim(s2_data_mat))
@@ -89,11 +99,11 @@ def _coherency(s1_data_mat: np.ndarray, s2_data_mat: np.ndarray, technique: str)
         coh_trace = np.where(np.isnan(coh_trace), 0, coh_trace)
         return coh_trace.sum(axis=(0, 1)), coh_num
     if technique == "FastMspec":
-        r = compute_crosscorr_mtc_fastmspec(s1_data_mat, s2_data_mat, wband=WBAND, cutoff=CUTOFF, epsilon=EPSILON)
+        r = compute_crosscorr_mtc_fastmspec(s1_data_mat, s2_data_mat, wband=wband, cutoff=CUTOFF, epsilon=EPSILON)
     elif technique == "Mspec":
         r = compute_crosscorr_mtc_mspec(s1_data_mat, s2_data_mat, nw=NW_MSPEC, k_taps=K_MSPEC, dt=1.0)
     elif technique == "MspecBestK":
-        r = compute_crosscorr_mtc_mspecbestk(s1_data_mat, s2_data_mat, wband=WBAND, cutoff=CUTOFF, epsilon=EPSILON, dt=1.0)
+        r = compute_crosscorr_mtc_mspecbestk(s1_data_mat, s2_data_mat, wband=wband, cutoff=CUTOFF, epsilon=EPSILON, dt=1.0)
     else:
         raise ValueError(f"Unknown technique: {technique!r}")
     return r.coh_sum, r.coh_num
@@ -134,7 +144,8 @@ def _score(diag) -> float:
     return diag.freq_coverage_fraction + 0.5 * bad_q_term + 0.5 * amp_term
 
 
-def process(pair: Pair, technique: str, ref_curve_path: Path) -> WorkUnitResult:
+def process(pair: Pair, technique: str, ref_curve_path: Path,
+            wband_override: float | None = None) -> WorkUnitResult:
     t0 = time.time()
     try:
         raw = loadmat(pair.matched_data_path, simplify_cells=True)
@@ -152,7 +163,7 @@ def process(pair: Pair, technique: str, ref_curve_path: Path) -> WorkUnitResult:
         n_samples = s1.shape[2]
         dist_km = float(raw.get("stapairsinfo", {}).get("r", pair.dist_km))
 
-        coh_sum, coh_num = _coherency(s1, s2, technique)
+        coh_sum, coh_num = _coherency(s1, s2, technique, wband_override=wband_override)
         matlab_coh_num, matlab_rel_err = _matlab_cross_validate(pair, technique, coh_sum, n_samples)
 
         faxis = np.fft.fftfreq(n_samples, d=1.0)
@@ -193,7 +204,7 @@ def process(pair: Pair, technique: str, ref_curve_path: Path) -> WorkUnitResult:
             mean_amp_ratio=best_diag.mean_amp_ratio if best_diag else None,
             n_templates_converged=n_converged, n_templates_scanned=len(templates),
             matlab_coh_num=matlab_coh_num, matlab_rel_l2_error=matlab_rel_err,
-            runtime_s=time.time() - t0, error=None,
+            runtime_s=time.time() - t0, error=None, wband_used=wband_override,
         )
     except Exception as e:  # noqa: BLE001 -- a batch of 1520 must never let one work unit's
         # exception kill the whole task; record it in the manifest instead. Re-raised nowhere:
@@ -204,5 +215,5 @@ def process(pair: Pair, technique: str, ref_curve_path: Path) -> WorkUnitResult:
             n_candidate_crossings=None, n_accepted_picks=None, freq_coverage_fraction=None,
             mean_amp_ratio=None, n_templates_converged=0, n_templates_scanned=0,
             matlab_coh_num=None, matlab_rel_l2_error=None, runtime_s=time.time() - t0,
-            error=f"{type(e).__name__}: {e}",
+            error=f"{type(e).__name__}: {e}", wband_used=wband_override,
         )

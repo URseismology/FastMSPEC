@@ -29,6 +29,23 @@ class FastMultitaper:
         else:
             raise ValueError("cutoff must be >= 1 or > eps")
 
+        # Defensive guard, not part of the original translation: at NW below ~3 (this cutoff),
+        # k=0 -- no taper reaches the `cutoff` eigenvalue threshold at all. Every downstream use
+        # of self.K divides by it (spectral_estimate here, fast_spectrum_batch in
+        # ccf_pipeline/fast_cross_spectrum.py), silently producing NaN/Inf rather than a clear
+        # error -- found live during Round 2's NW sweep (2026-09-04), where 65/300 low-bandwidth
+        # sweep points failed with a confusing "need at least one array to concatenate" deep
+        # inside the picker instead of a diagnosable cause. Raising here changes nothing for any
+        # K>0 input (every existing call site already assumed K>0); it only replaces silent
+        # corruption with an informative failure at the one input range that was never valid.
+        if k == 0:
+            raise ValueError(
+                f"FastMultitaper: NW={n * w:.3g} (cutoff={cutoff}) gives K=0 -- no taper reaches "
+                f"the cutoff eigenvalue threshold. NW must be large enough that at least one "
+                f"taper's eigenvalue exceeds `cutoff`; empirically this project's cutoff=1-1e-5 "
+                f"needs NW >~ 3."
+            )
+
         self.S = s * np.sqrt(np.abs(eig_weights))[None, :]
         self.index_plus = eig_weights > 0
         self.r = len(eig_weights)
