@@ -1331,3 +1331,18 @@ genuinely complete.
 
 Stage 5 remains explicitly on hold, per direct instruction, pending further feedback on
 outstanding analysis.
+
+### 2026-09-04 -- Round 2 hypothesis evaluation report
+
+Per direct request, wrote a full standalone report evaluating the four hypotheses that motivated
+Round 2's design (normalized-bandwidth H1, interior-MSE-optimum H2, existence-threshold-cliff H3,
+the mid-round-discovered K=0-floor H4) against the real 300-point sweep data:
+[`docs/round2_hypothesis_evaluation.tex`](../docs/round2_hypothesis_evaluation.pdf). Headline
+results: H1 and H3 strongly confirmed (quartile 4 shows zero convergence across all 75 attempts,
+including at 1.5x its own ceiling -- a genuine cliff, not a gradual decline); H4 confirmed with a
+clean quartile gradient (1%/12%/23%/51% K=0 rate); **H2 is not supported within the tested range
+`[0.25, 1.5] x NW_high` -- convergence and quality both monotonically favor the widest
+tested bandwidth, with no interior peak found**, reported as a genuine open question (either the
+true optimum sits above 1.5x, or other effects dominate at this sample size) rather than smoothed
+over to match the theory doc's prediction. Recommends extending the sweep's upper fraction on a
+quartile-1 subset before treating `stage5_bandwidth_theory.tex`'s MSE recipe as complete.

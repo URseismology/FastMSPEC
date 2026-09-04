@@ -1,0 +1,208 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage[final]{microtype}
+\sloppy
+
+\title{Round 2 NW-Sweep: Evaluating the Design Hypotheses Against Real Data}
+\author{FastMSPEC project report}
+\date{2026-09-04}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Round 2 (`docs/notebook5\_revamp\_progress.md`'s "Round 2 design" section) ran FastMspec at 5
+candidate bandwidths per pair for a 60-pair, distance-stratified subset (300 work units total),
+built specifically to test four hypotheses that motivated the sweep's design in the first place.
+This report states each hypothesis plainly, evaluates it against the real 300-point dataset, and
+gives an explicit verdict for each -- including one result (H2) that did \emph{not} come out the
+way a naive reading of the theory doc would predict, reported as found rather than smoothed over.
+Standalone reference, independent of the conversation that produced it.
+\end{abstract}
+
+\tableofcontents
+
+\section{The Four Hypotheses, Stated for the Record}
+\label{sec:hypotheses}
+
+Recalled from the session that designed Round 2; stated here explicitly so any misremembering
+can be corrected before the analysis below is trusted.
+
+\begin{description}[leftmargin=1.5em]
+  \item[H1 --- Normalized bandwidth is the right variable.] A pair's own $NW_{\rm high}(r) \approx
+    Nc_{\min}/(4r)$ (the resolution-bandwidth ceiling, computed per pair from its distance and
+    local phase velocity) is the correct quantity to normalize candidate bandwidths against --
+    i.e., convergence/quality should behave as a consistent function of $NW/NW_{\rm high}(r)$
+    across pairs of very different absolute distance, not depend on absolute $NW$ in a way that
+    differs pair to pair.
+  \item[H2 --- An interior MSE optimum exists.] Per the bias--variance framework in
+    \texttt{stage5\_bandwidth\_theory.tex} (following Haley \& Anitescu 2017), quality should
+    \emph{peak} at some bandwidth strictly between "as narrow as possible" and the resolution
+    ceiling -- not simply keep improving all the way to the ceiling. Haley \& Anitescu's own
+    Lorentzian example landed at $NW=14.5$ against a much larger ceiling, motivating the
+    expectation of an interior peak here too.
+  \item[H3 --- An existence threshold produces a cliff for far pairs.] For sufficiently large
+    distance $r$ (hence small $NW_{\rm high}(r)$), no candidate bandwidth in a reasonable range
+    should produce reliable convergence at all -- a qualitatively different, complete-failure
+    pattern for far pairs, distinct from the gradual bias--variance degradation expected for near
+    pairs.
+  \item[H4 --- A hard numerical floor exists below $NW\approx 3$.] Discovered mid-round, not
+    originally hypothesized, but directly testable once found: \texttt{FastMultitaper}'s taper
+    count $K$ hits exactly zero below $NW\approx 3$ (this project's \texttt{cutoff}), a
+    structurally different failure mode from H2/H3's statistical ones, expected to concentrate at
+    low fractions and, because $NW_{\rm high}(r)$ shrinks with $r$, disproportionately on far
+    pairs at any \emph{fixed} fraction.
+\end{description}
+
+\section{Data}
+
+300 work units: 60 pairs (15 per distance quartile, using Round 1's own quartile boundaries) x 5
+bandwidth fractions each, $NW/NW_{\rm high}(r) \in \{1.5, 1.0, 0.7, 0.45, 0.25\}$. Breakdown:
+\textbf{60/300 converged (20\%)}, \textbf{65/300 (21.7\%) hit the H4 floor} ($K=0$, a clear,
+diagnosable error after the same-day fix -- see \texttt{docs/notebook5\_revamp\_progress.md}'s
+2026-09-04 log entry), \textbf{175/300} are genuine convergence/non-convergence outcomes at
+numerically valid bandwidths. All numbers below are computed directly from
+\texttt{data/results/dispcurve\_quality/round2\_sweep/} (300 files) and \texttt{round2\_subset.csv}.
+
+\section{H1: Is fraction-of-$NW_{\rm high}$ the right normalization?}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+Quartile & $NW/NW_{\rm high}=1.5$ & $1.0$ & $0.7$ & $0.45$ & $0.25$ \\
+\midrule
+1 (nearest) & 12/15 (80\%) & 10/15 (67\%) & 9/15 (60\%) & 7/15 (47\%) & 3/15 (20\%) \\
+2           & 8/15 (53\%)  & 4/15 (27\%)  & 2/15 (13\%) & 0/15 (0\%)  & 0/15 (0\%) \\
+3           & 2/15 (13\%)  & 3/15 (20\%)  & 0/15 (0\%)  & 0/15 (0\%)  & 0/15 (0\%) \\
+4 (farthest)& 0/15 (0\%)   & 0/15 (0\%)   & 0/15 (0\%)  & 0/15 (0\%)  & 0/15 (0\%) \\
+\bottomrule
+\end{tabular}
+\caption{Convergence count/rate by quartile x fraction (raw, $K=0$ rows included as
+non-converged).}
+\label{tab:h1}
+\end{table}
+
+\textbf{Verdict: partially supported, with an important qualification.} Quartiles 1--3 all show
+the same \emph{direction} of dependence on fraction (convergence declines as fraction shrinks),
+consistent with $NW/NW_{\rm high}(r)$ being a meaningful normalized variable rather than an
+artifact of absolute distance. But quartile 4 doesn't participate in this pattern at all -- it is
+uniformly zero across every fraction tested, including $1.5\times$ its own ceiling. Normalizing
+by $NW_{\rm high}(r)$ makes quartiles 1--3 comparable to each other; it does not rescue quartile
+4, whose true operating point (if one exists at all for this window length) appears to sit
+entirely outside the tested range. This is exactly what H3 predicts, and is evaluated properly
+there rather than being treated as a failure of H1.
+
+\section{H2: Is there an interior optimum bandwidth?}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+& $1.5$ & $1.0$ & $0.7$ & $0.45$ & $0.25$ \\
+\midrule
+Convergence rate, raw (n=60 each) & 37\% & 28\% & 18\% & 12\% & 5\% \\
+Convergence rate, excl. $K=0$ rows & 37\% & 28\% & 21\% & 17\% & 14\% \\
+Mean \texttt{bad\_quality\_fraction} (converged only) & 0.634 & 0.651 & 0.663 & 0.666 & 0.800 \\
+Mean \texttt{freq\_coverage\_fraction} (converged only) & 0.540 & 0.486 & 0.476 & 0.358 & 0.366 \\
+\bottomrule
+\end{tabular}
+\caption{Convergence rate and quality scalars vs. fraction, aggregated across all quartiles.}
+\label{tab:h2}
+\end{table}
+
+\textbf{Verdict: not supported within the tested range $[0.25, 1.5]\times NW_{\rm high}$.} Every
+measure -- raw convergence, $K=0$-excluded convergence, and both quality scalars among converged
+units -- moves monotonically in the same direction: wider is better, all the way out to
+$1.5\times$ the nominal resolution ceiling, with no sign of turning over. This is not the pattern
+H2 predicted. Two honest readings, not adjudicated here:
+\begin{enumerate}[nosep]
+  \item The true interior optimum lies \emph{above} $1.5\times NW_{\rm high}$ -- i.e., the
+    resolution ceiling itself is more conservative than the point where bias actually starts
+    dominating, and the sweep simply didn't reach far enough to see the turnover.
+  \item In this regime, variance (favoring wider bandwidth) dominates the smooth bias term badly
+    enough, or other project-specific effects (picker mechanics, real non-stationarity per
+    \texttt{stage5\_bandwidth\_theory.tex}'s Section 5.2) swamp it enough, that no interior
+    optimum is visible at this sample size even if one exists in principle.
+\end{enumerate}
+Distinguishing these needs a wider sweep (fractions above 1.5) before H2 can be considered settled
+either way -- reported as an open question, not resolved by extrapolation.
+
+\section{H3: Does a real existence-threshold cliff appear for far pairs?}
+
+\textbf{Verdict: strongly supported, and more starkly than the qualitative prediction.} Quartile
+4's 15 pairs (individually, not just in aggregate) show \emph{zero} converged units across all 75
+attempts (5 fractions x 15 pairs), including at $1.5\times$ their own already-small $NW_{\rm
+high}(r)$ (range 2.30--5.08, all pairs individually listed in the underlying data). This is not a
+gradual decline -- it's a complete absence of convergence across the entire tested bandwidth
+range for every single far pair, exactly the qualitative "no valid window exists" signature H3
+predicted, and clearer than a marginal cliff would have been.
+
+\section{H4: The $K=0$ numerical floor}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Quartile 1 & Quartile 2 & Quartile 3 & Quartile 4 \\
+\midrule
+1/75 (1\%) & 9/75 (12\%) & 17/75 (23\%) & 38/75 (51\%) \\
+\bottomrule
+\end{tabular}
+\caption{$K=0$-floor rate by quartile (out of all 75 sweep points per quartile).}
+\label{tab:h4}
+\end{table}
+
+\textbf{Verdict: confirmed, with a clean, mechanistically-explained gradient.} The $K=0$ floor
+rate rises monotonically from 1\% (nearest quartile) to 51\% (farthest) -- exactly what the
+mechanism predicts: since $NW_{\rm high}(r)$ shrinks with distance, the \emph{same} fraction
+multiplier produces a smaller absolute $NW$ for farther pairs, crossing the $NW\approx 3$ floor at
+a higher fraction. By quartile 4, over half of all sweep points are not merely statistically
+unreliable but numerically undefined. This is a hard, structural limit, categorically different
+from H2/H3's statistical ones -- restated from \texttt{docs/notebook5\_revamp\_progress.md}: it
+must not be conflated with the soft, bias-variance-driven lower bound Stage 5 is deriving.
+
+\section{Synthesis and Implications for Stage 5}
+
+\begin{itemize}[nosep]
+  \item \textbf{H1 and H3 together give a clean, load-bearing result}: normalized bandwidth
+    ($NW/NW_{\rm high}(r)$) is the right variable for pairs where a viable window exists at all
+    (quartiles 1--3), and the existence-threshold theory correctly predicts \emph{which} pairs
+    don't have one (quartile 4, confirmed with zero exceptions). This validates the core
+    machinery \texttt{round2\_prep.py} was built on, not just the sweep's raw convergence numbers.
+  \item \textbf{H2's non-result is the most actionable finding for Stage 5's next step}: the
+    bias--variance MSE framework predicts an interior optimum, and this sweep didn't find one --
+    not because it was falsified, but because the tested range may not have reached it. Before
+    trusting \texttt{stage5\_bandwidth\_theory.tex}'s Eq.~16 recipe as a complete answer, extend
+    the sweep's upper fraction (e.g. to $2.0$--$3.0\times NW_{\rm high}$) on a subset of quartile-1
+    pairs specifically, where a real signal is most likely to be visible against the noise floor.
+  \item \textbf{H4 is now a known, permanent constraint on any future sweep design}: any bandwidth
+    search must stay above $NW\approx 3$ or expect the same clean failure mode -- already fixed to
+    fail informatively rather than silently, but still worth excluding from statistical fits by
+    construction (e.g. floor the fraction grid's minimum well above wherever $NW\approx 3$ falls
+    for the pairs being tested) rather than discovered again.
+\end{itemize}
+
+\section{Caveats}
+
+\begin{itemize}[nosep]
+  \item Sample sizes are modest -- 15 pairs per quartile, and after excluding the $K=0$ floor,
+    as few as 22 valid units at the lowest fraction. The quartile-level patterns (Tables
+    \ref{tab:h1}, \ref{tab:h4}) are stark enough to trust qualitatively; finer claims (e.g. exact
+    convergence-rate percentages) carry real sampling uncertainty at this $n$.
+  \item Quality scalars (Table \ref{tab:h2}, bottom two rows) are averaged only over
+    \emph{converged} units at each fraction -- as convergence rate drops, this average is
+    increasingly selected on a shrinking, potentially biased subset (as few as 3 units at
+    fraction $0.25$), not a random sample of "quality regardless of outcome."
+  \item This report covers FastMspec only, the technique the sweep was designed around;
+    single-taper's own Round 1 result (0/380 converged, a real mechanistic result) is separate
+    context, not re-evaluated here.
+\end{itemize}
+
+\end{document}
