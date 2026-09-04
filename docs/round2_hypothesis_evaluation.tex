@@ -430,35 +430,38 @@ smoothed dispersion curve (red), where one was found.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{q1_XVBITY_XVMAGY.png}
-\caption{Quartile 1 (nearest), \texttt{XVBITY\_XVMAGY}, 223.0\,km, converged. A clean, long-tracked
-pick (red, bottom panel) follows a single high-density ridge from short to long period with only a
-handful of low-quality crossings (red dots, top panel) -- the resolution criterion is comfortably
-satisfied at this distance.}
+\caption{Quartile 1 (nearest), \texttt{XVBITY\_XVMAGY}, 223.0\,km, $NW=22.21$ ($1.5\times
+NW_{\rm high}=14.81$; $W\approx0.00206$\,Hz), converged. A clean, long-tracked pick (red, bottom
+panel) follows a single high-density ridge from short to long period with only a handful of
+low-quality crossings (red dots, top panel) -- the resolution criterion is comfortably satisfied
+at this distance.}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{q2_XVBAEL_XVZAKA.png}
-\caption{Quartile 2, \texttt{XVBAEL\_XVZAKA}, 369.4\,km, converged. The coherence spectrum (top)
-still shows a clear amplitude envelope and well-defined oscillations; the pick (bottom) tracks
-cleanly across most of the band, with low-quality crossings concentrated only at the high-frequency
-edge.}
+\caption{Quartile 2, \texttt{XVBAEL\_XVZAKA}, 369.4\,km, $NW=22.18$ ($1.5\times NW_{\rm
+high}=14.79$; $W\approx0.00205$\,Hz), converged. The coherence spectrum (top) still shows a clear
+amplitude envelope and well-defined oscillations; the pick (bottom) tracks cleanly across most of
+the band, with low-quality crossings concentrated only at the high-frequency edge.}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{q3_XVBAND_XVMAJA.png}
-\caption{Quartile 3, \texttt{XVBAND\_XVMAJA}, 520.1\,km, converged. Real convergence is still
-possible at this distance (13-20\% of attempts, Table~\ref{tab:h1}), but the picked branch spans a
-visibly narrower frequency range than quartiles 1-2, and low-quality crossings (top panel) are more
+\caption{Quartile 3, \texttt{XVBAND\_XVMAJA}, 520.1\,km, $NW=15.36$ ($1.5\times NW_{\rm
+high}=10.24$; $W\approx0.00142$\,Hz), converged. Real convergence is still possible at this
+distance (13-20\% of attempts, Table~\ref{tab:h1}), but the picked branch spans a visibly
+narrower frequency range than quartiles 1-2, and low-quality crossings (top panel) are more
 frequent throughout the record.}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{q4_XVDGOS_XVMAGY.png}
-\caption{Quartile 4 (farthest), \texttt{XVDGOS\_XVMAGY}, 783.4\,km, did not converge -- the
-mechanism behind H3's finding, visually. The coherence spectrum (top) never develops the clean,
+\caption{Quartile 4 (farthest), \texttt{XVDGOS\_XVMAGY}, 783.4\,km, $NW=7.61$ ($1.5\times NW_{\rm
+high}=5.08$; $W\approx0.000704$\,Hz), did not converge -- the mechanism behind H3's finding,
+visually. The coherence spectrum (top) never develops the clean,
 decaying amplitude envelope the near-pair examples show -- it stays essentially unstructured
 oscillation throughout, and the majority of candidate crossings across the low-frequency half of
 the record are flagged low-quality (the near-continuous wall of red). The KDE panel (bottom) shows
@@ -466,6 +469,35 @@ only a thin sliver of real density at the extreme long-period edge; the picker f
 (small red cluster) and then has nothing left to track -- not a near-miss, a genuine absence of a
 resolvable branch.}
 \end{figure}
+
+\subsection{The quality gate depends on the reference curve, not just on the data}
+\label{sec:refcurve-dependence}
+
+Raised directly from visual inspection of the figures above: some crossings that look clean by
+eye (well-formed, unambiguous sign changes) are still flagged low-quality. Checked against the
+picker's actual source
+(\texttt{python/dispcurve\_pick/\_vendored\_seislib\_an\_processing.py}), not assumed. Of the
+three \texttt{bad\_quality} criteria, two depend directly on the reference curve:
+\begin{equation}
+  \texttt{expected\_fstep} = \frac{c_{\rm ref}(f)}{2r},
+\end{equation}
+computed from the \emph{reference curve's} velocity $c_{\rm ref}(f)$, not the true local velocity
+for the pair in question. Criterion 2 (envelope amplitude, \texttt{crossamps < 0.5*peakamps}) and
+criterion 3 (spacing, \texttt{diff(w\_axis) > 1.5*expected\_fstep}) both use this quantity; only
+criterion 1 (the peak-ratio test) is reference-curve-independent. If the reference curve's
+velocity is wrong for a specific path, \texttt{expected\_fstep} is wrong, and genuinely real,
+well-formed crossings can be flagged low-quality simply because their spacing does not match a
+miscalibrated prediction -- not because the crossing itself is spurious.
+
+This is not yet quantified for the dataset as a whole. What can be said now: this is a real,
+code-confirmed mechanism, not a hypothesis about the picker's behavior, and it means the
+\texttt{bad\_quality\_fraction} diagnostic reported throughout this document (and Round 1's own
+manifest) is not a pure measure of coherence quality -- it is a joint measure of coherence
+quality \emph{and} reference-curve accuracy for that specific path, and the two are not currently
+separated. A proper follow-up (not done here) would compare \texttt{bad\_quality\_fraction}
+against an independent measure of how far the reference curve sits from the picked/high-density
+branch, per pair, to check how much of the quality-gate signal is actually reference-curve error
+rather than data quality.
 
 \section{Synthesis and Implications for Stage 5}
 
@@ -486,6 +518,18 @@ resolvable branch.}
     fail informatively rather than silently, but still worth excluding from statistical fits by
     construction (e.g. floor the fraction grid's minimum well above wherever $NW\approx 3$ falls
     for the pairs being tested) rather than discovered again.
+  \item \textbf{The reference-curve dependence (Section~\ref{sec:refcurve-dependence}) affects
+    how much this report's own convergence numbers can be trusted as pure coherence-quality
+    measures}, and needs its own quantified check, not just the mechanism confirmed above.
+  \item \textbf{A direct FastMspec-vs-single-taper coherence comparison, independent of the
+    seislib quality gate, is a real and currently missing check}, raised directly. Every
+    convergence number in this report and in Round 1 (FastMspec 26.1\% vs. single-taper 0\%) is
+    filtered through the picker's own gate -- and that gate is now known (above) to be sensitive
+    to reference-curve accuracy, not solely to the underlying coherence's own quality. Whether
+    FastMspec's real advantage over single-taper is larger, smaller, or the same once measured
+    directly on the coherence itself (e.g. an SNR or spectral-flatness metric computed before any
+    picking), rather than through the gate's pass/fail outcome, is not yet known and should be
+    checked before leaning further on the gated convergence rate as the primary comparison metric.
 \end{itemize}
 
 \section{Caveats}

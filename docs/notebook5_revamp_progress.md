@@ -1408,3 +1408,36 @@ Also drafted (in conversation, not yet placed in any manuscript) a calibrated "n
 intro paragraph in both technical and non-technical registers, explicitly avoiding overclaiming
 completion given the bias-variance lower bound is still undetermined and the one direct empirical
 test of the window-length fix came back negative.
+
+### 2026-09-04 -- Real feedback on the four example figures surfaces a genuine mechanism: the
+quality gate depends on the reference curve, not just the data
+
+Reviewing the report's own Q4 figure, spotted something the report hadn't addressed: some
+crossings that look clean by eye are still flagged low-quality. Checked directly against
+`_vendored_seislib_an_processing.py` rather than guessed: of the three `bad_quality` criteria,
+two (envelope amplitude, spacing) are computed from `expected_fstep = c_ref(f)/(2r)` -- the
+**reference curve's** velocity, not the true local velocity for that specific path. Only the
+peak-ratio criterion is reference-curve-independent. So a reference curve that's wrong for a
+given path can cause genuinely real, well-formed crossings to be flagged low-quality purely
+because their spacing doesn't match a miscalibrated prediction -- exactly the visual impression
+from the Q4 figure, now grounded in the actual code rather than left as an intuition.
+
+**Consequence, stated plainly**: `bad_quality_fraction`, reported throughout this whole project
+(Round 1's manifest, this report's tables) is not a pure coherence-quality measure -- it's a
+joint measure of coherence quality and reference-curve accuracy for that path, currently
+unseparated. Not yet quantified across the dataset; added to
+`docs/round2_hypothesis_evaluation.tex` (Section 5.1) as a confirmed mechanism with the concrete
+follow-up named (compare `bad_quality_fraction` against an independent measure of reference-curve
+offset, per pair) but not yet done.
+
+**A second, separate point raised directly, also added to the report's Synthesis section**: every
+convergence number this whole project has reported (FastMspec 26.1\% vs. single-taper 0\% in
+Round 1, everything in this report) is filtered through the seislib gate -- which the finding
+above shows is reference-curve-sensitive, not a pure data-quality measure. Whether FastMspec's
+real advantage over single-taper is bigger, smaller, or the same when measured directly on the
+coherence itself (an SNR or spectral-flatness metric, computed *before* picking), rather than
+through the gate's pass/fail outcome, is genuinely unknown and flagged as a real, currently
+missing check -- not yet done, named explicitly as a next step rather than assumed away.
+
+Also fixed a real gap raised directly: the four example figures' captions didn't state which
+bandwidth (`NW`) each one used. Added the exact `NW`/`W` values to all four captions.
