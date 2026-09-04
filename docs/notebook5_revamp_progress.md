@@ -22,9 +22,10 @@ next stage.
 - [ ] **Stage 4.5** -- Reference-curve accuracy & wave-polarization correction (new work stream,
       inserted ahead of Stage 5 -- see log 2026-09-04 entries): (a) fix/quantify the
       `horizontal_polarization` Love-wave bug in the picker, (b) build a hybrid ADAMA (5-40s) +
-      GDM52 (>40s) per-pair reference curve replacing the single generic `SDISPL.ASC`, (c) compare
-      our correlations against ADAMA's raw `cf`/`co` products (AkiEstimate, Hawkins & Sambridge
-      2019) as an independent check
+      GDM52 (>40s) per-pair reference curve replacing the single generic `SDISPL.ASC` -- the scope
+      of *this* stage; a true pair-to-pair correlation/dispersion benchmark against ADAMA is a
+      separate, deferred future stage (needs a newly-constructed matched dataset, see log --
+      Sayan's 380 and ADAMA's own catalog are confirmed disjoint, so no existing data supports it)
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
 - [ ] **Stage 6** -- Packaging + docs cleanup, Notebook 3 Section 4 ref_curve fix
 
@@ -1616,3 +1617,22 @@ AkiEstimate's fit, not the correlation waveform itself. `delta=1.0` (1 Hz sampli
 convention) and a real `distance=1261.15` km were useful metadata regardless. The actual raw
 correlation is `ADAMA_ncfs_TT_fi.h5`/`_fr.h5` (Love/transverse, real+imaginary), transferring now
 (~62%) -- next step once that lands.
+
+**Which ADAMA pairs actually touch Madagascar, and a scoping split.** Reclassified the 156
+XV-XV pairs against `ADAMA_stalist.csv`'s `In_africa` column: 141 pair an island station against
+one of the 6 mainland companions (`MAPH`, `MOCU`, `MSGR`, `NAPU`, `SENA`, `TETE`; distances
+~724-2220 km), 15 are pure mainland-mainland and don't touch Madagascar at all. Zero, as
+established, are island-to-island.
+
+**Explicit scoping decision (user-directed)**: these 141 "nearby" pairs are not a strong
+correlation benchmark -- they're a different physical path than any of Sayan's 380, so a
+pair-to-pair comparison against them would be comparing different measurements, not validating
+ours. **Two separate work items going forward, not one**:
+1. **Reference curve via `ADAMA_Maps`** (already deep-verified above) -- proceed now, this doesn't
+   need pair-matching at all.
+2. **A true pair-to-pair correlation/dispersion benchmark** -- deferred, scoped as its own future
+   stage: would require constructing a new matched dataset (e.g. running our own pipeline on the
+   same island-mainland pairs ADAMA measured, or a future ADAMA run on Sayan's exact 380), not
+   attempted with what exists today. The `ncfs_TT`/`cf_love`/`co_love` transfers already done are
+   kept as useful inventory for when that stage is scoped, not being used for a "nearby" substitute
+   now.
