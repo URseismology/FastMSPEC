@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BANJ",
+  "net2": "XV",
+  "stn2": "BATG",
+  "dist_km": 630.4486211080945,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8733333333333333,
+  "n_candidate_crossings": 300,
+  "n_accepted_picks": 13,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.939871130993998,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3330,
+  "matlab_rel_l2_error": 0.272749187165236,
+  "runtime_s": 396.11272621154785,
+  "error": null,
+  "wband_used": 0.0007267845569854643
+}

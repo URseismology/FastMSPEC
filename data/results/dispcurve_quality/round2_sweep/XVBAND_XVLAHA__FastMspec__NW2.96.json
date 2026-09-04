@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 780.3232850616911,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7662807525325616,
+  "n_candidate_crossings": 1382,
+  "n_accepted_picks": 31,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.4220842891352699,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5940,
+  "matlab_rel_l2_error": 0.9281848261561758,
+  "runtime_s": 924.0580143928528,
+  "error": null,
+  "wband_used": 0.000274048699194519
+}

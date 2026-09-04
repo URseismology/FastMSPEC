@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 369.38632954026906,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.6500000000000012,
+  "bad_quality_fraction": 0.5984251968503937,
+  "n_candidate_crossings": 127,
+  "n_accepted_picks": 1006,
+  "freq_coverage_fraction": 0.7714285714285715,
+  "mean_amp_ratio": 8.618664417951702,
+  "n_templates_converged": 19,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4425,
+  "matlab_rel_l2_error": 0.22771254373679856,
+  "runtime_s": 1165.5362594127655,
+  "error": null,
+  "wband_used": 0.00205351356355893
+}

@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BAEL",
+  "dist_km": 360.2441188250598,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9130434782608695,
+  "n_candidate_crossings": 460,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.2006994643481048,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4590,
+  "matlab_rel_l2_error": 0.30316892472984824,
+  "runtime_s": 402.57707834243774,
+  "error": null,
+  "wband_used": 0.0003814461623923711
+}

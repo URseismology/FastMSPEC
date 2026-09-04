@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "MAJA",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 280.67645257299705,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.05000000000000071,
+  "bad_quality_fraction": 0.5,
+  "n_candidate_crossings": 152,
+  "n_accepted_picks": 532,
+  "freq_coverage_fraction": 0.39473684210526316,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 14,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5850,
+  "matlab_rel_l2_error": 0.01879180530554354,
+  "runtime_s": 969.9002106189728,
+  "error": null,
+  "wband_used": 0.0010119433385797612
+}

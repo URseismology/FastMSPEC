@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "KIRI",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 459.76660095556514,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9105058365758755,
+  "n_candidate_crossings": 514,
+  "n_accepted_picks": 12,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.2543944134270095,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3165,
+  "matlab_rel_l2_error": 0.33276296331680594,
+  "runtime_s": 338.1920819282532,
+  "error": null,
+  "wband_used": 0.0004332932135913341
+}

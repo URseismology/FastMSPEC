@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "ZAKA",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 130.33107906025043,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.8000000000000014,
+  "bad_quality_fraction": 0.7037037037037037,
+  "n_candidate_crossings": 54,
+  "n_accepted_picks": 123,
+  "freq_coverage_fraction": 0.30666666666666664,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 22,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4425,
+  "matlab_rel_l2_error": 0.11639915622267882,
+  "runtime_s": 483.6974546909332,
+  "error": null,
+  "wband_used": 0.0017026201277659477
+}

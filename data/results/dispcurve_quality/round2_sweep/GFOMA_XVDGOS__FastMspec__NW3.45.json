@@ -1,0 +1,22 @@
+{
+  "net1": "G",
+  "stn1": "FOMA",
+  "net2": "XV",
+  "stn2": "DGOS",
+  "dist_km": 1433.4305574579778,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8289473684210527,
+  "n_candidate_crossings": 1368,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.4020577582673401,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 386.51765847206116,
+  "error": null,
+  "wband_used": 0.00031941486899361173
+}

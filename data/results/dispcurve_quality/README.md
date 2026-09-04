@@ -41,3 +41,28 @@ richer capture would add.
 **Used by**: the Stage 5 notebook rewrite (not yet started), and the scalar-mining analysis
 already summarized in `docs/notebook5_revamp_progress.md` (resolution-bandwidth confirmation,
 template-scan stability, MATLAB-mismatch-vs-convergence check).
+
+## Round 2: the NW sweep
+
+`round2_subset.csv` (60 pairs, 15 per distance quartile, selected by
+`python/dispcurve_pick_batch/round2_prep.py` against the complete Round 1 results above) +
+`round2_sweep/*.json` (300 files -- 60 pairs x 5 candidate bandwidths each, computed by the new
+`run_round2_sweep.py`/`submit_round2_sweep.sbatch`). Each pair's own `NW_high(R)` is computed from
+its `c_min` (Round 1's converged pick where one exists, the bare reference curve otherwise -- see
+`round2_prep.py`'s docstring), then swept at fractions `[1.5, 1.0, 0.7, 0.45, 0.25]` of that value
+-- FastMspec only, single-taper has no bandwidth to sweep. Filenames encode the target NW:
+`<pair>__FastMspec__NW<value>.json`; each carries `wband_used` (the actual bandwidth applied,
+absent/`null` in every Round 1 file, which never set it).
+
+**60/300 converged (20%)**; **65/300 (21.7%) hit a real, now-understood structural floor**: at
+`NW` below ~3 (this project's `cutoff=1-1e-5`), `FastMultitaper`'s taper count `K` hits exactly
+zero -- no taper reaches the eigenvalue cutoff at all -- and every downstream use of `K` divides
+by it. Originally surfaced as a confusing `ValueError: need at least one array to concatenate`
+deep inside the picker; traced to the real cause and fixed with a clear guard in
+`thomson_multitaper/fast_multitaper.py` (raises informatively now, changes nothing for any
+`K>0` input) -- see `docs/notebook5_revamp_progress.md`'s 2026-09-04 log entry for the full
+diagnosis. **This is a hard numerical floor, distinct from Stage 5's soft, statistically-derived
+bandwidth lower bound** -- the 65 affected points (all at the sweep's lowest fractions, on pairs
+whose `NW_high(R)` was itself already small) should be read as "below the point where the method
+is even numerically defined," not as a statistical non-convergence result, when fitting or
+interpreting the sweep.

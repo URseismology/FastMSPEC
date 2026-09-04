@@ -18,7 +18,7 @@ next stage.
 - [x] **Stage 2** -- Vendor + instrument the seislib picker (`python/dispcurve_pick/`)
 - [x] **Stage 3** -- Validate against Sayan's SKRH-BAND result; 4-technique timing pilot
 - [x] **Stage 4** -- bluehive batch pipeline, full 380 pairs x 4 techniques (Round 1 complete;
-      Round 2 -- NW sweep, single-taper+FastMspec only -- designed but not yet run)
+      Round 2 -- NW sweep, 300 points, complete)
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
 - [ ] **Stage 6** -- Packaging + docs cleanup, Notebook 3 Section 4 ref_curve fix
 
@@ -1283,3 +1283,51 @@ commitment, held for explicit confirmation before launching, per the two-round d
 rationale about not running compute speculatively. Per the established branch/merge cadence
 (merge to `main` only at full stage completion), this is the point to merge
 `notebook5-phase-velocity-revamp` into `main` and push.
+
+### 2026-09-04 -- Round 2 (the NW sweep) complete, and it caught a real bug of its own
+
+Went ahead with Round 2 per direct go-ahead, holding Stage 5 for later feedback. Built the
+missing machinery: `work_unit.py` gained a backward-compatible `wband_override` parameter
+(threaded through `_coherency`, `None` means "use the module default `WBAND`", byte-identical to
+every Round 1 call site) and a `wband_used` field on `WorkUnitResult`; new
+`run_round2_sweep.py`/`submit_round2_sweep.sbatch` runs FastMspec at 5 candidate bandwidths per
+pair for the 60-pair stratified subset. Ran `round2_prep.py` for real against the now-complete
+Round 1 results (not the earlier partial-data test run) -- 15/15/15/15 across quartiles, as
+designed.
+
+**Smoke-tested 3 units before committing to the full 300** (per this stage's now-standard
+practice) -- clean, proceeded to the full submission.
+
+**A real bug, found and fixed the same day**: 65/300 (21.7%) failed with a confusing
+`ValueError: need at least one array to concatenate` deep inside the picker. Reproduced locally
+and traced the actual cause: at `NW` below ~3 (this project's `cutoff=1-1e-5`),
+`FastMultitaper`'s `K` hits exactly zero -- no taper reaches the eigenvalue cutoff -- and
+`z / fmtse.K` silently divides by zero, poisoning everything downstream with NaN/Inf until the
+picker finds no valid crossings at all. Confirmed precisely with a direct sweep (`NW=3: K=2`,
+`NW=2: K=0`, ..., `NW=0.5: K=0`) -- a hard structural floor, not a gradual degradation. Fixed with
+a guard in `thomson_multitaper/fast_multitaper.py` that raises a clear, diagnosable error at
+`K=0` instead of corrupting output silently -- verified it changes nothing for any `K>0` input
+(the same real SKRH-BAND pair still converges identically at a normal bandwidth). Deleted the 65
+stale, confusingly-labeled error results and resubmitted them (job `31348413`) -- same
+non-convergence outcome, now with an informative error message instead of a red herring.
+
+**This distinction matters for Stage 5, stated explicitly so it isn't conflated later**: this
+`K=0` floor is a *hard numerical* limit (the method is literally undefined below it), not the
+*soft, statistically-driven* lower bound the bias-variance MSE framework
+(`docs/stage5_bandwidth_theory.tex`) is meant to derive. The 65 affected points -- all at the
+sweep's lowest fractions, concentrated on pairs whose `NW_high(R)` was itself already small --
+should be excluded or specially flagged when fitting/interpreting the sweep, not treated as
+ordinary non-convergence data points.
+
+**Final Round 2 tally**: 60/300 converged (20%); 65/300 hit the K=0 floor (21.7%); the remaining
+175/300 are genuine convergence/non-convergence results at numerically-valid bandwidths.
+
+Pulled the full sweep (182KB: `round2_subset.csv` + 300 per-point JSON files) into
+[`data/results/dispcurve_quality/round2_sweep/`](../data/results/dispcurve_quality/round2_sweep/),
+with the provenance README updated to cover both rounds. Code changes (the `wband_override`
+plumbing, the new driver/submit script, the `FastMultitaper` guard) committed and pushed to
+`notebook5-phase-velocity-revamp`; merging to `main` now that both Round 1 and Round 2 are
+genuinely complete.
+
+Stage 5 remains explicitly on hold, per direct instruction, pending further feedback on
+outstanding analysis.

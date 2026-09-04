@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "LAHA",
+  "net2": "XV",
+  "stn2": "VATO",
+  "dist_km": 508.30415347595186,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9281437125748503,
+  "n_candidate_crossings": 334,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": NaN,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2385,
+  "matlab_rel_l2_error": 0.09219587902403908,
+  "runtime_s": 252.59645438194275,
+  "error": null,
+  "wband_used": 0.0009017683547819646
+}

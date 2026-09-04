@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "MAJA",
+  "dist_km": 520.1138119790588,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9240121580547113,
+  "n_candidate_crossings": 329,
+  "n_accepted_picks": 4,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 8.659436833473926,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5805,
+  "matlab_rel_l2_error": 0.2911563780760163,
+  "runtime_s": 498.02736711502075,
+  "error": null,
+  "wband_used": 0.0004268123321914638
+}

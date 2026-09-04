@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "LONA",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 621.5962780610137,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8553459119496856,
+  "n_candidate_crossings": 636,
+  "n_accepted_picks": 25,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.4703493587929517,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4125,
+  "matlab_rel_l2_error": 0.4608170331524098,
+  "runtime_s": 517.7710528373718,
+  "error": null,
+  "wband_used": 0.00036570687899268586
+}

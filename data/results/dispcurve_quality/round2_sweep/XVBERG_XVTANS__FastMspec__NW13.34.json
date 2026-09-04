@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 371.2133680479069,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.8000000000000014,
+  "bad_quality_fraction": 0.5641025641025641,
+  "n_candidate_crossings": 156,
+  "n_accepted_picks": 958,
+  "freq_coverage_fraction": 0.44594594594594594,
+  "mean_amp_ratio": 6.444179662074612,
+  "n_templates_converged": 5,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3165,
+  "matlab_rel_l2_error": 0.0635139394342467,
+  "runtime_s": 700.2049753665924,
+  "error": null,
+  "wband_used": 0.0012350708267752986
+}

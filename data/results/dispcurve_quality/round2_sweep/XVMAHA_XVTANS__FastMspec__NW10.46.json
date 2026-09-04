@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "MAHA",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 473.2200447106886,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9262672811059908,
+  "n_candidate_crossings": 217,
+  "n_accepted_picks": 19,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 4.69359270441659,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3120,
+  "matlab_rel_l2_error": 0.021060962115497524,
+  "runtime_s": 293.4003891944885,
+  "error": null,
+  "wband_used": 0.0009684288491806315
+}

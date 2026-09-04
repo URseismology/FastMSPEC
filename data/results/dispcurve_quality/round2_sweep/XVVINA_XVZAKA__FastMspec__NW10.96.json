@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "VINA",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 340.1832678221557,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.350000000000001,
+  "bad_quality_fraction": 0.7578125,
+  "n_candidate_crossings": 128,
+  "n_accepted_picks": 549,
+  "freq_coverage_fraction": 0.3291139240506329,
+  "mean_amp_ratio": 13.023470485024498,
+  "n_templates_converged": 7,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4350,
+  "matlab_rel_l2_error": 0.02773948587779856,
+  "runtime_s": 608.2558495998383,
+  "error": null,
+  "wband_used": 0.0010147208591797057
+}

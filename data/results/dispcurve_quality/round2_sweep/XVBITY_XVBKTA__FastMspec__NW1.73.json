@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "BKTA",
+  "dist_km": 478.2207678185678,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": null,
+  "n_candidate_crossings": null,
+  "n_accepted_picks": null,
+  "freq_coverage_fraction": null,
+  "mean_amp_ratio": null,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 0,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 9.963443756103516,
+  "error": "ValueError: FastMultitaper: NW=1.73 (cutoff=0.99999) gives K=0 -- no taper reaches the cutoff eigenvalue threshold. NW must be large enough that at least one taper's eigenvalue exceeds `cutoff`; empirically this project's cutoff=1-1e-5 needs NW >~ 3.",
+  "wband_used": 0.0001601703545967966
+}

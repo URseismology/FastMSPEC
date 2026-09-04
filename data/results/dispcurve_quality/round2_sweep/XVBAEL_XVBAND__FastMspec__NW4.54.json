@@ -1,0 +1,22 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "BAND",
+  "dist_km": 726.5937166799246,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9108159392789373,
+  "n_candidate_crossings": 527,
+  "n_accepted_picks": 6,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.538687694801393,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5700,
+  "matlab_rel_l2_error": 0.4348852796772271,
+  "runtime_s": 520.542610168457,
+  "error": null,
+  "wband_used": 0.00042033145079159337
+}
