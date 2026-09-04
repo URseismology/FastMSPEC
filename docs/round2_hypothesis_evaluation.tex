@@ -7,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage[final]{microtype}
+\usepackage{graphicx}
 \sloppy
 
 \title{Round 2 NW-Sweep: Evaluating the Design Hypotheses Against Real Data}
@@ -27,6 +28,54 @@ Standalone reference, independent of the conversation that produced it.
 \end{abstract}
 
 \tableofcontents
+
+\section{Significance: Why Bandwidth/Taper-Size Selection Isn't a Pedantic Detail}
+\label{sec:significance}
+
+\begin{quote}
+\emph{Slepian asked which functions concentrate their energy in a bandwidth; Thomson turned that
+answer into a spectral estimate. This project asks what that estimate costs as the bandwidth
+itself changes, pair by pair -- and shows the cost can be bounded: across three orders of
+magnitude in bandwidth ($NW$ from 5 to 1600), the correction never needs more than about two
+dozen tapers. That bound is what lets a resolution criterion chosen honestly for every station
+pair scale from one pair to a continent, without becoming wrong at one end or unaffordable at the
+other.}
+\end{quote}
+
+This report's core technical content -- resolution criteria, taper counts, Rayleigh sampling --
+can read as narrow implementation detail. It isn't, and the stakes are worth stating plainly
+before the technical sections, for this report and for any future manuscript built on it.
+
+\textbf{Without a principled per-pair method, the only safe strategy is to over-provision.} If
+the right taper count/bandwidth for a given station pair isn't known in advance -- which was
+exactly the situation before this project's resolution-bandwidth and bias-variance work -- the
+only defensible choice is a taper count large enough to work for the hardest case a practitioner
+might encounter. That conservative hedge, not any specific pair's actual requirement, is what
+this session found breaking deployment directly: the 55\,GB OOM, the K-chunking architectural
+fix, the per-technique memory budgets this project's own Stage 4 needed to build. Nobody chose
+$K=80$ because any particular pair needed it -- it was chosen to be safe across an unknown range,
+and that hedge is what costs.
+
+\textbf{Three concrete stakes, not one}:
+\begin{enumerate}[nosep]
+  \item \textbf{Scale.} This project runs 380 pairs. Continental or global ambient-noise
+    tomography runs thousands to millions. At that scale, a method whose cost scales with a
+    conservatively-large taper count isn't inconvenient -- it is a hard ceiling on what is
+    attemptable at all.
+  \item \textbf{Correctness, not just cost.} A one-size-fits-all large taper count is not a safe
+    default -- it over-smooths near pairs (violating the resolution criterion quantified in H1/H3
+    below) while remaining insufficient for far pairs regardless of size (the existence-threshold
+    cliff -- no taper count fixes a window that is fundamentally too short). The naive "big and
+    safe" strategy is silently wrong in both directions, not merely wasteful.
+  \item \textbf{FastMspec is what makes the question askable, not just the answer cheap.} Because
+    FastMspec's cost is decoupled from the taper count (Section~\ref{sec:fastmspec-robustness}),
+    running an actual empirical bandwidth sweep -- like Round 2's 300-point experiment -- becomes
+    practical. With classical Mspec's cost profile, that sweep would itself have been a serious
+    engineering undertaking. FastMspec is not simply a faster implementation of the same method;
+    it is the enabling technology that makes "what is the right bandwidth for this pair" a
+    tractable empirical question, rather than a purely theoretical one that could never be tested
+    at real scale. That is the version of this argument worth leading with.
+\end{enumerate}
 
 \section{The Four Hypotheses, Stated for the Record}
 \label{sec:hypotheses}
@@ -100,6 +149,7 @@ entirely outside the tested range. This is exactly what H3 predicts, and is eval
 there rather than being treated as a failure of H1.
 
 \section{H2: Is there an interior optimum bandwidth?}
+\label{sec:h2}
 
 \begin{table}[h]
 \centering
@@ -144,7 +194,203 @@ gradual decline -- it's a complete absence of convergence across the entire test
 range for every single far pair, exactly the qualitative "no valid window exists" signature H3
 predicted, and clearer than a marginal cliff would have been.
 
+\subsection{Distance ranges, and how resolution depends on them}
+\label{sec:distance-ranges}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Quartile & Distance range (km) & Mean (km) & $n$ pairs (full 380) \\
+\midrule
+1 (nearest)  & 44.9 -- 304.5   & 202.1  & 95 \\
+2            & 305.1 -- 502.6  & 404.5  & 95 \\
+3            & 503.2 -- 779.7  & 622.0  & 95 \\
+4 (farthest) & 780.3 -- 1538.4 & 1018.6 & 95 \\
+\bottomrule
+\end{tabular}
+\caption{Quartile boundaries, computed over the full 380-pair population (not just the 60-pair
+sweep subset).}
+\label{tab:distance-ranges}
+\end{table}
+
+Since $NW_{\rm high}(r) \approx Nc_{\min}/(4r)$ (Section~\ref{sec:hypotheses}) is directly
+proportional to window length $N$ and inversely proportional to distance $r$, both terms in
+Table~\ref{tab:distance-ranges} matter for reading the rest of this report: a pair's resolution
+ceiling is set jointly by how far apart the two stations are \emph{and} how long a window this
+dataset's fixed \texttt{window3hr} convention ($N=10801$) allows. Quartile 4 isn't failing because
+FastMspec or the picker is deficient -- it's failing because, at this $N$, its stations are simply
+too far apart for \emph{any} bandwidth to satisfy the resolution criterion with real margin.
+
+\subsection{A concrete, quantitative fix: window length, not bandwidth}
+\label{sec:window-length-fix}
+
+This reframes H3's finding as directly actionable rather than just diagnostic. If $NW_{\rm
+high}(r)$ is too small at today's window length, the only lever that helps \emph{every} far pair
+simultaneously is a longer window -- no choice of bandwidth within a fixed $N$ can rescue a pair
+whose ceiling is already below where the method needs to operate. Table~\ref{tab:window-fix}
+quantifies this directly, using each quartile's own farthest (hence most demanding) pair, against
+two reference targets: just clearing the $K=0$ hard floor (Section~\ref{sec:h4} below) needs
+$NW_{\rm high}\geq 3$; matching the quality quartile 1 already gets today needs $NW_{\rm
+high}\geq 10$ -- notably, quartile 1's own farthest pair (304.5\,km) already sits almost exactly
+at $NW_{\rm high}=10.8$ with today's 3-hour window, suggesting today's fixed bandwidth choice was,
+whether deliberately or not, implicitly calibrated to about quartile 1's own regime.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Quartile & Farthest pair & \multicolumn{2}{c}{Window length needed for} \\
+& (km) & $NW_{\rm high}=3$ (bare floor) & $NW_{\rm high}=10$ (match Q1 today) \\
+\midrule
+1 & 304.5  & 0.8\,hr (0.28x) & 2.8\,hr (0.92x) \\
+2 & 502.6  & 1.4\,hr (0.46x) & 4.6\,hr (1.52x) \\
+3 & 779.7  & 2.1\,hr (0.71x) & 7.1\,hr (2.36x) \\
+4 & 1538.4 & 4.2\,hr (1.40x) & 14.0\,hr (4.66x) \\
+\bottomrule
+\end{tabular}
+\caption{Window length required for each quartile's farthest pair to reach a given $NW_{\rm
+high}$, vs. today's fixed 3-hour window (multiplier in parentheses).}
+\label{tab:window-fix}
+\end{table}
+
+Two tiers worth separating: reaching quartile 4's farthest pair past the bare numerical floor
+needs only a modest $1.4\times$ increase (about 4.2 hours) -- a realistic ask. Reaching quartile
+1's \emph{present-day} quality level needs a much larger $4.66\times$ increase (about 14 hours),
+which may or may not be practical depending on how much continuous, low-noise ambient-noise data
+is actually available for the farthest pairs. This is not something Round 2's existing data can
+resolve further -- it is a data-collection design question, not an algorithmic one, and is stated
+here as a concrete, falsifiable recommendation rather than a vague "longer windows would help."
+
+\textbf{An honest caveat on the "$NW_{\rm high}=10$" target, raised directly and worth stating
+plainly rather than left implicit}: $NW_{\rm high}(r)$ is a \emph{ceiling}, not a target -- the
+resolution criterion only requires $NW$ to stay below it. The real requirement for a usable
+operating point is that $NW_{\rm high}(r)$ clears $NW_{\rm low}$ (Stage 5's still-undetermined,
+bias-variance-driven floor) by enough margin to leave an actual interval. There is no
+first-principles reason that margin needs to reach 10 specifically -- that number was chosen
+because it is approximately what quartile 1's own farthest pair already achieves, an
+\emph{empirical} anchor ("give far pairs the same headroom near pairs already have"), not a
+derived one, and today's fixed 3-hour window that produces it was itself never derived from a
+noise-stationarity or SNR argument as far as this project's record shows. There is a specific
+reason in this report's own data to suspect $NW_{\rm high}=10$ is conservative: H2
+(Section~\ref{sec:h2}, above) found convergence and quality both still improving at
+$1.5\times NW_{\rm high}$ with no interior peak in sight -- if $NW_{\rm low}$ is real but smaller
+than anything the sweep tested, the true requirement could be much closer to "clear the $K=0$
+floor with real margin" ($NW_{\rm high}\gtrsim 5$--$6$, not 10), needing a substantially smaller
+window-length increase than Table~\ref{tab:window-fix}'s right-hand column implies. Both targets
+are kept in the table deliberately -- as bracketing candidates, not because either is settled.
+
+\subsection{A third constraint, distinct from bias-variance: $NW_{\rm high}$ is already a sample
+count}
+\label{sec:rayleigh}
+
+The caveat above leaves an open question: if 10 has no first-principles justification, is there
+\emph{any} principled reason $NW_{\rm high}(r)$ shouldn't be small, independent of the
+still-undetermined bias-variance $NW_{\rm low}$? Raised directly, and the answer is yes -- a
+constraint that has nothing to do with estimator variance at all.
+
+The DFT of an $N$-sample series has an intrinsic frequency spacing (the classical Rayleigh
+resolution) of $1/N$ (this project's $dt=1$ convention) -- a property of the transform length
+alone, true even for a raw, unsmoothed periodogram. The number of independent frequency samples
+falling inside one zero-crossing interval $\Delta f_{\rm zero} = c/(2r)$ is therefore
+\begin{equation}
+  n_{\rm bins} = \frac{\Delta f_{\rm zero}}{1/N} = N\Delta f_{\rm zero} = \frac{Nc}{2r}.
+\end{equation}
+Comparing directly to $NW_{\rm high}(r) = N\cdot c/(4r)$ (Section~\ref{sec:hypotheses}, derived
+from the same $2W\leq\Delta f_{\rm zero}$ criterion):
+\begin{equation}
+  NW_{\rm high}(r) = \frac{n_{\rm bins}}{2} \quad\Longleftrightarrow\quad n_{\rm bins} =
+  2\, NW_{\rm high}(r).
+\end{equation}
+This is exact, not approximate: \emph{$NW_{\rm high}$ was already counting independent DFT
+samples per zero-crossing interval, in units of one-half}. $NW_{\rm high}=10$ means 20 bins per
+crossing (comfortable); $NW_{\rm high}=3$ means 6 (thin); $NW_{\rm high}<1$ means fewer than 2 --
+not enough grid points to represent that two separate crossings even exist, regardless of
+smoothing bandwidth or estimator variance.
+
+This also gives a plausible explanation for something otherwise left as an unexplained
+coincidence: the $K=0$ numerical floor (Section~\ref{sec:h4}) sits at $NW\approx 3$ -- exactly
+where this sampling argument starts running thin (6 bins per crossing). A DPSS taper's ability to
+concentrate energy within bandwidth $W$ at all requires enough independent frequency-domain
+degrees of freedom inside that bandwidth; that is the same underlying resource this sampling
+argument counts. The $K=0$ floor and the Rayleigh-sampling floor are plausibly two views of the
+same limit, not two unrelated numerical accidents -- though this project has not verified that
+connection formally, and states it here as a plausible reading of the coincidence, not a proof.
+
+\textbf{Net effect on the recommendation above}: the $NW_{\rm high}\gtrsim 5$--$6$ alternative
+target is better-grounded than it looked -- it is not just "some margin past $K=0$," it
+corresponds to roughly 10-12 independent frequency samples per zero-crossing interval, a genuine
+sampling-adequacy floor that exists prior to, and independent of, whatever the bias-variance
+$NW_{\rm low}$ turns out to be. $NW_{\rm high}=10$ remains defensible as a comfortable margin
+above this floor, just not because it matches quartile 1's own numbers.
+
+\subsection{A direct empirical test -- and a negative result, reported plainly}
+\label{sec:splice-test}
+
+Section~\ref{sec:window-length-fix}'s recommendation is derived, not tested. Per direct request,
+tested it directly: spliced several genuinely non-overlapping, contiguous windows (confirmed from
+\texttt{python/ccf\_pipeline/prepare\_data.py}'s windowing formula -- adjacent windows have 50\%
+overlap, so windows two apart are exactly contiguous, with no time duplicated or skipped) into a
+longer continuous trace for \texttt{AFSKRH\_XVBAEL} (1013.7\,km, quartile 4's mean-distance pair),
+turning the standard 3-hour window into a $\sim$24-hour one ($N=10801\to86401$, an $8\times$
+increase), at $NW=10$.
+
+\textbf{First attempt confounded the test}: using only 10 spliced days collapsed \texttt{coh\_num}
+from the baseline's 1605 down to 10 -- a $\sim$160$\times$ loss of multi-record averaging to buy
+an $8\times$ gain in $N$. Did not converge (\texttt{cov=0.0}). \textbf{Corrected, using all 107
+available days} (\texttt{coh\_num=107} for the spliced case, closer to though still below the
+baseline's 1605) -- \textbf{still did not converge}: \texttt{freq\_coverage\_fraction} stayed
+exactly 0.0 in both the baseline and the spliced case, and \texttt{bad\_quality\_fraction} barely
+moved (0.955 $\to$ 0.910).
+
+\textbf{Reported honestly, this does not confirm the window-length recommendation for this
+specific pair}, and is not spun into a success. Plausible reasons, none adjudicated here since
+this is a single example: (i) this may simply be an intrinsically weak-signal pair, and no
+resolution fix rescues a pair whose problem is genuine SNR/non-stationarity rather than sampling
+adequacy -- exactly the excess-variance mechanism \texttt{stage5\_bandwidth\_theory.tex}'s Section
+5.2 already names; (ii) only one bandwidth ($NW=10$) was tested at the new, longer $N$ -- a
+proper test needs its own mini-sweep at the new $N$, not reuse of a single point chosen for the
+old one; (iii) splicing collapses the within-day, sub-24-hour averaging structure into a single
+longer trace per day, which may cost more (in effective per-trace SNR) than the longer $N$ buys
+back. \textbf{The right follow-up, not yet done}: repeat this test across several quartile-4
+pairs, with a small NW sweep at the new $N$ each time, before treating the window-length
+recommendation as validated or refuted.
+
+\subsection{Why this strengthens the case for FastMspec -- a robustness argument, not just a
+speed one}
+\label{sec:fastmspec-robustness}
+
+Fixing quartile 4 means longer windows (Section~\ref{sec:window-length-fix}), and it is worth
+being precise about how that interacts with the FastMspec-vs-classical-Mspec choice, since a
+loose version of this argument is easy to overstate. Checked directly (not assumed): $r$ and $K$
+depend only on the product $NW$, not on $N$ and $W$ separately -- at fixed $NW=10$, both stay
+exactly constant ($K=14$, $r=12$) across $N=10801$ through $N=86401$ (an $8\times$ range). So
+simply lengthening the window at a fixed $NW$ target does not by itself widen the $K$-vs-$r$ gap;
+both techniques' costs scale identically (linearly) with $N$ alone.
+
+At the specific $NW\approx10$--$15$ relevant to fixing quartile 4, $K$ and $r$ are close (14 vs.
+12) -- not the $40\times$+ gap seen at $NW\sim500$--$1000$ (\texttt{stage5\_bandwidth\_theory.tex},
+Section 4). At this modest $K$, classical Mspec would not even hit a
+hard memory wall ($K=14$ needs roughly 3.9\,GB per array at this dataset's typical trace count --
+well under what forced the K-chunking architectural fix at $K=80$, this project's own classical
+baseline convention). Stated honestly: at this specific regime, the size of the gap is real but
+modest, not dramatic.
+
+\textbf{The tighter, more durable version of the argument is architectural, not magnitudinal}:
+FastMspec's cost structure needs \emph{no conditional engineering for any $NW$} in the entire
+range already verified ($NW=5$ to $1600$, $r$ staying bounded 11--24 throughout). Classical
+Mspec's implementation needed the K-chunking fix, and needs per-technique memory budgets sized to
+whatever $K$ is chosen -- real engineering effort this project already had to spend once, tied
+specifically to the $K=80$ convention. If Stage 5 ever recommends a larger $NW$ for some pairs
+(H2, Section~\ref{sec:h2}, leaves this open -- no interior peak was found in the tested range),
+classical Mspec would need that re-engineering again; FastMspec would not, because its cost
+structure was already verified robust across that entire span. The claim is not "FastMspec is
+always dramatically cheaper" -- at today's relevant $NW$ it is only modestly cheaper -- the claim
+is "FastMspec never needs to be re-architected regardless of what $NW$ turns out to be right,"
+which held unconditionally, not because $NW$ happened to land somewhere favorable.
+
 \section{H4: The $K=0$ numerical floor}
+\label{sec:h4}
 
 \begin{table}[h]
 \centering
@@ -167,6 +413,60 @@ a higher fraction. By quartile 4, over half of all sweep points are not merely s
 unreliable but numerically undefined. This is a hard, structural limit, categorically different
 from H2/H3's statistical ones -- restated from \texttt{docs/notebook5\_revamp\_progress.md}: it
 must not be conflated with the soft, bias-variance-driven lower bound Stage 5 is deriving.
+
+\section{Representative Examples, One Per Quartile}
+\label{sec:examples}
+
+The tables above summarize 300 points as counts; this section shows what four of them actually
+look like, one representative pair per distance quartile, each at $NW=1.5\times NW_{\rm high}(r)$
+-- the widest fraction tested, and (per Table~\ref{tab:h2}) the one with the best convergence rate
+in every quartile, so each is that quartile's best-case example, not a cherry-picked outlier. Top
+panel: the real part of the FastMspec cross-spectrum
+(the coherence), with the picker's own \texttt{bad\_quality} crossings marked in red. Bottom
+panel: the picker's internal kernel-density diagnostic -- the ellipse-weighted density estimate
+(the same "KDE" construction \texttt{docs/coherence\_barcode\_design.tex} describes), the
+reference curve (light blue), individual zero-crossing branches (blue), and the final picked/
+smoothed dispersion curve (red), where one was found.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{q1_XVBITY_XVMAGY.png}
+\caption{Quartile 1 (nearest), \texttt{XVBITY\_XVMAGY}, 223.0\,km, converged. A clean, long-tracked
+pick (red, bottom panel) follows a single high-density ridge from short to long period with only a
+handful of low-quality crossings (red dots, top panel) -- the resolution criterion is comfortably
+satisfied at this distance.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{q2_XVBAEL_XVZAKA.png}
+\caption{Quartile 2, \texttt{XVBAEL\_XVZAKA}, 369.4\,km, converged. The coherence spectrum (top)
+still shows a clear amplitude envelope and well-defined oscillations; the pick (bottom) tracks
+cleanly across most of the band, with low-quality crossings concentrated only at the high-frequency
+edge.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{q3_XVBAND_XVMAJA.png}
+\caption{Quartile 3, \texttt{XVBAND\_XVMAJA}, 520.1\,km, converged. Real convergence is still
+possible at this distance (13-20\% of attempts, Table~\ref{tab:h1}), but the picked branch spans a
+visibly narrower frequency range than quartiles 1-2, and low-quality crossings (top panel) are more
+frequent throughout the record.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{q4_XVDGOS_XVMAGY.png}
+\caption{Quartile 4 (farthest), \texttt{XVDGOS\_XVMAGY}, 783.4\,km, did not converge -- the
+mechanism behind H3's finding, visually. The coherence spectrum (top) never develops the clean,
+decaying amplitude envelope the near-pair examples show -- it stays essentially unstructured
+oscillation throughout, and the majority of candidate crossings across the low-frequency half of
+the record are flagged low-quality (the near-continuous wall of red). The KDE panel (bottom) shows
+only a thin sliver of real density at the extreme long-period edge; the picker finds a few points
+(small red cluster) and then has nothing left to track -- not a near-miss, a genuine absence of a
+resolvable branch.}
+\end{figure}
 
 \section{Synthesis and Implications for Stage 5}
 
@@ -204,5 +504,26 @@ must not be conflated with the soft, bias-variance-driven lower bound Stage 5 is
     single-taper's own Round 1 result (0/380 converged, a real mechanistic result) is separate
     context, not re-evaluated here.
 \end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{slepian1978}
+Slepian, D. (1978). Prolate spheroidal wave functions, Fourier analysis, and uncertainty V: The
+discrete case. \textit{Bell System Technical Journal}, 57, 1371--1429.
+
+\bibitem{thomson1982}
+Thomson, D. J. (1982). Spectrum estimation and harmonic analysis. \textit{Proceedings of the
+IEEE}, 70(9), 1055--1096.
+
+\bibitem{karnik2022}
+Karnik, S., Romberg, J., \& Davenport, M. A. (2022). Multitaper spectral estimation revisited:
+fast algorithms and generalized approaches. Preprint. (FastMSPEC project reference:
+\texttt{Multitaper\_Revisited\_Karnik.pdf}.)
+
+\bibitem{haley2017}
+Haley, C. L., \& Anitescu, M. (2017). Optimal bandwidth for multitaper spectrum estimation.
+\textit{IEEE Signal Processing Letters}, 24(11), 1696--1700.
+
+\end{thebibliography}
 
 \end{document}

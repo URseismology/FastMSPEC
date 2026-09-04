@@ -1346,3 +1346,65 @@ tested bandwidth, with no interior peak found**, reported as a genuine open ques
 true optimum sits above 1.5x, or other effects dominate at this sample size) rather than smoothed
 over to match the theory doc's prediction. Recommends extending the sweep's upper fraction on a
 quartile-1 subset before treating `stage5_bandwidth_theory.tex`'s MSE recipe as complete.
+
+### 2026-09-04 -- Substantial enrichment of `round2_hypothesis_evaluation.tex`: distance ranges,
+a window-length fix, a third (Rayleigh-sampling) resolution constraint, an empirical splice test,
+a sharpened FastMspec robustness argument, and four real worked examples
+
+Extended the report considerably per direct requests, each building on the last:
+
+- **Distance ranges + a quantitative window-length fix (Section 4.1-4.2)**: added the true
+  per-quartile distance ranges (full 380-pair population: Q1 44.9-304.5km, Q2 305.1-502.6km, Q3
+  503.2-779.7km, Q4 780.3-1538.4km). Quantified the window-length-vs-resolution tradeoff directly:
+  reaching `NW_high=3` (the bare `K=0` floor) for quartile 4's farthest pair needs only a 1.4x
+  window increase (~4.2hr); reaching `NW_high=10` (matching quartile 1's own present-day quality)
+  needs 4.66x (~14hr).
+- **A third, genuinely independent resolution constraint, raised directly and confirmed exact**:
+  the classical Rayleigh/DFT-grid criterion. Derived `NW_high(r) = n_bins/2` exactly (`n_bins` =
+  independent DFT frequency samples per zero-crossing interval) -- meaning `NW_high` was already
+  counting sampling adequacy, not just multitaper smoothing, and plausibly explains why the `K=0`
+  floor sits at `NW~3` (6 bins/crossing) rather than some unrelated number. This is a hard,
+  first-principles bound, independent of the still-undetermined bias-variance `NW_low` -- confirmed
+  directly in discussion, not just asserted.
+- **An honest correction to the earlier "NW_high=10" target**: explicitly flagged as an empirical
+  anchor (matches quartile 1's own numbers), not a derived one -- and noted H2's own finding
+  (convergence still improving at 1.5x with no peak found) suggests it may be conservative, with
+  `NW_high>~5-6` (from the Rayleigh argument) as a better-grounded alternative.
+- **A direct empirical test of the window-length fix -- negative result, reported plainly**: spliced
+  genuinely non-overlapping windows (confirmed via `prepare_data.py`'s 50%-overlap formula --
+  windows 2 apart are exactly contiguous) into a ~24hr trace for `AFSKRH_XVBAEL` (Q4's mean-distance
+  pair). First attempt (10 days, `coh_num` collapsed 1605->10) did not converge -- confounded.
+  Corrected attempt (all 107 days, `coh_num=107`) **also did not converge** (`freq_coverage_fraction`
+  stayed exactly 0.0 both times). Reported as a genuine negative result, not smoothed over -- three
+  honest candidate explanations given (weak-signal pair, only one NW tested at the new N, splicing
+  costs within-day averaging), with the real follow-up (multiple pairs, a mini-sweep at the new N)
+  named as not yet done.
+- **A sharpened, corrected FastMspec argument (Section 4.4)**: verified `r`/`K` depend only on the
+  product `NW`, not `N` and `W` separately (`K=14, r=12` constant across `N=10801` to `86401` at
+  fixed `NW=10`) -- so lengthening the window at fixed `NW` does not itself widen the gap. At the
+  `NW~10-15` actually relevant here, `K` and `r` are close (14 vs 12), not the 40x+ gap seen at
+  `NW~500-1000` -- stated honestly rather than oversold. The durable version of the argument is
+  architectural, not magnitudinal: FastMspec needs no conditional engineering (no chunking, no
+  per-technique memory budgeting) for *any* `NW` in the verified range, while classical Mspec's
+  `K=80` convention already needed exactly that re-engineering once this session.
+- **A "why this isn't pedantic" significance section (Section 2)**, opening with a north-star
+  statement connecting Slepian's concentration problem and Thomson's multitaper method to this
+  project's own extension of it, and three concrete stakes: scale (a method whose cost is safe
+  regardless of taper count is what makes continental/global deployment attemptable at all),
+  correctness (a naively-large taper count isn't just wasteful, it's wrong in both directions --
+  over-smooths near pairs, never fixes far ones), and affordability-enables-inquiry (FastMspec's
+  decoupled cost is what makes an empirical bandwidth sweep like Round 2's practical to run at
+  all -- the enabling technology for asking the question, not just answering it cheaply).
+- **Four real worked examples (Section 5)**, one per quartile, each at the empirically-best
+  fraction (`1.5x NW_high`, confirmed the same across all four): real coherence spectra + the
+  picker's own KDE/ellipse/pick diagnostic plot (`python/dispcurve_pick_batch/gen_report_figures.py`
+  run on bluehive, real data, not synthetic). Q1-Q3 show clean, converged picks with visibly
+  degrading track length/crossing quality moving outward; Q4 shows the actual failure mechanism
+  visually -- an unstructured coherence spectrum with no decaying envelope, a wall of low-quality
+  crossings, and a KDE panel with only a thin sliver of real density before the picker has nothing
+  left to track.
+
+Also drafted (in conversation, not yet placed in any manuscript) a calibrated "north star"
+intro paragraph in both technical and non-technical registers, explicitly avoiding overclaiming
+completion given the bias-variance lower bound is still undetermined and the one direct empirical
+test of the window-length fix came back negative.
