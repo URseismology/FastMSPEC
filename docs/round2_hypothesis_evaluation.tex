@@ -435,6 +435,7 @@ NW_{\rm high}=14.81$; $W\approx0.00206$\,Hz), converged. A clean, long-tracked p
 panel) follows a single high-density ridge from short to long period with only a handful of
 low-quality crossings (red dots, top panel) -- the resolution criterion is comfortably satisfied
 at this distance.}
+\label{fig:q1}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -444,6 +445,7 @@ at this distance.}
 high}=14.79$; $W\approx0.00205$\,Hz), converged. The coherence spectrum (top) still shows a clear
 amplitude envelope and well-defined oscillations; the pick (bottom) tracks cleanly across most of
 the band, with low-quality crossings concentrated only at the high-frequency edge.}
+\label{fig:q2}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -454,6 +456,7 @@ high}=10.24$; $W\approx0.00142$\,Hz), converged. Real convergence is still possi
 distance (13-20\% of attempts, Table~\ref{tab:h1}), but the picked branch spans a visibly
 narrower frequency range than quartiles 1-2, and low-quality crossings (top panel) are more
 frequent throughout the record.}
+\label{fig:q3}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -461,13 +464,15 @@ frequent throughout the record.}
 \includegraphics[width=0.85\textwidth]{q4_XVDGOS_XVMAGY.png}
 \caption{Quartile 4 (farthest), \texttt{XVDGOS\_XVMAGY}, 783.4\,km, $NW=7.61$ ($1.5\times NW_{\rm
 high}=5.08$; $W\approx0.000704$\,Hz), did not converge -- the mechanism behind H3's finding,
-visually. The coherence spectrum (top) never develops the clean,
-decaying amplitude envelope the near-pair examples show -- it stays essentially unstructured
-oscillation throughout, and the majority of candidate crossings across the low-frequency half of
-the record are flagged low-quality (the near-continuous wall of red). The KDE panel (bottom) shows
-only a thin sliver of real density at the extreme long-period edge; the picker finds a few points
-(small red cluster) and then has nothing left to track -- not a near-miss, a genuine absence of a
-resolvable branch.}
+visually, within the picker's own cropped view. Over this narrower window the coherence spectrum
+(top) shows no clean, decaying envelope, and the majority of candidate crossings across the
+low-frequency half are flagged low-quality (the near-continuous wall of red). The KDE panel
+(bottom) shows only a thin sliver of real density at the extreme long-period edge; the picker
+finds a few points (small red cluster) and then has nothing left to track. \textbf{Correction,
+Section~\ref{sec:overlay}}: over the full 0--0.35\,Hz band this pair's coherence in fact has a
+real, strong, multi-lobed envelope -- it is not simply unstructured noise; the picker's own plot
+window (cropped near the low-frequency edge) does not show it.}
+\label{fig:q4}
 \end{figure}
 
 \subsection{The quality gate depends on the reference curve, not just on the data}
@@ -499,6 +504,103 @@ against an independent measure of how far the reference curve sits from the pick
 branch, per pair, to check how much of the quality-gate signal is actually reference-curve error
 rather than data quality.
 
+\paragraph{A local, synthetic isolation test.} To make the mechanism concrete rather than just
+citing the formula, a fully local test (synthetic flat-velocity Bessel coherence, 500\,km, no real
+station data needed) fed the \emph{same} 376 zero crossings through the \emph{same} unmodified
+picker logic, changing only the reference curve. Criterion 1 (peak-ratio) was, as its formula
+predicts, completely unchanged (235 flagged in both runs). Criterion 2
+(\texttt{crossamps<0.5*peakamps}) nearly doubled from a correct reference curve (3.5\,km/s,
+matching the synthetic truth) to one offset by 1.5\,km/s: 119 vs.\ 210 flagged, out of 376, with
+every other input held fixed. This isolates the effect cleanly: the same data, the same crossings,
+a different reference curve alone changes which crossings are called low-quality.
+
+\paragraph{Three distinct roles, not one.} The reference curve enters the pipeline in three
+separate places, worth distinguishing explicitly: (1) the quality gate above; (2) resolving the
+zero crossing's fundamental $2\pi$ cycle-count ambiguity -- \texttt{get\_zero\_crossings} compares
+every observed crossing against every Bessel-function zero, producing one velocity candidate per
+possible cycle count, and the reference curve is what picks which candidate is plausible, both to
+seed the walk and in the local-slope continuity checks as picking proceeds; (3) it defines the
+frequency band the final \texttt{freq\_coverage\_fraction} diagnostic is even measured against
+(\texttt{f\_min}, \texttt{f\_max} are taken directly from \texttt{min/max(ref\_curve[:,0])}). A
+reference-curve mismatch is therefore not just a labeling artifact on individual crossings -- it
+can also shift which candidate branch the walk starts on and what frequency range "coverage" means
+for that pair.
+
+\paragraph{Is the mismatch specific to quartile 4?} No. Checked directly against
+Figures~\ref{fig:q1}--\ref{fig:q3}'s reference curves (light blue), not assumed: in all three
+converged examples (quartiles 1--3), the reference curve starts high, descends steeply, and
+\emph{crosses through} the real, high-density picked branch around period 0.04--0.11\,s, then
+continues to fall well below the true branch for the rest of the record -- the same shape and
+roughly the same magnitude of mismatch visible in quartile 4. Since quartiles 1--3 converge
+despite this and quartile 4 does not, the reference-curve mismatch by itself cannot be the primary
+driver of the near/far convergence gap; it is a real, consistently-present confound across every
+distance tested, not a quartile-4-specific one. Within the picker's own cropped diagnostic view,
+quartiles 1--3 show a clear decaying-envelope wavetrain and quartile 4 does not -- but
+Section~\ref{sec:overlay} shows this reading does not survive looking at the full band: quartile 4
+does have a real, strong envelope, just positioned differently and more sharply multi-lobed than
+the picker's crop reveals. The reference-curve mechanism should still be quantified dataset-wide
+(it is a real source of noise in every \texttt{bad\_quality\_fraction} number in this report).
+
+\subsection{FastMspec vs.\ single-taper, and the full-band envelope}
+\label{sec:overlay}
+
+Raised directly: how much better are FastMspec's correlations than single-taper's, even after the
+seislib gate -- independent of picking altogether? Figures~\ref{fig:overlay1}--\ref{fig:overlay4}
+overlay the two techniques' raw coherence (real part) for the same four pairs, over the full
+0--0.35\,Hz band computed for each (wider than the picker's own cropped diagnostic plots above). In
+every quartile, the FastMspec curve (red) sits as a visibly smoothed envelope through the
+single-taper curve's noise (grey) -- both trace the same real zero crossings, but single-taper's
+version is far noisier, with many more spurious small-amplitude crossings that don't reflect real
+structure. This is the gate-independent comparison Section~5's Synthesis had flagged as missing.
+
+This view also corrects the earlier reading of quartile 4 (Section~\ref{sec:refcurve-dependence}
+and Figure~\ref{fig:q4}'s caption): over the full band, quartile 4's coherence has a real, strong,
+multi-lobed envelope, with its main burst around 0.09--0.13\,Hz -- not the unstructured noise the
+picker's own cropped plot suggested. Quartile 3 (Figure~\ref{fig:overlay3}) shows a comparably
+multi-lobed, two-burst envelope and still converges, so multi-lobed structure by itself does not
+distinguish quartile 4 from the converged examples. What does still look distinctive, and is being
+tested directly as this document is being written (results not yet in hand): quartile 4's
+strongest envelope lobe sits well inside the band rather than at the low-frequency edge, while the
+picker's walk (\texttt{extract\_dispcurve}'s outer loop) always starts at the lowest-frequency
+non-\texttt{bad\_quality} crossing and only ever advances upward in frequency -- it has no
+mechanism to seed at, or expand outward from, the record's strongest region. If quartile 4's
+opening stretch is disproportionately unreliable relative to quartiles 1--3's, the walk may simply
+never reach its own strongest structure before stalling. A direct test -- raising \texttt{freqmin}
+per pair to the frequency of peak local amplitude within the low-frequency half of the band, then
+rerunning the unmodified picker -- is in progress; this section will be updated with the result.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{overlay_q1_XVBITY_XVMAGY.png}
+\caption{Quartile 1, FastMspec ($NW=22.21$) vs.\ single-taper, full band.}
+\label{fig:overlay1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{overlay_q2_XVBAEL_XVZAKA.png}
+\caption{Quartile 2, FastMspec ($NW=22.18$) vs.\ single-taper, full band.}
+\label{fig:overlay2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{overlay_q3_XVBAND_XVMAJA.png}
+\caption{Quartile 3, FastMspec ($NW=15.36$) vs.\ single-taper, full band. A comparably multi-lobed
+envelope to quartile 4, yet this pair converges -- multi-lobed structure alone does not explain
+the difference.}
+\label{fig:overlay3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{overlay_q4_XVDGOS_XVMAGY.png}
+\caption{Quartile 4, FastMspec ($NW=7.61$) vs.\ single-taper, full band. A real, strong envelope
+is present, peaking around 0.09--0.13\,Hz -- corrects the impression from Figure~\ref{fig:q4}'s
+cropped view.}
+\label{fig:overlay4}
+\end{figure}
+
 \section{Synthesis and Implications for Stage 5}
 
 \begin{itemize}[nosep]
@@ -520,7 +622,13 @@ rather than data quality.
     for the pairs being tested) rather than discovered again.
   \item \textbf{The reference-curve dependence (Section~\ref{sec:refcurve-dependence}) affects
     how much this report's own convergence numbers can be trusted as pure coherence-quality
-    measures}, and needs its own quantified check, not just the mechanism confirmed above.
+    measures}, and needs its own quantified check, not just the mechanism confirmed above. Checked
+    across quartiles, not just quartile 4: the mismatch is present with similar shape and magnitude
+    in every converged example too (Figures~\ref{fig:q1}--\ref{fig:q3}), so it is a
+    dataset-wide confound on \texttt{bad\_quality\_fraction}, not a quartile-4-specific artifact --
+    and correspondingly it does not by itself explain \emph{why} quartile 4 fails while quartiles
+    1--3 succeed. The top-panel amplitude envelope (present in quartiles 1--3, absent in quartile
+    4) remains the more likely primary differentiator, consistent with H3.
   \item \textbf{A direct FastMspec-vs-single-taper coherence comparison, independent of the
     seislib quality gate, is a real and currently missing check}, raised directly. Every
     convergence number in this report and in Round 1 (FastMspec 26.1\% vs. single-taper 0\%) is
