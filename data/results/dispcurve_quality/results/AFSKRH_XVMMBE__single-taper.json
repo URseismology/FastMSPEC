@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 184.23739383282037,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.5874294923448832,
+  "n_candidate_crossings": 2482,
+  "n_accepted_picks": 6,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3567245507561885,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1605,
+  "matlab_rel_l2_error": 1.7118389549977097e-09,
+  "runtime_s": 1019.1479907035828,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 215.27444673073106,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.5500000000000012,
+  "bad_quality_fraction": 0.7528089887640449,
+  "n_candidate_crossings": 89,
+  "n_accepted_picks": 517,
+  "freq_coverage_fraction": 0.3974358974358974,
+  "mean_amp_ratio": 20.7092527000866,
+  "n_templates_converged": 18,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5865,
+  "matlab_rel_l2_error": 0.0002417629386195291,
+  "runtime_s": 837.4533224105835,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 386.84472267014513,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6419573643410853,
+  "n_candidate_crossings": 2064,
+  "n_accepted_picks": 7,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3544520105045021,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1605,
+  "matlab_rel_l2_error": 2.909674820629357e-09,
+  "runtime_s": 605.2706832885742,
+  "error": null
+}

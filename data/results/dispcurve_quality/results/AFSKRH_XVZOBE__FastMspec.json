@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 582.6802794059347,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9516616314199395,
+  "n_candidate_crossings": 331,
+  "n_accepted_picks": 35,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.4580292055741837,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1605,
+  "matlab_rel_l2_error": 0.03790968236314667,
+  "runtime_s": 556.2802927494049,
+  "error": null
+}

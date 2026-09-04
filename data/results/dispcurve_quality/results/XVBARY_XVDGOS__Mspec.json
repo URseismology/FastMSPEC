@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "DGOS",
+  "dist_km": 607.8950238442383,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9805194805194806,
+  "n_candidate_crossings": 154,
+  "n_accepted_picks": 18,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 7.26956957224424,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2013.2231049537659,
+  "error": null
+}

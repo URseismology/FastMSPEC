@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 147.45856723109674,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.7000000000000013,
+  "bad_quality_fraction": 0.6341463414634146,
+  "n_candidate_crossings": 41,
+  "n_accepted_picks": 221,
+  "freq_coverage_fraction": 0.5849056603773585,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 24,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 717.4779300689697,
+  "error": null
+}

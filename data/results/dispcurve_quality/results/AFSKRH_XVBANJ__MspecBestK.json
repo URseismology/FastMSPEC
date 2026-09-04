@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "BANJ",
+  "dist_km": 1094.0439843430574,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9679802955665024,
+  "n_candidate_crossings": 406,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 190.47666649249075,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 884.6090896129608,
+  "error": null
+}

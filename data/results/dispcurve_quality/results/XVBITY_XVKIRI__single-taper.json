@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 244.4662493100406,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8004402054292002,
+  "n_candidate_crossings": 1363,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.1392950270338904,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3555,
+  "matlab_rel_l2_error": 1.3265848325663927e-10,
+  "runtime_s": 85.5473141670227,
+  "error": null
+}

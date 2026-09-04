@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 885.2372150842461,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9713114754098361,
+  "n_candidate_crossings": 244,
+  "n_accepted_picks": 15,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.2861512300272087,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 59.82477807998657,
+  "error": null
+}

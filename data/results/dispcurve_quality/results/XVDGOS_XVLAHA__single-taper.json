@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 311.55016743225116,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7905882352941176,
+  "n_candidate_crossings": 1275,
+  "n_accepted_picks": 6,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.6232995470594112,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 9135,
+  "matlab_rel_l2_error": 1.3968325551792585e-13,
+  "runtime_s": 261.6756839752197,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BAND",
+  "dist_km": 500.8523540991903,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.718978102189781,
+  "n_candidate_crossings": 1918,
+  "n_accepted_picks": 3,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.783115281418308,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4680,
+  "matlab_rel_l2_error": 2.0547363597728652e-11,
+  "runtime_s": 377.83564853668213,
+  "error": null
+}

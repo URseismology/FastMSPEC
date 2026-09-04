@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 206.20546832615503,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.5000000000000011,
+  "bad_quality_fraction": 0.7941176470588235,
+  "n_candidate_crossings": 68,
+  "n_accepted_picks": 243,
+  "freq_coverage_fraction": 0.29577464788732394,
+  "mean_amp_ratio": 27.74825000515834,
+  "n_templates_converged": 4,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1477.1571793556213,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "ANTS",
+  "dist_km": 947.5732416175398,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9278350515463918,
+  "n_candidate_crossings": 388,
+  "n_accepted_picks": 4,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.42372042874942,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1605,
+  "matlab_rel_l2_error": 0.05557324201979169,
+  "runtime_s": 899.4247453212738,
+  "error": null
+}

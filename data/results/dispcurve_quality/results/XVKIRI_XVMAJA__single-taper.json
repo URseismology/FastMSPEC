@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "KIRI",
+  "net2": "XV",
+  "stn2": "MAJA",
+  "dist_km": 517.0233053542738,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.75,
+  "n_candidate_crossings": 1608,
+  "n_accepted_picks": 11,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.253862470522208,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4740,
+  "matlab_rel_l2_error": 4.2838018984698275e-11,
+  "runtime_s": 116.3430507183075,
+  "error": null
+}

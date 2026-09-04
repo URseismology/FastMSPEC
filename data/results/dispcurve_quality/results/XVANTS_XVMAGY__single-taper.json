@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 503.85128175874394,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7419354838709677,
+  "n_candidate_crossings": 1581,
+  "n_accepted_picks": 9,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.5610395972115407,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4125,
+  "matlab_rel_l2_error": 5.065836770385021e-13,
+  "runtime_s": 467.6999876499176,
+  "error": null
+}

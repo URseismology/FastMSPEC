@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 740.928641063444,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9278996865203761,
+  "n_candidate_crossings": 319,
+  "n_accepted_picks": 13,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 6.811602123356455,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 869.8412561416626,
+  "error": null
+}

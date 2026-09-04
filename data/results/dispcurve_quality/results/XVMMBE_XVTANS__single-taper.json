@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MMBE",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 537.5799129179496,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6043859649122807,
+  "n_candidate_crossings": 2280,
+  "n_accepted_picks": 20,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.162057043110009,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3195,
+  "matlab_rel_l2_error": 5.624953694244616e-10,
+  "runtime_s": 350.44329476356506,
+  "error": null
+}

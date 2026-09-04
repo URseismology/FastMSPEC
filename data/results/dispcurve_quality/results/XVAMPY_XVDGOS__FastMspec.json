@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "DGOS",
+  "dist_km": 1464.0063253747915,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9389312977099237,
+  "n_candidate_crossings": 393,
+  "n_accepted_picks": 7,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.7498007094186043,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4425,
+  "matlab_rel_l2_error": 0.0011153830191329762,
+  "runtime_s": 480.05678510665894,
+  "error": null
+}

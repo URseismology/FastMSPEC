@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "TANS",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 258.7050491015717,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.350000000000001,
+  "bad_quality_fraction": 0.85625,
+  "n_candidate_crossings": 160,
+  "n_accepted_picks": 342,
+  "freq_coverage_fraction": 0.2911392405063291,
+  "mean_amp_ratio": 19.482405688386773,
+  "n_templates_converged": 4,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1050.8258140087128,
+  "error": null
+}

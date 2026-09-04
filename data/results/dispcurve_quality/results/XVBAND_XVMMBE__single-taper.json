@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 278.8651878340524,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.5789473684210527,
+  "n_candidate_crossings": 2337,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.5106492740059911,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5820,
+  "matlab_rel_l2_error": 4.018692229495621e-12,
+  "runtime_s": 698.4822371006012,
+  "error": null
+}

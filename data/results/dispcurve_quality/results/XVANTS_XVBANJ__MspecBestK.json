@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "BANJ",
+  "dist_km": 146.4972809358701,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.7000000000000013,
+  "bad_quality_fraction": 0.3684210526315789,
+  "n_candidate_crossings": 76,
+  "n_accepted_picks": 541,
+  "freq_coverage_fraction": 0.4657534246575342,
+  "mean_amp_ratio": 12.18309297686357,
+  "n_templates_converged": 16,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1076.9243268966675,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 219.67840837983596,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7967549103330487,
+  "n_candidate_crossings": 1171,
+  "n_accepted_picks": 4,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.7829202839513658,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4305,
+  "matlab_rel_l2_error": 1.556148027786581e-13,
+  "runtime_s": 92.54372930526733,
+  "error": null
+}

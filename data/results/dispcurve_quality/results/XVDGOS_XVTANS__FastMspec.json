@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 762.782934198231,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9128919860627178,
+  "n_candidate_crossings": 287,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 9.904077958332351,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2850,
+  "matlab_rel_l2_error": 0.002424241561942345,
+  "runtime_s": 333.40090894699097,
+  "error": null
+}

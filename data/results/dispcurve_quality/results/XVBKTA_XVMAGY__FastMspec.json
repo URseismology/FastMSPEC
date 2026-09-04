@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BKTA",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 639.5272936239361,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9340277777777778,
+  "n_candidate_crossings": 288,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1875,
+  "matlab_rel_l2_error": 8.848113051824779e-06,
+  "runtime_s": 234.9827744960785,
+  "error": null
+}

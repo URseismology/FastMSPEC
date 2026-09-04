@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 1054.2384212290015,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6481398476019722,
+  "n_candidate_crossings": 2231,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.507894443182245,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1605,
+  "matlab_rel_l2_error": 3.355362846163841e-09,
+  "runtime_s": 628.491485118866,
+  "error": null
+}

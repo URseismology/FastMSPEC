@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BAEL",
+  "dist_km": 360.2441188250598,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8210526315789474,
+  "n_candidate_crossings": 1425,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3149852651106628,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4590,
+  "matlab_rel_l2_error": 1.4355475983999159e-11,
+  "runtime_s": 352.4756200313568,
+  "error": null
+}

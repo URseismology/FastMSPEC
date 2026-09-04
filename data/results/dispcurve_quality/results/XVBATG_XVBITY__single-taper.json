@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 156.66686417707885,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8528557599225557,
+  "n_candidate_crossings": 1033,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3859703665252863,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5430,
+  "matlab_rel_l2_error": 5.883060202326599e-13,
+  "runtime_s": 497.502064704895,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 1070.962535699454,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9617346938775511,
+  "n_candidate_crossings": 392,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 22.763039900138075,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1575,
+  "matlab_rel_l2_error": 0.0008913556818332752,
+  "runtime_s": 230.35512113571167,
+  "error": null
+}

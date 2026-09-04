@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 641.2833695384574,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8862559241706162,
+  "n_candidate_crossings": 211,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 5.583258990170366,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5700,
+  "matlab_rel_l2_error": 0.0013416513437838418,
+  "runtime_s": 626.3639752864838,
+  "error": null
+}

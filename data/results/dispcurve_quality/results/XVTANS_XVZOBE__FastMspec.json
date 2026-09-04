@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "TANS",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 93.2197578231499,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.10000000000000075,
+  "bad_quality_fraction": 0.9102564102564102,
+  "n_candidate_crossings": 78,
+  "n_accepted_picks": 92,
+  "freq_coverage_fraction": 0.2,
+  "mean_amp_ratio": 57.730575516337545,
+  "n_templates_converged": 14,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3225,
+  "matlab_rel_l2_error": 0.002395518893680146,
+  "runtime_s": 313.27326941490173,
+  "error": null
+}

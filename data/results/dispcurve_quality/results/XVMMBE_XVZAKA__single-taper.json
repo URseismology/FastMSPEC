@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MMBE",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 683.6841909473029,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.5727680391357521,
+  "n_candidate_crossings": 2453,
+  "n_accepted_picks": 23,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.4600121692410317,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4425,
+  "matlab_rel_l2_error": 3.766413720075222e-10,
+  "runtime_s": 405.2503893375397,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAHA",
+  "net2": "XV",
+  "stn2": "MARO",
+  "dist_km": 468.29666178737494,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6868464501926252,
+  "n_candidate_crossings": 1817,
+  "n_accepted_picks": 10,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.604789012536217,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2385,
+  "matlab_rel_l2_error": 6.03352621483454e-13,
+  "runtime_s": 397.371054649353,
+  "error": null
+}

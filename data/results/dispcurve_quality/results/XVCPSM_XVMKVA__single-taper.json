@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "CPSM",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 1367.1855694453895,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7993421052631579,
+  "n_candidate_crossings": 1824,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.26321746423244,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5640,
+  "matlab_rel_l2_error": 3.3685846554258366e-13,
+  "runtime_s": 774.3414514064789,
+  "error": null
+}

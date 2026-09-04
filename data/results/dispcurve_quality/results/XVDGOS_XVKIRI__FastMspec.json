@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 1000.4631727403766,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.95625,
+  "n_candidate_crossings": 320,
+  "n_accepted_picks": 4,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 15.48226021945377,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4470,
+  "matlab_rel_l2_error": 0.0029355879493906415,
+  "runtime_s": 1334.985989332199,
+  "error": null
+}

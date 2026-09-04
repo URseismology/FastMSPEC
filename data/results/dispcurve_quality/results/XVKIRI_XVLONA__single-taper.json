@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "KIRI",
+  "net2": "XV",
+  "stn2": "LONA",
+  "dist_km": 306.7792732788389,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7683264177040111,
+  "n_candidate_crossings": 1446,
+  "n_accepted_picks": 4,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.0014266640694784,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4740,
+  "matlab_rel_l2_error": 4.2659494595958535e-11,
+  "runtime_s": 161.5041208267212,
+  "error": null
+}

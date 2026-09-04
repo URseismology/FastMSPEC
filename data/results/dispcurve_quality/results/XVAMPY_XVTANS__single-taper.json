@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 705.5369871201636,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7095477386934673,
+  "n_candidate_crossings": 1990,
+  "n_accepted_picks": 3,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.8546119551796512,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3255,
+  "matlab_rel_l2_error": 3.141813562771364e-10,
+  "runtime_s": 467.1440486907959,
+  "error": null
+}

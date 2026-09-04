@@ -1,0 +1,21 @@
+{
+  "net1": "G",
+  "stn1": "FOMA",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 1168.789072072173,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9935622317596566,
+  "n_candidate_crossings": 466,
+  "n_accepted_picks": 1,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 31.96118524823295,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 52.069114208221436,
+  "error": null
+}

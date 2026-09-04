@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BANJ",
+  "dist_km": 464.5086029887382,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9166666666666666,
+  "n_candidate_crossings": 132,
+  "n_accepted_picks": 24,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.728693993536617,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1569.2894566059113,
+  "error": null
+}

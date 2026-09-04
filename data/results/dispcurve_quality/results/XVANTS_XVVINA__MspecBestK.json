@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 470.62922453994634,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9018691588785047,
+  "n_candidate_crossings": 214,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.1675266705846554,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 552.0585420131683,
+  "error": null
+}

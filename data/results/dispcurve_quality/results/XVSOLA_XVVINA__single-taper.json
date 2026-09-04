@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "SOLA",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 461.2794338997562,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6794995187680462,
+  "n_candidate_crossings": 2078,
+  "n_accepted_picks": 21,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.9295161922550061,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1365,
+  "matlab_rel_l2_error": 1.6646065291453824e-12,
+  "runtime_s": 591.2813811302185,
+  "error": null
+}

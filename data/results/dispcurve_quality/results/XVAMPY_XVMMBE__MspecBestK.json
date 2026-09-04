@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 357.02573536903856,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9137466307277629,
+  "n_candidate_crossings": 371,
+  "n_accepted_picks": 41,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 5.4445676356828,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 873.6081447601318,
+  "error": null
+}

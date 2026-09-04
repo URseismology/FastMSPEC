@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 676.4242492857251,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.7000000000000013,
+  "bad_quality_fraction": 0.8056537102473498,
+  "n_candidate_crossings": 283,
+  "n_accepted_picks": 451,
+  "freq_coverage_fraction": 0.3026315789473684,
+  "mean_amp_ratio": 1.7628080764826066,
+  "n_templates_converged": 3,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4740,
+  "matlab_rel_l2_error": 0.005944383703328334,
+  "runtime_s": 648.5828540325165,
+  "error": null
+}

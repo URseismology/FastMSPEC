@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 219.67840837983596,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.45000000000000107,
+  "bad_quality_fraction": 0.7910447761194029,
+  "n_candidate_crossings": 67,
+  "n_accepted_picks": 352,
+  "freq_coverage_fraction": 0.4084507042253521,
+  "mean_amp_ratio": 11.12358476998798,
+  "n_templates_converged": 22,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1976.1579213142395,
+  "error": null
+}

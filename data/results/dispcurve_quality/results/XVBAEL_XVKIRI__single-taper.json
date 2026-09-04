@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 752.2662362450121,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7565683646112601,
+  "n_candidate_crossings": 1865,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.1272840676441955,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3450,
+  "matlab_rel_l2_error": 1.6873616745950244e-10,
+  "runtime_s": 334.86905670166016,
+  "error": null
+}

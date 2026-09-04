@@ -1,0 +1,21 @@
+{
+  "net1": "AF",
+  "stn1": "SKRH",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 588.3875752146723,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6175243393602226,
+  "n_candidate_crossings": 2157,
+  "n_accepted_picks": 12,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.361161897168672,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 750,
+  "matlab_rel_l2_error": 3.213802329536199e-13,
+  "runtime_s": 186.5716004371643,
+  "error": null
+}

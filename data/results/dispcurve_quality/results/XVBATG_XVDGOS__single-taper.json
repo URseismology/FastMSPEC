@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "DGOS",
+  "dist_km": 808.2897318371334,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7406605305901461,
+  "n_candidate_crossings": 1847,
+  "n_accepted_picks": 33,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.281533170989233,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4260,
+  "matlab_rel_l2_error": 4.4727349449282775e-13,
+  "runtime_s": 667.6235568523407,
+  "error": null
+}

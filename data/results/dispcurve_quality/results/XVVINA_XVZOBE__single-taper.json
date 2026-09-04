@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "VINA",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 211.80575140137591,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8720821661998133,
+  "n_candidate_crossings": 1071,
+  "n_accepted_picks": 6,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.7007843845851456,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5415,
+  "matlab_rel_l2_error": 3.8536926223922916e-11,
+  "runtime_s": 72.88884949684143,
+  "error": null
+}

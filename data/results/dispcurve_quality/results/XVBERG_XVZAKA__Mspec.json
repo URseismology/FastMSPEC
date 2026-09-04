@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 265.93568330853736,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.5500000000000012,
+  "bad_quality_fraction": 0.8428571428571429,
+  "n_candidate_crossings": 70,
+  "n_accepted_picks": 211,
+  "freq_coverage_fraction": 0.2459016393442623,
+  "mean_amp_ratio": 5.187122640438933,
+  "n_templates_converged": 4,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1980.8801624774933,
+  "error": null
+}

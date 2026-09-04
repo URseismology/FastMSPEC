@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 143.55967627766054,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.45000000000000107,
+  "bad_quality_fraction": 0.8347826086956521,
+  "n_candidate_crossings": 115,
+  "n_accepted_picks": 236,
+  "freq_coverage_fraction": 0.32432432432432434,
+  "mean_amp_ratio": 59.31162156720836,
+  "n_templates_converged": 20,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3030,
+  "matlab_rel_l2_error": 0.003054957170464661,
+  "runtime_s": 1033.5545608997345,
+  "error": null
+}

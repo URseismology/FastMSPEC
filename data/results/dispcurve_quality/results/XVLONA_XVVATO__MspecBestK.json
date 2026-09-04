@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "LONA",
+  "net2": "XV",
+  "stn2": "VATO",
+  "dist_km": 620.9607164073652,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9347079037800687,
+  "n_candidate_crossings": 291,
+  "n_accepted_picks": 32,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 6.3305622438450335,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 284.3926169872284,
+  "error": null
+}

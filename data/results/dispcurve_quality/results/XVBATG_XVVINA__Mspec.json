@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 127.99750390632725,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.30000000000000093,
+  "bad_quality_fraction": 0.7058823529411765,
+  "n_candidate_crossings": 34,
+  "n_accepted_picks": 224,
+  "freq_coverage_fraction": 0.5882352941176471,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 26,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2454.780809879303,
+  "error": null
+}

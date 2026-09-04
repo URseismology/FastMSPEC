@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "LONA",
+  "dist_km": 963.014231833671,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.758082497212932,
+  "n_candidate_crossings": 1794,
+  "n_accepted_picks": 18,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.2290346953953968,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 10470,
+  "matlab_rel_l2_error": 1.1195217427841817e-12,
+  "runtime_s": 346.2626373767853,
+  "error": null
+}

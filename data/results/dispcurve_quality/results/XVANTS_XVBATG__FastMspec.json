@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "BATG",
+  "dist_km": 484.17665545802896,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8766519823788547,
+  "n_candidate_crossings": 227,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": NaN,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5430,
+  "matlab_rel_l2_error": 0.0011475199916193483,
+  "runtime_s": 581.7650482654572,
+  "error": null
+}

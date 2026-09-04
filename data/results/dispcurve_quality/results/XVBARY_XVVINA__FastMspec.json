@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 205.144838135579,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.6500000000000012,
+  "bad_quality_fraction": 0.8627450980392157,
+  "n_candidate_crossings": 102,
+  "n_accepted_picks": 206,
+  "freq_coverage_fraction": 0.31746031746031744,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 18,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5415,
+  "matlab_rel_l2_error": 0.000271302541609296,
+  "runtime_s": 1353.6446373462677,
+  "error": null
+}

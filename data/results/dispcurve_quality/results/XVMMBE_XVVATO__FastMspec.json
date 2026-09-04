@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MMBE",
+  "net2": "XV",
+  "stn2": "VATO",
+  "dist_km": 643.0297592543646,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9093406593406593,
+  "n_candidate_crossings": 364,
+  "n_accepted_picks": 4,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 6.31362333150304,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2505,
+  "matlab_rel_l2_error": 0.003932841817766016,
+  "runtime_s": 885.1534855365753,
+  "error": null
+}

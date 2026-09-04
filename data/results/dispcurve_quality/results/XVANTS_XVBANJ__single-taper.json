@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "BANJ",
+  "dist_km": 146.4972809358701,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9534282018111255,
+  "n_candidate_crossings": 773,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.1841283386682884,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3480,
+  "matlab_rel_l2_error": 3.39306136970746e-13,
+  "runtime_s": 35.93163871765137,
+  "error": null
+}

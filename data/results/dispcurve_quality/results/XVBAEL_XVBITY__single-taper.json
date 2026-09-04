@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 641.2833695384574,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8191318327974276,
+  "n_candidate_crossings": 1244,
+  "n_accepted_picks": 12,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.802544894655342,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5700,
+  "matlab_rel_l2_error": 1.224279162423408e-11,
+  "runtime_s": 248.63829064369202,
+  "error": null
+}

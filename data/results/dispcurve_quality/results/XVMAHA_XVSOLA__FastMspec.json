@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAHA",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 821.2561125934382,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.935672514619883,
+  "n_candidate_crossings": 342,
+  "n_accepted_picks": 25,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 37.10837974222042,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1590,
+  "matlab_rel_l2_error": 1.2390030621992079e-08,
+  "runtime_s": 883.0414094924927,
+  "error": null
+}

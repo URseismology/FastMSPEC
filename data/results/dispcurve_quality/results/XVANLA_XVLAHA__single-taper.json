@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 320.7169960544515,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7576435495898584,
+  "n_candidate_crossings": 1341,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.1653057593435414,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 9225,
+  "matlab_rel_l2_error": 7.210561820381487e-12,
+  "runtime_s": 232.88745951652527,
+  "error": null
+}

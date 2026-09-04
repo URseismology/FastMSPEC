@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BKTA",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 669.3723855866074,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9420849420849421,
+  "n_candidate_crossings": 259,
+  "n_accepted_picks": 20,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.9988619216707524,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5415,
+  "matlab_rel_l2_error": 0.00012038409689948772,
+  "runtime_s": 590.4909145832062,
+  "error": null
+}

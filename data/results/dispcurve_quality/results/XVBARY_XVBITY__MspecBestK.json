@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 320.18471172530934,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.5000000000000011,
+  "bad_quality_fraction": 0.7404580152671756,
+  "n_candidate_crossings": 131,
+  "n_accepted_picks": 725,
+  "freq_coverage_fraction": 0.3924050632911392,
+  "mean_amp_ratio": 13.032417796660576,
+  "n_templates_converged": 6,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 607.5365085601807,
+  "error": null
+}

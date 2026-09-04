@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 280.480526686413,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.8000000000000014,
+  "bad_quality_fraction": 0.6637168141592921,
+  "n_candidate_crossings": 113,
+  "n_accepted_picks": 443,
+  "freq_coverage_fraction": 0.36486486486486486,
+  "mean_amp_ratio": 8.837756228518804,
+  "n_templates_converged": 6,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5415,
+  "matlab_rel_l2_error": 0.0001493689730335458,
+  "runtime_s": 641.143646478653,
+  "error": null
+}

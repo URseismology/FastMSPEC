@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "LONA",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 151.0375327767523,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": -0.4999999999999998,
+  "bad_quality_fraction": 0.912621359223301,
+  "n_candidate_crossings": 103,
+  "n_accepted_picks": 146,
+  "freq_coverage_fraction": 0.2638888888888889,
+  "mean_amp_ratio": 8.016828077795592,
+  "n_templates_converged": 7,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 4701.428967475891,
+  "error": null
+}

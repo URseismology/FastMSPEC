@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MKVA",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 1102.860864089303,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9803921568627451,
+  "n_candidate_crossings": 459,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.578840675508466,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5550,
+  "matlab_rel_l2_error": 0.004939749601102759,
+  "runtime_s": 586.6388990879059,
+  "error": null
+}

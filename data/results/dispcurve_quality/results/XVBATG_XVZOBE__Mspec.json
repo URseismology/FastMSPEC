@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 137.3643641980309,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 6.661338147750939e-16,
+  "bad_quality_fraction": 0.7954545454545454,
+  "n_candidate_crossings": 44,
+  "n_accepted_picks": 198,
+  "freq_coverage_fraction": 0.4722222222222222,
+  "mean_amp_ratio": 37.85901169758083,
+  "n_templates_converged": 17,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2241.666892528534,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 139.6239769701174,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9629629629629629,
+  "n_candidate_crossings": 108,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3240,
+  "matlab_rel_l2_error": 0.0028734552260340517,
+  "runtime_s": 319.2805051803589,
+  "error": null
+}

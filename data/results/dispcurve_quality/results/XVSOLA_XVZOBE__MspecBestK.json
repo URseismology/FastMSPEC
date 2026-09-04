@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "SOLA",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 304.5411625007181,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.922077922077922,
+  "n_candidate_crossings": 154,
+  "n_accepted_picks": 18,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 7.660896301852507,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 854.2100179195404,
+  "error": null
+}

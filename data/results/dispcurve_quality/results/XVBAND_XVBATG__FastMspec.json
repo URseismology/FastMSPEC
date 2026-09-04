@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "BATG",
+  "dist_km": 174.17117187309157,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.30000000000000093,
+  "bad_quality_fraction": 0.8333333333333334,
+  "n_candidate_crossings": 78,
+  "n_accepted_picks": 174,
+  "freq_coverage_fraction": 0.5138888888888888,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 29,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5430,
+  "matlab_rel_l2_error": 0.0025025067517765566,
+  "runtime_s": 1140.4995198249817,
+  "error": null
+}

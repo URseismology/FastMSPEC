@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAGY",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 415.10599666943153,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7069486404833837,
+  "n_candidate_crossings": 1655,
+  "n_accepted_picks": 28,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.5507415807103104,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1710,
+  "matlab_rel_l2_error": 1.3395934237228845e-12,
+  "runtime_s": 411.7885353565216,
+  "error": null
+}

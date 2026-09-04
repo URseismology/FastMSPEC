@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 294.59505076956435,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8495645288994458,
+  "n_candidate_crossings": 1263,
+  "n_accepted_picks": 7,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.2006147476294053,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5775,
+  "matlab_rel_l2_error": 2.3258079871451333e-13,
+  "runtime_s": 106.17793107032776,
+  "error": null
+}

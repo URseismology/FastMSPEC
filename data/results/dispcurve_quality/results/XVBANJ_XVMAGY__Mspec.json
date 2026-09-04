@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BANJ",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 633.5380513959244,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9856115107913669,
+  "n_candidate_crossings": 139,
+  "n_accepted_picks": 1,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.090391435260502,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2145.222941637039,
+  "error": null
+}

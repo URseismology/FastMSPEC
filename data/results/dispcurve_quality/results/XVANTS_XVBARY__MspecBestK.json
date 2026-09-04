@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "BARY",
+  "dist_km": 283.4007550481921,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8875739644970414,
+  "n_candidate_crossings": 169,
+  "n_accepted_picks": 14,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.6430850419002825,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1218.2358746528625,
+  "error": null
+}

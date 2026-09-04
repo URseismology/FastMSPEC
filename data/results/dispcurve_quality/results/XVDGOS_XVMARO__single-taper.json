@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "MARO",
+  "dist_km": 1012.5133896593336,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6562790697674419,
+  "n_candidate_crossings": 2150,
+  "n_accepted_picks": 19,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.1312074875356852,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2430,
+  "matlab_rel_l2_error": 7.502161456289102e-13,
+  "runtime_s": 569.1629004478455,
+  "error": null
+}

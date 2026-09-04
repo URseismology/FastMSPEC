@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "DGOS",
+  "dist_km": 259.62272556499494,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8832116788321168,
+  "n_candidate_crossings": 137,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 5.126357075340484,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4485,
+  "matlab_rel_l2_error": 0.0009384067434314073,
+  "runtime_s": 1228.7850511074066,
+  "error": null
+}

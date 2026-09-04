@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 431.52194254622015,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8253068932955618,
+  "n_candidate_crossings": 1059,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.720345538106558,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5700,
+  "matlab_rel_l2_error": 2.6937328635794505e-11,
+  "runtime_s": 308.3072168827057,
+  "error": null
+}

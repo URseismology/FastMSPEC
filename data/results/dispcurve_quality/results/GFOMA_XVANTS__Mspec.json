@@ -1,0 +1,21 @@
+{
+  "net1": "G",
+  "stn1": "FOMA",
+  "net2": "XV",
+  "stn2": "ANTS",
+  "dist_km": 1127.1475033500046,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9942528735632183,
+  "n_candidate_crossings": 174,
+  "n_accepted_picks": 21,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 28.49130892753601,
+  "error": null
+}

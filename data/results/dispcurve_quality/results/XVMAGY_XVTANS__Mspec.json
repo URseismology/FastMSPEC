@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAGY",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 156.4311843237626,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.6000000000000012,
+  "bad_quality_fraction": 0.7407407407407407,
+  "n_candidate_crossings": 54,
+  "n_accepted_picks": 248,
+  "freq_coverage_fraction": 0.36923076923076925,
+  "mean_amp_ratio": 26.14070163028712,
+  "n_templates_converged": 20,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1713.0826330184937,
+  "error": null
+}

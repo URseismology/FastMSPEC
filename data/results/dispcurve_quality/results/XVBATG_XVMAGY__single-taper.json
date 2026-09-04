@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 297.3412350651391,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7254073627036813,
+  "n_candidate_crossings": 1657,
+  "n_accepted_picks": 13,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3617418652488744,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1740,
+  "matlab_rel_l2_error": 5.827392814903791e-13,
+  "runtime_s": 403.772180557251,
+  "error": null
+}

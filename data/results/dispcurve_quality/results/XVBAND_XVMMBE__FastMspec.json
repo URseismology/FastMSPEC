@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 278.8651878340524,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9468085106382979,
+  "n_candidate_crossings": 376,
+  "n_accepted_picks": 14,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.3684028049590173,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5820,
+  "matlab_rel_l2_error": 0.030201342169370413,
+  "runtime_s": 663.9508645534515,
+  "error": null
+}

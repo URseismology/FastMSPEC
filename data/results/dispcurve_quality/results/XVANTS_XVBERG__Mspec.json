@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "BERG",
+  "dist_km": 87.0272781777348,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.6500000000000012,
+  "bad_quality_fraction": 0.6129032258064516,
+  "n_candidate_crossings": 31,
+  "n_accepted_picks": 280,
+  "freq_coverage_fraction": 0.6666666666666666,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 26,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2563.327846288681,
+  "error": null
+}

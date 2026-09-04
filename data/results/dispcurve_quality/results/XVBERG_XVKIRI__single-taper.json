@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 589.6247949104951,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7406387665198237,
+  "n_candidate_crossings": 1816,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.2190670224272258,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3510,
+  "matlab_rel_l2_error": 6.679978336682194e-11,
+  "runtime_s": 283.8243007659912,
+  "error": null
+}

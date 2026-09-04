@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BKTA",
+  "dist_km": 820.3369530447054,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7226890756302521,
+  "n_candidate_crossings": 1785,
+  "n_accepted_picks": 36,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.395968760234926,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4590,
+  "matlab_rel_l2_error": 2.1726377732516352e-11,
+  "runtime_s": 758.2405459880829,
+  "error": null
+}

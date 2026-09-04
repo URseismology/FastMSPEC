@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "SOLA",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 224.69158353489712,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.5500000000000012,
+  "bad_quality_fraction": 0.8547486033519553,
+  "n_candidate_crossings": 179,
+  "n_accepted_picks": 451,
+  "freq_coverage_fraction": 0.4142857142857143,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 7,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 139.0632519721985,
+  "error": null
+}

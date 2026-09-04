@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "CPSM",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 458.2329642505542,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9482352941176471,
+  "n_candidate_crossings": 425,
+  "n_accepted_picks": 7,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.6559091469357083,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5700,
+  "matlab_rel_l2_error": 0.0037109779013388615,
+  "runtime_s": 1405.0518441200256,
+  "error": null
+}

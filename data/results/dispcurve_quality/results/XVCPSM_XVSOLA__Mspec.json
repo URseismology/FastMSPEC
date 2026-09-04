@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "CPSM",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 1141.2380577783188,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9924242424242424,
+  "n_candidate_crossings": 132,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 15.79594173678589,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1986.1316003799438,
+  "error": null
+}

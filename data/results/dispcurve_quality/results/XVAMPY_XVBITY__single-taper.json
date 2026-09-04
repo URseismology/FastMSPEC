@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 565.9225712556657,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.805693950177936,
+  "n_candidate_crossings": 1405,
+  "n_accepted_picks": 6,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.7291830978436158,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5715,
+  "matlab_rel_l2_error": 7.85858072703732e-13,
+  "runtime_s": 427.46774077415466,
+  "error": null
+}

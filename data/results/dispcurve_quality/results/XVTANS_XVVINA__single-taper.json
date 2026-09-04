@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "TANS",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 258.7050491015717,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7496757457846952,
+  "n_candidate_crossings": 1542,
+  "n_accepted_picks": 10,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.311742666598155,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3045,
+  "matlab_rel_l2_error": 5.787765527307624e-10,
+  "runtime_s": 97.05449414253235,
+  "error": null
+}

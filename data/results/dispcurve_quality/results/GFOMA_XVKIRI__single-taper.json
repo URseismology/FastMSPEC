@@ -1,0 +1,21 @@
+{
+  "net1": "G",
+  "stn1": "FOMA",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 595.4369230196212,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6504576659038902,
+  "n_candidate_crossings": 1748,
+  "n_accepted_picks": 18,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.6107073969153383,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 945,
+  "matlab_rel_l2_error": 1.5584724878219173e-10,
+  "runtime_s": 384.10802364349365,
+  "error": null
+}

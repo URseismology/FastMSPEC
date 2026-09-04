@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "BERG",
+  "dist_km": 397.408439505775,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.30000000000000093,
+  "bad_quality_fraction": 0.7906976744186046,
+  "n_candidate_crossings": 172,
+  "n_accepted_picks": 313,
+  "freq_coverage_fraction": 0.2857142857142857,
+  "mean_amp_ratio": 9.367663170269473,
+  "n_templates_converged": 7,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5415,
+  "matlab_rel_l2_error": 0.00021370619915165397,
+  "runtime_s": 690.7112286090851,
+  "error": null
+}

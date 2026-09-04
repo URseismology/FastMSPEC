@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAGY",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 226.25251620026904,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9568965517241379,
+  "n_candidate_crossings": 116,
+  "n_accepted_picks": 3,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 18.556100255542745,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2010,
+  "matlab_rel_l2_error": 8.549576585635694e-09,
+  "runtime_s": 930.6492490768433,
+  "error": null
+}

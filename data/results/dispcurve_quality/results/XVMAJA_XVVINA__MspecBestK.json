@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAJA",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 300.36777713991404,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.7500000000000013,
+  "bad_quality_fraction": 0.7471910112359551,
+  "n_candidate_crossings": 178,
+  "n_accepted_picks": 245,
+  "freq_coverage_fraction": 0.2631578947368421,
+  "mean_amp_ratio": 2.038234609281958,
+  "n_templates_converged": 5,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 559.8494095802307,
+  "error": null
+}

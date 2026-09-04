@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 368.11851356714607,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9148936170212766,
+  "n_candidate_crossings": 188,
+  "n_accepted_picks": 13,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.2605161487601666,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4695,
+  "matlab_rel_l2_error": 0.012194809765925196,
+  "runtime_s": 1081.6778435707092,
+  "error": null
+}

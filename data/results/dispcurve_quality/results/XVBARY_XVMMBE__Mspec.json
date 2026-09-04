@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 625.3936580864654,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9835164835164835,
+  "n_candidate_crossings": 182,
+  "n_accepted_picks": 16,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3192051852893483,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2534.336656808853,
+  "error": null
+}

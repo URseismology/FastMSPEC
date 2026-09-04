@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "BARY",
+  "dist_km": 282.13066736496006,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9316239316239316,
+  "n_candidate_crossings": 234,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.4548352458830696,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4680,
+  "matlab_rel_l2_error": 0.03168125409337706,
+  "runtime_s": 670.0240573883057,
+  "error": null
+}

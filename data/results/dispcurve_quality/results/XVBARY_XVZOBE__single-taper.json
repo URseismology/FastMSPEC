@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 112.99145520680683,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8398328690807799,
+  "n_candidate_crossings": 718,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.6595011856479212,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5820,
+  "matlab_rel_l2_error": 2.240584590287141e-11,
+  "runtime_s": 215.45323872566223,
+  "error": null
+}

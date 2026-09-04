@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 618.77532979281,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.916058394160584,
+  "n_candidate_crossings": 274,
+  "n_accepted_picks": 23,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.2624788207354922,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 513.6457171440125,
+  "error": null
+}

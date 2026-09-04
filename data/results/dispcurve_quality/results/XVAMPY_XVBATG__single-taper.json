@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "BATG",
+  "dist_km": 664.582897407184,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7468493150684932,
+  "n_candidate_crossings": 1825,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.6423396347575858,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5430,
+  "matlab_rel_l2_error": 4.994555015059028e-13,
+  "runtime_s": 647.5797872543335,
+  "error": null
+}

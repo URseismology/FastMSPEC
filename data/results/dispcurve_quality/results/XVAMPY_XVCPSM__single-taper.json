@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "CPSM",
+  "dist_km": 101.2089122694608,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8614457831325302,
+  "n_candidate_crossings": 664,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 5.2690584216141385,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5730,
+  "matlab_rel_l2_error": 1.0323660670264221e-13,
+  "runtime_s": 310.45444655418396,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 439.63107647790196,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.400000000000001,
+  "bad_quality_fraction": 0.7918367346938775,
+  "n_candidate_crossings": 245,
+  "n_accepted_picks": 681,
+  "freq_coverage_fraction": 0.4507042253521127,
+  "mean_amp_ratio": 6.24290244814828,
+  "n_templates_converged": 13,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 502.7287108898163,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "KIRI",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 642.3766353673701,
+  "technique": "Mspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9457364341085271,
+  "n_candidate_crossings": 129,
+  "n_accepted_picks": 14,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.488482718374376,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1393.699476480484,
+  "error": null
+}

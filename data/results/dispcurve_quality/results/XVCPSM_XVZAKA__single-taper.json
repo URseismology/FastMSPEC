@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "CPSM",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 919.2558472314012,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7869352869352869,
+  "n_candidate_crossings": 1638,
+  "n_accepted_picks": 9,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.8187272436175543,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4425,
+  "matlab_rel_l2_error": 2.293173406805182e-10,
+  "runtime_s": 634.6241316795349,
+  "error": null
+}

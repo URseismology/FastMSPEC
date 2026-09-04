@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "VATO",
+  "dist_km": 187.59553817764106,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.7500000000000013,
+  "bad_quality_fraction": 0.8151260504201681,
+  "n_candidate_crossings": 119,
+  "n_accepted_picks": 424,
+  "freq_coverage_fraction": 0.46835443037974683,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 26,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1083.2751212120056,
+  "error": null
+}

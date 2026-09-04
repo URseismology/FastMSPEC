@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "BAND",
+  "dist_km": 658.1689007891629,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.8000000000000014,
+  "bad_quality_fraction": 0.7224334600760456,
+  "n_candidate_crossings": 263,
+  "n_accepted_picks": 394,
+  "freq_coverage_fraction": 0.27631578947368424,
+  "mean_amp_ratio": 1.9119398737029958,
+  "n_templates_converged": 4,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1530.1308708190918,
+  "error": null
+}

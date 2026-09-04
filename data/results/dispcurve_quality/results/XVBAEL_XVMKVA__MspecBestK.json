@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 148.48853290244867,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.7000000000000013,
+  "bad_quality_fraction": 0.813953488372093,
+  "n_candidate_crossings": 86,
+  "n_accepted_picks": 158,
+  "freq_coverage_fraction": 0.35443037974683544,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 29,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1282.513855934143,
+  "error": null
+}

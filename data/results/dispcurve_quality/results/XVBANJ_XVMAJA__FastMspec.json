@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BANJ",
+  "net2": "XV",
+  "stn2": "MAJA",
+  "dist_km": 318.6549199807776,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": -0.4999999999999998,
+  "bad_quality_fraction": 0.8,
+  "n_candidate_crossings": 215,
+  "n_accepted_picks": 248,
+  "freq_coverage_fraction": 0.34177215189873417,
+  "mean_amp_ratio": 6.451879876538318,
+  "n_templates_converged": 3,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3480,
+  "matlab_rel_l2_error": 2.2517811614164017e-05,
+  "runtime_s": 967.6803984642029,
+  "error": null
+}

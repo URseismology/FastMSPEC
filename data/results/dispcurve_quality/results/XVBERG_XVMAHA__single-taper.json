@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "MAHA",
+  "dist_km": 844.1503460886915,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7979207277452891,
+  "n_candidate_crossings": 1539,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.5358021686076722,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5715,
+  "matlab_rel_l2_error": 8.998945514688579e-13,
+  "runtime_s": 356.9669990539551,
+  "error": null
+}

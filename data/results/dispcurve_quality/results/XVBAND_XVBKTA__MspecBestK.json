@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "BKTA",
+  "dist_km": 426.99445063315363,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.05000000000000071,
+  "bad_quality_fraction": 0.7898550724637681,
+  "n_candidate_crossings": 138,
+  "n_accepted_picks": 547,
+  "freq_coverage_fraction": 0.3472222222222222,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 5,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1337.39444565773,
+  "error": null
+}

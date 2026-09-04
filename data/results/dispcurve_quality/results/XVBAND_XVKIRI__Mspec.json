@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 102.44450588009188,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.05000000000000071,
+  "bad_quality_fraction": 0.5333333333333333,
+  "n_candidate_crossings": 45,
+  "n_accepted_picks": 228,
+  "freq_coverage_fraction": 0.5,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 30,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1699.8640785217285,
+  "error": null
+}

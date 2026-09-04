@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "LONA",
+  "dist_km": 305.09113330696545,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7872062663185379,
+  "n_candidate_crossings": 1532,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.8542185075105295,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5865,
+  "matlab_rel_l2_error": 1.0419606715890235e-12,
+  "runtime_s": 189.1992838382721,
+  "error": null
+}

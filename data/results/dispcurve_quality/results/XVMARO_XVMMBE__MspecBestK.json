@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MARO",
+  "net2": "XV",
+  "stn2": "MMBE",
+  "dist_km": 217.55166072964576,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.6000000000000012,
+  "bad_quality_fraction": 0.8055555555555556,
+  "n_candidate_crossings": 180,
+  "n_accepted_picks": 160,
+  "freq_coverage_fraction": 0.358974358974359,
+  "mean_amp_ratio": 2.517312024009808,
+  "n_templates_converged": 9,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 356.4970121383667,
+  "error": null
+}

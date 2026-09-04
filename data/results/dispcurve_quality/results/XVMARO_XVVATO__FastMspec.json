@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MARO",
+  "net2": "XV",
+  "stn2": "VATO",
+  "dist_km": 472.2349867534685,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9298245614035088,
+  "n_candidate_crossings": 285,
+  "n_accepted_picks": 12,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 21.836654092311438,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2430,
+  "matlab_rel_l2_error": 0.001318177522935189,
+  "runtime_s": 1003.5740444660187,
+  "error": null
+}

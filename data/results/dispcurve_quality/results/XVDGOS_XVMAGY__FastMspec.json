@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 783.3665617980087,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.2500000000000009,
+  "bad_quality_fraction": 0.7432432432432432,
+  "n_candidate_crossings": 296,
+  "n_accepted_picks": 1074,
+  "freq_coverage_fraction": 0.37662337662337664,
+  "mean_amp_ratio": 4.8870441545342524,
+  "n_templates_converged": 5,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4125,
+  "matlab_rel_l2_error": 5.962987725625076e-05,
+  "runtime_s": 1597.2470264434814,
+  "error": null
+}

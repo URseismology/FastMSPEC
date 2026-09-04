@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "CPSM",
+  "dist_km": 977.7453430244848,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9096573208722741,
+  "n_candidate_crossings": 321,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 46.131980049896576,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4560,
+  "matlab_rel_l2_error": 0.01440268821946086,
+  "runtime_s": 1263.4088191986084,
+  "error": null
+}

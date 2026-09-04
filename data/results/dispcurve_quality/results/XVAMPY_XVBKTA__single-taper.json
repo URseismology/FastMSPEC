@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "BKTA",
+  "dist_km": 110.4937157958484,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8832116788321168,
+  "n_candidate_crossings": 685,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.1400755889617535,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5730,
+  "matlab_rel_l2_error": 2.7237239538012873e-13,
+  "runtime_s": 101.39850616455078,
+  "error": null
+}

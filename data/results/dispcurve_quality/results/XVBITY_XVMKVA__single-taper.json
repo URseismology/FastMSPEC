@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 734.5758012634129,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6986301369863014,
+  "n_candidate_crossings": 1679,
+  "n_accepted_picks": 28,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.5689456806895425,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5595,
+  "matlab_rel_l2_error": 6.633111863351896e-13,
+  "runtime_s": 649.9405698776245,
+  "error": null
+}

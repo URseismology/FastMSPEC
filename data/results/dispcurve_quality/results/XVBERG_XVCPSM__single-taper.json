@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "CPSM",
+  "dist_km": 1136.5872715231799,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8102501525320317,
+  "n_candidate_crossings": 1639,
+  "n_accepted_picks": 10,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.2593298009274996,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5670,
+  "matlab_rel_l2_error": 8.821513966474171e-14,
+  "runtime_s": 592.5201811790466,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "CPSM",
+  "net2": "XV",
+  "stn2": "LONA",
+  "dist_km": 315.6927975625672,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8765432098765432,
+  "n_candidate_crossings": 162,
+  "n_accepted_picks": 27,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 2.7628185869562754,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 516.5608012676239,
+  "error": null
+}

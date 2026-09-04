@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "LAHA",
+  "net2": "XV",
+  "stn2": "MARO",
+  "dist_km": 839.1389937300855,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6665118439386902,
+  "n_candidate_crossings": 2153,
+  "n_accepted_picks": 9,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.5331493848631739,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2355,
+  "matlab_rel_l2_error": 5.648876793968569e-13,
+  "runtime_s": 231.5013449192047,
+  "error": null
+}

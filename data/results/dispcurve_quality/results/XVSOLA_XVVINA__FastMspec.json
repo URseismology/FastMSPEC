@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "SOLA",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 461.2794338997562,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9354838709677419,
+  "n_candidate_crossings": 248,
+  "n_accepted_picks": 15,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 6.580189073387631,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1365,
+  "matlab_rel_l2_error": 0.00019849085321159668,
+  "runtime_s": 186.30699563026428,
+  "error": null
+}

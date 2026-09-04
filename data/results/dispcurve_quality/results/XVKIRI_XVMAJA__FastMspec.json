@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "KIRI",
+  "net2": "XV",
+  "stn2": "MAJA",
+  "dist_km": 517.0233053542738,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.2500000000000009,
+  "bad_quality_fraction": 0.8,
+  "n_candidate_crossings": 230,
+  "n_accepted_picks": 396,
+  "freq_coverage_fraction": 0.5443037974683544,
+  "mean_amp_ratio": 4.176159473228381,
+  "n_templates_converged": 16,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4740,
+  "matlab_rel_l2_error": 0.001358973813147792,
+  "runtime_s": 794.8354556560516,
+  "error": null
+}

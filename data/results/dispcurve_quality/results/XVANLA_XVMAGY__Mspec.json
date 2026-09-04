@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANLA",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 186.26202739350285,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.7000000000000013,
+  "bad_quality_fraction": 0.6875,
+  "n_candidate_crossings": 64,
+  "n_accepted_picks": 390,
+  "freq_coverage_fraction": 0.5616438356164384,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 18,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1987.7780556678772,
+  "error": null
+}

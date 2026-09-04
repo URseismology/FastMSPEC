@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "TANS",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 150.4443119874676,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8471849865951743,
+  "n_candidate_crossings": 1119,
+  "n_accepted_picks": 6,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.6158124660242663,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2025,
+  "matlab_rel_l2_error": 4.138761870325765e-10,
+  "runtime_s": 266.56121373176575,
+  "error": null
+}

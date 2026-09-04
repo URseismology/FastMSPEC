@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 689.9538462746413,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9102564102564102,
+  "n_candidate_crossings": 234,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.161986635949178,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 4620,
+  "matlab_rel_l2_error": 0.0008879391643256578,
+  "runtime_s": 501.6774010658264,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "LONA",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 602.3219057842366,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7451317296678122,
+  "n_candidate_crossings": 1746,
+  "n_accepted_picks": 2,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.2460887616630785,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5895,
+  "matlab_rel_l2_error": 3.7666577253806864e-11,
+  "runtime_s": 395.9252698421478,
+  "error": null
+}

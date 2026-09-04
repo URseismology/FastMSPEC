@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAGY",
+  "net2": "XV",
+  "stn2": "ZAKA",
+  "dist_km": 173.7090057575934,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.8306836248012719,
+  "n_candidate_crossings": 1258,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.913425042178828,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1785,
+  "matlab_rel_l2_error": 4.0202441587987393e-13,
+  "runtime_s": 286.73654413223267,
+  "error": null
+}

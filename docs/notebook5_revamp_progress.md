@@ -17,7 +17,8 @@ next stage.
       `notebooks/README.md` + `docs/coherence_barcode_design.tex`)
 - [x] **Stage 2** -- Vendor + instrument the seislib picker (`python/dispcurve_pick/`)
 - [x] **Stage 3** -- Validate against Sayan's SKRH-BAND result; 4-technique timing pilot
-- [ ] **Stage 4** -- bluehive batch pipeline, full 380 pairs x 4 techniques
+- [x] **Stage 4** -- bluehive batch pipeline, full 380 pairs x 4 techniques (Round 1 complete;
+      Round 2 -- NW sweep, single-taper+FastMspec only -- designed but not yet run)
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
 - [ ] **Stage 6** -- Packaging + docs cleanup, Notebook 3 Section 4 ref_curve fix
 
@@ -1240,3 +1241,45 @@ Validation script + provenance committed as
 [`verification/jackknife_variance_check/`](../verification/jackknife_variance_check/), matching
 `verification/skrh_band_real_data/`'s convention (same source `.mat` file, not committed, real
 retrieval command documented in its own README).
+
+### 2026-09-03 -- Stage 4 Round 1 complete: 1520/1520, one last real bug caught only by the final
+aggregation pass
+
+The batch finished (`results_so_far=1520`) while the jackknife-theory validation work above was
+in progress. Ran `aggregate.py` for the real final manifest -- and it surfaced one more genuine
+bug, distinct from everything found live during the run: **7 work units had a real `error` set
+(6 `MemoryError`, 1 `OSError: Bad address`)**, silently sitting in `results/` since before this
+session's memory-budget fixes. Root cause of why these survived every earlier sweep: `run_plain.
+py`'s idempotency guard (`if out_path.exists(): skip`) treats *any* existing result file --
+including one recording a real error, not just a successful/failed-to-converge outcome -- as
+"already done," so these never got automatically retried even after later fixups raised memory
+budgets for everyone else. The `.err`-log crash sweep used throughout this stage only caught
+`Bus error`/`Segmentation`/`Killed`/`OOM` signatures in *current* `.err` files -- a
+`MemoryError` caught cleanly by Python (not a hard OOM-kill) never produced one of those signatures
+and was invisible to that check; only reading the aggregated `error` column caught it. All 7
+needed only ~20-22GB (their `.mat` files have unusually large trace counts, ~9300-10400 vs. the
+~1600 "typical" this whole stage's budgets were calibrated around) -- trivial against the 120GB
+already standard for fixups. Deleted the 7 stale error results, resubmitted at 120GB (job
+`31347891`), confirmed all 7 `COMPLETED` cleanly.
+
+**Final tally, 1520/1520 work units, zero errors**:
+
+| Technique | Converged | Total | Rate |
+|---|---|---|---|
+| single-taper | 0 | 380 | 0.0% |
+| FastMspec | 99 | 380 | 26.1% |
+| Mspec | 58 | 380 | 15.3% |
+| MspecBestK | 100 | 380 | 26.3% |
+
+Pulled the bounded results back to this repo (888KB total -- `manifest.csv` + all 1520 per-unit
+JSON files, never the raw ~99GB inputs or MATLAB cross-spectra) into
+[`data/results/dispcurve_quality/`](../data/results/dispcurve_quality/), with its own provenance
+README matching `data/reference/README.md`'s convention. Added a `.gitignore` exception (the
+existing `/data/*` blanket rule, plus the separate blanket `*.csv` rule, both needed a carve-out).
+
+**Stage 4 marked complete in the checklist.** Round 2 (the NW sweep, single-taper + FastMspec
+only, designed and sized earlier this session) is not yet submitted -- a genuinely new compute
+commitment, held for explicit confirmation before launching, per the two-round decision's own
+rationale about not running compute speculatively. Per the established branch/merge cadence
+(merge to `main` only at full stage completion), this is the point to merge
+`notebook5-phase-velocity-revamp` into `main` and push.

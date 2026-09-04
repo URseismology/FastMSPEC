@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "BITY",
+  "dist_km": 149.8001487685651,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.350000000000001,
+  "bad_quality_fraction": 0.7804878048780488,
+  "n_candidate_crossings": 41,
+  "n_accepted_picks": 226,
+  "freq_coverage_fraction": 0.56,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 18,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 2595.8414492607117,
+  "error": null
+}

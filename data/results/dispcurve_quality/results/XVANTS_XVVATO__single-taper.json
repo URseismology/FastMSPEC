@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "VATO",
+  "dist_km": 505.4047965328043,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.6914949815108293,
+  "n_candidate_crossings": 1893,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.634487164882011,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2535,
+  "matlab_rel_l2_error": 1.9388169462345025e-12,
+  "runtime_s": 793.3946499824524,
+  "error": null
+}

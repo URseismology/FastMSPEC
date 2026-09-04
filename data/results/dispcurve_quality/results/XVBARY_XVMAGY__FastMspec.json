@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "MAGY",
+  "dist_km": 326.270443994151,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9444444444444444,
+  "n_candidate_crossings": 198,
+  "n_accepted_picks": 34,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 3.2059402115803026,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1965,
+  "matlab_rel_l2_error": 7.306605382916863e-05,
+  "runtime_s": 924.2619669437408,
+  "error": null
+}

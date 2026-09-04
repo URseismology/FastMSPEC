@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAHA",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 1035.1045263077913,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.742145178764897,
+  "n_candidate_crossings": 1846,
+  "n_accepted_picks": 9,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.3992993781513896,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5475,
+  "matlab_rel_l2_error": 1.3732306220374665e-12,
+  "runtime_s": 460.24334263801575,
+  "error": null
+}

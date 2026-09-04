@@ -5,6 +5,8 @@ __pycache__/
 *.csv
 /data/*
 !/data/reference/
+!/data/results/
+!/data/results/dispcurve_quality/manifest.csv
 .venv/
 *.log
 *.aux

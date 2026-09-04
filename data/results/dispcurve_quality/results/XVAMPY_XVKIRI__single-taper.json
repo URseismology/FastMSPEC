@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "AMPY",
+  "net2": "XV",
+  "stn2": "KIRI",
+  "dist_km": 515.5388033488988,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7559487492373398,
+  "n_candidate_crossings": 1639,
+  "n_accepted_picks": 5,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.6110359640937708,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 3390,
+  "matlab_rel_l2_error": 9.532981664145827e-11,
+  "runtime_s": 321.1125202178955,
+  "error": null
+}

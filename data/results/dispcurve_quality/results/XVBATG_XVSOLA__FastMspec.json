@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BATG",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 436.8239470073757,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9683257918552036,
+  "n_candidate_crossings": 221,
+  "n_accepted_picks": 0,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": NaN,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 1380,
+  "matlab_rel_l2_error": 2.4559471828865103e-08,
+  "runtime_s": 868.7376551628113,
+  "error": null
+}

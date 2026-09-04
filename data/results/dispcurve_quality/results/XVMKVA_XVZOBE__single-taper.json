@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MKVA",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 537.8557188630119,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7640287769784173,
+  "n_candidate_crossings": 1390,
+  "n_accepted_picks": 9,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.7039885155209196,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5580,
+  "matlab_rel_l2_error": 2.5390078219829428e-11,
+  "runtime_s": 242.0157859325409,
+  "error": null
+}

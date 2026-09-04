@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "SOLA",
+  "dist_km": 256.1978732058687,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.05000000000000071,
+  "bad_quality_fraction": 0.919431279620853,
+  "n_candidate_crossings": 211,
+  "n_accepted_picks": 215,
+  "freq_coverage_fraction": 0.2597402597402597,
+  "mean_amp_ratio": 34.196486542974355,
+  "n_templates_converged": 1,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 868.8961682319641,
+  "error": null
+}

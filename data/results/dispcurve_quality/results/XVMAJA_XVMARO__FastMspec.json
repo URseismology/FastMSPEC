@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "MAJA",
+  "net2": "XV",
+  "stn2": "MARO",
+  "dist_km": 527.9900740934623,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9227799227799228,
+  "n_candidate_crossings": 259,
+  "n_accepted_picks": 61,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2430,
+  "matlab_rel_l2_error": 0.0022183551472632923,
+  "runtime_s": 341.1025514602661,
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BARY",
+  "net2": "XV",
+  "stn2": "BERG",
+  "dist_km": 196.4395951677022,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.6000000000000012,
+  "bad_quality_fraction": 0.8137254901960784,
+  "n_candidate_crossings": 102,
+  "n_accepted_picks": 111,
+  "freq_coverage_fraction": 0.2647058823529412,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 1,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5775,
+  "matlab_rel_l2_error": 0.0005038188522555557,
+  "runtime_s": 615.2943184375763,
+  "error": null
+}

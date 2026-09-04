@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "DGOS",
+  "net2": "XV",
+  "stn2": "TANS",
+  "dist_km": 762.782934198231,
+  "technique": "single-taper",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.7696774193548387,
+  "n_candidate_crossings": 1550,
+  "n_accepted_picks": 8,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.7351564875433345,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 2850,
+  "matlab_rel_l2_error": 1.8663309074542148e-10,
+  "runtime_s": 711.5443904399872,
+  "error": null
+}

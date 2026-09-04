@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "VINA",
+  "dist_km": 243.97667943108328,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.45000000000000107,
+  "bad_quality_fraction": 0.717391304347826,
+  "n_candidate_crossings": 92,
+  "n_accepted_picks": 490,
+  "freq_coverage_fraction": 0.4375,
+  "mean_amp_ratio": 14.813844763725129,
+  "n_templates_converged": 16,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5415,
+  "matlab_rel_l2_error": 0.00039978855847470055,
+  "runtime_s": 1649.8988218307495,
+  "error": null
+}

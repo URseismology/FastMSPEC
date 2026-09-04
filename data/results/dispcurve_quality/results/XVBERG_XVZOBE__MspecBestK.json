@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BERG",
+  "net2": "XV",
+  "stn2": "ZOBE",
+  "dist_km": 287.4635551248718,
+  "technique": "MspecBestK",
+  "converged": true,
+  "best_delta_km_s": 0.6000000000000012,
+  "bad_quality_fraction": 0.5978260869565217,
+  "n_candidate_crossings": 92,
+  "n_accepted_picks": 715,
+  "freq_coverage_fraction": 0.43037974683544306,
+  "mean_amp_ratio": 9.633014403019455,
+  "n_templates_converged": 15,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 1645.605928659439,
+  "error": null
+}

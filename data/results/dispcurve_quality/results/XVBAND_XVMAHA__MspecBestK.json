@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAND",
+  "net2": "XV",
+  "stn2": "MAHA",
+  "dist_km": 381.6487884615539,
+  "technique": "MspecBestK",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9282051282051282,
+  "n_candidate_crossings": 195,
+  "n_accepted_picks": 37,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 1.9400223571526047,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 548.0274591445923,
+  "error": null
+}

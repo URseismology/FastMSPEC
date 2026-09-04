@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BITY",
+  "net2": "XV",
+  "stn2": "MAHA",
+  "dist_km": 353.15430367673395,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9440559440559441,
+  "n_candidate_crossings": 143,
+  "n_accepted_picks": 3,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": 6.952785203014149,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5760,
+  "matlab_rel_l2_error": 0.0002285678927403653,
+  "runtime_s": 1585.123765707016,
+  "error": null
+}

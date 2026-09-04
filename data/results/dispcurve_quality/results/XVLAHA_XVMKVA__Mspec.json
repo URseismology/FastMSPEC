@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "LAHA",
+  "net2": "XV",
+  "stn2": "MKVA",
+  "dist_km": 92.08806281530187,
+  "technique": "Mspec",
+  "converged": true,
+  "best_delta_km_s": 0.400000000000001,
+  "bad_quality_fraction": 0.5517241379310345,
+  "n_candidate_crossings": 29,
+  "n_accepted_picks": 349,
+  "freq_coverage_fraction": 0.7719298245614035,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 23,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": null,
+  "matlab_rel_l2_error": null,
+  "runtime_s": 3274.0360321998596,
+  "error": null
+}

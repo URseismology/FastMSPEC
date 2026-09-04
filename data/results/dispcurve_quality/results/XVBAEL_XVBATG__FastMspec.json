@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "BAEL",
+  "net2": "XV",
+  "stn2": "BATG",
+  "dist_km": 554.1067164757294,
+  "technique": "FastMspec",
+  "converged": false,
+  "best_delta_km_s": null,
+  "bad_quality_fraction": 0.9295774647887324,
+  "n_candidate_crossings": 213,
+  "n_accepted_picks": 26,
+  "freq_coverage_fraction": 0.0,
+  "mean_amp_ratio": Infinity,
+  "n_templates_converged": 0,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 5430,
+  "matlab_rel_l2_error": 0.001993440322786016,
+  "runtime_s": 1419.8479669094086,
+  "error": null
+}

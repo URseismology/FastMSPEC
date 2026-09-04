@@ -1,0 +1,21 @@
+{
+  "net1": "XV",
+  "stn1": "ANTS",
+  "net2": "XV",
+  "stn2": "LAHA",
+  "dist_km": 246.31929583080438,
+  "technique": "FastMspec",
+  "converged": true,
+  "best_delta_km_s": 0.45000000000000107,
+  "bad_quality_fraction": 0.8363636363636363,
+  "n_candidate_crossings": 110,
+  "n_accepted_picks": 183,
+  "freq_coverage_fraction": 0.24050632911392406,
+  "mean_amp_ratio": 16.54667744248216,
+  "n_templates_converged": 6,
+  "n_templates_scanned": 33,
+  "matlab_coh_num": 10320,
+  "matlab_rel_l2_error": 0.0030158697926484794,
+  "runtime_s": 1195.9750881195068,
+  "error": null
+}
