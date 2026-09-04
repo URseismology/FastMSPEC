@@ -1585,3 +1585,17 @@ specific 380 pairs, not a matter of having checked the wrong (smaller) file. Rei
 
 **Settled decision, not just a test**: going forward, `horizontal_polarization=True` for all Love
 data -- confirmed as the correct setting, not merely something to trial.
+
+**A methodological correction on the search itself, raised directly**: the 156-pair "XV-XV" count
+above filters by *network code*, not geography -- and checking those 156 pairs' actual coordinates
+shows the mistake: every one of them pairs a Madagascar-island station against a mainland
+companion (`MOCU`, `MSGR`, `TETE`, `MAPH`, `NAPU` -- all Mozambique/Tanzania coast, not
+Madagascar). `XV` evidently spans mainland companion stations too, not just the island array.
+Redid the search geographically instead (both stations' lat/lon required inside Madagascar's
+actual bounding box, any network code) across the full 113,155-pair catalog:
+**0 pairs have both stations physically on Madagascar island.** Two independent filters (network
+code, geography) now agree: this isn't a search-method artifact, it's a real structural fact about
+ADAMA's own design -- it targets long mainland-island paths for continental-scale tomography, not
+short intra-island baselines, so there is no natural intersection with Sayan's 380-pair dataset to
+exploit at the pair level under any reasonable definition. Closes the pairwise-matching question
+for good; `ADAMA_Maps` remains the only viable path for a reference curve.
