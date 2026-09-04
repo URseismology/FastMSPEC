@@ -1649,3 +1649,41 @@ ours. **Two separate work items going forward, not one**:
    attempted with what exists today. The `ncfs_TT`/`cf_love`/`co_love` transfers already done are
    kept as useful inventory for when that stage is scoped, not being used for a "nearby" substitute
    now.
+
+### 2026-09-04 (cont.) -- The hybrid reference curve built and validated against real ADAMA data
+
+`python/dispcurve_pick/hybrid_reference_curve.py`: a physically-grounded, per-pair Love-wave
+reference curve (ADAMA_Maps 6-40s + GDM52 45-150s, stitched at 40s), replacing the single generic
+`SDISPL.ASC` used for all 380 pairs. Standard Ekstrom-style slowness-averaged path integration
+over 50 great-circle points. `data/reference/hybrid_curve_README.md` documents full provenance and
+re-fetch commands (neither dataset is committed).
+
+**Grid registration for ADAMA_Maps** found via the plain-text axis files
+(`ADAMA_Models/LoveMaps_txt/a_latgrid_2Dgrid.txt`/`a_longrid_2Dgrid.txt`), since `plotpara.mat` --
+what the repo's own plotting scripts actually load axes from -- isn't checked into the repo.
+**A real data gap caught, not assumed away**: `LoveAvgMap` has no `_P_` (phase velocity) file for
+periods 5s and 25s, only `_G_` (group velocity) -- confirmed via the GitHub tree, not guessed from
+a failed download. Using group velocity as a phase substitute would be physically wrong, so these
+two periods are simply excluded from `ADAMA_PERIODS` rather than faked.
+
+**Validated against `XV.BITY-XV.MAPH`, a real ADAMA-measured pair with its own independently-known
+`cf` (AkiEstimate) dispersion curve** (decoded correctly earlier this session). Result, honest
+both ways:
+- **T=12-40s: good agreement**, -3.2% to +2.7%.
+- **T=6-10s: large disagreement**, hybrid reads +15% to +95% too fast. This test pair crosses the
+  open Mozambique channel -- the tomographic map is likely poorly constrained at short periods
+  over water (no seafloor stations feed the inversion there). Visually the two curves still have a
+  qualitatively similar rising shape, just offset -- the alarming percentages are partly an
+  artifact of the real curve's small absolute values at short period (`docs/hybrid_vs_real_bity_maph.png`).
+- A second check on `XV.BITY-XV.MAGY` (this project's own island-internal report example, 223 km,
+  no ocean crossing) does not show the same order-of-magnitude short-period blowup (stays
+  physically plausible, 3.8-4.7 km/s) -- but is noticeably non-smooth/non-monotonic
+  period-to-period, most likely real tomographic-grid cell-to-cell noise showing through because a
+  short path averages over few grid cells (`docs/hybrid_bity_magy_island.png`).
+
+**Net assessment, stated plainly**: promising for our actual use case (island-internal paths never
+cross ocean), but not yet blindly production-ready. Two open items before wiring into the picker,
+not yet decided: (1) whether/how to smooth the per-pair curve given real map-cell noise, (2)
+whether the shortest periods (6-10s) need extra caution given the ocean-crossing test case's large
+disagreement, even though our own paths don't cross ocean. Not yet wired into `work_unit.py` --
+still a standalone, validated module.
