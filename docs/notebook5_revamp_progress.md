@@ -1551,6 +1551,37 @@ User feedback, grounded by reading ADAMA1 directly: ADAMA's dispersion curves co
 *entire* NCF amplitude plus an a priori path-average model, explicitly contrasted in the paper
 against simple automated zero-crossing (Ekstrom 2009, our method's own family). Comparing our
 picked dispersion curves against ADAMA's would conflate "do the data agree" with "do the two
-picking methods agree" -- comparing raw correlations (`ADAMAraw_cf_love.h5`, being pulled) against
-ours sidesteps that confound and is the right comparison. Not yet done -- next step once the `cf`
-transfer completes.
+picking methods agree" -- comparing raw correlations against ours sidesteps that confound and is
+the right comparison.
+
+**Corrected product identification, per direct user clarification**: `co` is AkiEstimate's
+*initial* Z/M/N (zero/max/min event) solution -- methodologically the same family as this
+project's own superseded Notebook-5-v1 barcode approach -- and `cf` is the *final* solution after
+the full nonlinear waveform-fitting refinement. Neither is the raw correlation itself; that's a
+separate product, `ADAMA_ncfs_TT_fi.h5`/`_fr.h5` (transverse-transverse = Love component, real +
+imaginary Fourier parts) -- now also being pulled. All three are useful benchmarks: raw correlation
+(what the data looks like with no picking method at all), `co` (the old, superseded-style
+approach), and `cf` (the sophisticated final AkiEstimate answer).
+
+**A structural discovery from directly inspecting `ADAMAraw_co_love.h5` (h5py, not assumed from
+filename)**: `file_format` attribute is `obspyh5` -- this is ObsPy's generic Stream/Trace HDF5
+storage format, indexed
+`waveforms/{net1}.{stn1}-{net2}.{stn2}/{loc1}.{chan1}-{loc2}.{chan2}/{starttime}_{endtime}`, each
+leaf a `(7200,)` float64 array (a 2-hour time-domain window). So `co`/`cf` store actual
+correlation-domain time series per pair/window, not simple scalar phase-velocity tables --
+inspecting one sample waveform's actual shape (oscillatory vs. not) is a needed next step before
+using these, not yet done.
+
+**Full-catalog pair-level check, definitive**: extracted all 113,155 pair keys from
+`ADAMAraw_co_love.h5` directly (matches ADAMA1's ~114,000 claim) and re-ran the overlap check with
+the correct `NET.STN-NET.STN` key format (the earlier `ADAMA_clean` check used a different,
+compatible format so this is a genuine independent confirmation, not a repeat of the same query).
+**Still 0/380 exact matches.** Only 156 pure XV-XV pairs exist in the *entire* raw catalog -- i.e.
+the small `ADAMA_clean` sample checked earlier had already captured essentially all of them, this
+isn't a filtered subset undercounting a much larger true set. This robustly closes the pair-lookup
+question: ADAMA's XV-internal coverage is real but sparse and structurally disjoint from our
+specific 380 pairs, not a matter of having checked the wrong (smaller) file. Reinforces
+`ADAMA_Maps` (already deep-verified above) as the right path, not pair-matching.
+
+**Settled decision, not just a test**: going forward, `horizontal_polarization=True` for all Love
+data -- confirmed as the correct setting, not merely something to trial.
