@@ -1599,3 +1599,20 @@ ADAMA's own design -- it targets long mainland-island paths for continental-scal
 short intra-island baselines, so there is no natural intersection with Sayan's 380-pair dataset to
 exploit at the pair level under any reasonable definition. Closes the pairwise-matching question
 for good; `ADAMA_Maps` remains the only viable path for a reference curve.
+
+**Authoritative third confirmation**: the main `ADAMA` repo (github.com/URseismology/ADAMA,
+`DataFiles/ADAMA_stalist.csv`) has an explicit `In_africa` column -- `0` for every one of our 28
+island stations, `1` for exactly the 6 stations the geographic filter had already flagged as
+mainland (`MAPH`, `MOCU`, `MSGR`, `NAPU`, `SENA`, `TETE`). ADAMA's own metadata independently
+agrees with the coordinate-box finding; not a heuristic artifact.
+
+**`co`/`cf` inspected directly (real pair, `XV.BITY-XV.MAPH`, h5py + FFT) -- not the raw
+correlation.** Both are smooth, always-positive, envelope-shaped pulses (peak ~4435-4454, rises at
+~t=400s, decays smoothly, zero outside a ~2500s window out of the full 7200s), essentially
+identical between `co` and `cf` for this pair. FFT of this array is dominated by near-zero
+frequency, nothing resembling an oscillatory cross-spectrum -- so this is very likely a
+group-velocity-derived time window/envelope used to isolate the surface-wave arrival before
+AkiEstimate's fit, not the correlation waveform itself. `delta=1.0` (1 Hz sampling, matches our own
+convention) and a real `distance=1261.15` km were useful metadata regardless. The actual raw
+correlation is `ADAMA_ncfs_TT_fi.h5`/`_fr.h5` (Love/transverse, real+imaginary), transferring now
+(~62%) -- next step once that lands.
