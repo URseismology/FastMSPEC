@@ -1607,16 +1607,29 @@ island stations, `1` for exactly the 6 stations the geographic filter had alread
 mainland (`MAPH`, `MOCU`, `MSGR`, `NAPU`, `SENA`, `TETE`). ADAMA's own metadata independently
 agrees with the coordinate-box finding; not a heuristic artifact.
 
-**`co`/`cf` inspected directly (real pair, `XV.BITY-XV.MAPH`, h5py + FFT) -- not the raw
-correlation.** Both are smooth, always-positive, envelope-shaped pulses (peak ~4435-4454, rises at
-~t=400s, decays smoothly, zero outside a ~2500s window out of the full 7200s), essentially
-identical between `co` and `cf` for this pair. FFT of this array is dominated by near-zero
-frequency, nothing resembling an oscillatory cross-spectrum -- so this is very likely a
-group-velocity-derived time window/envelope used to isolate the surface-wave arrival before
-AkiEstimate's fit, not the correlation waveform itself. `delta=1.0` (1 Hz sampling, matches our own
-convention) and a real `distance=1261.15` km were useful metadata regardless. The actual raw
-correlation is `ADAMA_ncfs_TT_fi.h5`/`_fr.h5` (Love/transverse, real+imaginary), transferring now
-(~62%) -- next step once that lands.
+**`co`/`cf` inspected directly (real pair, `XV.BITY-XV.MAPH`, h5py) -- first pass wrongly FFT'd it
+as a time-domain waveform; corrected by reading the actual writer code, per direct user
+guidance.** `DataReaderWriter/buildADAMAraw.py` (github.com/URseismology/ADAMA) makes this
+unambiguous: `co`/`cf` are **the same column** ("phase", column 2) of AkiEstimate's
+`opt.pred-love`/`opt.pred-rayleigh` output, `co` read from the pipeline's intermediate stage
+(`ResultOf02`, `02_fit_initial_target_phase.sh`) and `cf` from the final stage (`ResultOf03`,
+`03_fit_bessel.sh`) -- matching the user's original description exactly. Critically, the
+`ObsPy Trace`'s "time axis" is repurposed to store the **frequency** axis (`fo`, `fend`, `N` in the
+header define it; the `1970-01-01...` "time window" I'd read as 2 hours of real time is just
+ObsPy's default `starttime`, an artifact of the storage container, not real time at all) -- so
+FFT'ing it was measuring the wrong thing entirely, and zeros mark "outside the trusted band", not
+silence. Redecoded correctly (`freq = linspace(fo, fend, N)`, mask zeros, values in m/s): a
+smooth, physically sensible Love dispersion curve, ~1.0 km/s at 5s rising to ~4.45 km/s at 40s
+-- textbook continental dispersion shape, `co`/`cf` essentially identical for this pair, valid
+band 5.0-36.7s (`co`) / 5.0-40.0s (`cf`), matching ADAMA1's stated 5-40s range almost exactly.
+This is now a correctly-understood, directly usable dispersion-curve product, should the deferred
+pair-to-pair benchmark stage (below) ever be scoped. The intermediate per-pair text files
+(`opt.pred-love`/`opt.pred-rayleigh`) also exist directly on `terravibranium`
+(`/RAID6/bluehiveBackup/Prj5_HarnomicRFTraces/2_Data/`), not just packaged into the h5 catalogs --
+useful if ever needed at that level of detail.
+
+The actual raw correlation (not dispersion) is `ADAMA_ncfs_TT_fi.h5`/`_fr.h5` (Love/transverse,
+real+imaginary) -- both fully transferred now, not yet inspected.
 
 **Which ADAMA pairs actually touch Madagascar, and a scoping split.** Reclassified the 156
 XV-XV pairs against `ADAMA_stalist.csv`'s `In_africa` column: 141 pair an island station against
