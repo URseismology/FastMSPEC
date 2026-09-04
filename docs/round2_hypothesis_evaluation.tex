@@ -558,16 +558,57 @@ and Figure~\ref{fig:q4}'s caption): over the full band, quartile 4's coherence h
 multi-lobed envelope, with its main burst around 0.09--0.13\,Hz -- not the unstructured noise the
 picker's own cropped plot suggested. Quartile 3 (Figure~\ref{fig:overlay3}) shows a comparably
 multi-lobed, two-burst envelope and still converges, so multi-lobed structure by itself does not
-distinguish quartile 4 from the converged examples. What does still look distinctive, and is being
-tested directly as this document is being written (results not yet in hand): quartile 4's
-strongest envelope lobe sits well inside the band rather than at the low-frequency edge, while the
-picker's walk (\texttt{extract\_dispcurve}'s outer loop) always starts at the lowest-frequency
-non-\texttt{bad\_quality} crossing and only ever advances upward in frequency -- it has no
-mechanism to seed at, or expand outward from, the record's strongest region. If quartile 4's
-opening stretch is disproportionately unreliable relative to quartiles 1--3's, the walk may simply
-never reach its own strongest structure before stalling. A direct test -- raising \texttt{freqmin}
-per pair to the frequency of peak local amplitude within the low-frequency half of the band, then
-rerunning the unmodified picker -- is in progress; this section will be updated with the result.
+distinguish quartile 4 from the converged examples.
+
+\paragraph{Branch continuity: tested directly, not supported.} A hypothesis raised during this
+work -- that beat-envelope nulls corrupt nearby zero crossings and cause a cycle-slip in the
+crossing's Bessel-branch assignment, fragmenting a single trackable branch into disconnected
+islands -- was tested directly by extracting the full \texttt{return\_indexes=True} branch id for
+every crossing and tracking the nearest-to-reference branch as a function of frequency, for all
+four examples. It is not supported. In both quartile 1 and quartile 4 the tracked branch id
+increases smoothly and monotonically across the entire 0.01--0.5\,Hz band -- no scatter, no
+discontinuous jumps, no fragmentation into disconnected islands in either case. What differs is
+crossing \emph{density} (quartile 4 has 356 valid crossings spanning cycle counts 95--245;
+quartile 1 has 66 spanning 9--31), which mechanically shortens the naive "same-branch-run" metric
+without reflecting genuine discontinuity. What is real: \texttt{bad\_quality\_fraction} is sharply
+worse for quartile 4 (0.888) than quartiles 1--3 (0.41, 0.56, 0.40), consistent with H3. A further
+nuance, visible in quartile 4's own amplitude trace: many \texttt{bad\_quality} flags land exactly
+where \texttt{crossamps}$\approx$\texttt{peakamps} -- i.e.\ no local amplitude collapse at all --
+meaning criterion 1 (peak-ratio) or criterion 3 (reference-curve spacing) is doing the flagging
+there, not the amplitude-collapse criterion 2. Even quartile 4's strongest envelope region is
+heavily gated by non-amplitude criteria, tying back to the reference-curve dependence
+(Section~\ref{sec:refcurve-dependence}) more than to a beat-node cycle-slip mechanism. A
+per-criterion breakdown across the full dataset would confirm this; not done here.
+
+\paragraph{Reseeding at the amplitude peak: tested directly, makes things worse.} The complementary
+test -- raising \texttt{freqmin} per pair to the frequency of peak local amplitude within the
+low-frequency half of the band, then rerunning the \emph{unmodified} picker unchanged otherwise --
+was run on all four examples. The result is a clean, reproducible negative, not a partial one:
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+ & Q1 & Q2 & Q3 & Q4 \\
+\midrule
+seed freq.\ (Hz) & 0.154 & 0.158 & 0.202 & 0.099 \\
+baseline: converged / coverage / bad\_quality & T / 0.63 / 0.39 & T / 0.77 / 0.60 & T / 0.69 / 0.46 & F / 0.00 / 0.90 \\
+reseeded: converged / coverage / bad\_quality & F / 0.00 / 0.50 & F / 0.00 / 0.78 & F / 0.00 / 0.67 & F / 0.00 / 0.98 \\
+\bottomrule
+\end{tabular}
+\end{center}
+Every quartile 1--3 pair, previously converging cleanly, \emph{fails outright} once reseeded, and
+quartile 4's already-poor \texttt{bad\_quality\_fraction} gets worse still. This is not merely
+lower coverage from a smaller denominator: a targeted single-pair check (quartile 1, reseeded at
+0.154\,Hz) confirmed \texttt{n\_accepted\_picks=0} despite 46 real candidate crossings available
+at and above the seed frequency -- the walk finds crossings but accepts none of them. The likely
+explanation is that the walk's own bootstrapping/continuity logic (\texttt{get\_slope}'s local
+trend estimate, built from a short history of prior accepted picks) depends on context this
+particular experiment removes by starting cold in the middle of the record, rather than on any
+property of the record itself; this is not fully diagnosed and is flagged as an open item, not
+claimed with certainty. The honest conclusion: simply moving \texttt{freqmin} later, keeping the
+walk otherwise unmodified, is not a viable fix -- and does not by itself resolve H3's near/far
+convergence gap. A genuine bidirectional walker (forking the picking loop to seed at the strongest
+region and expand outward both ways) is a substantially larger change than tested here and remains
+an open, unexplored direction, not a disproven one.
 
 \begin{figure}[htbp]
 \centering
@@ -625,19 +666,27 @@ cropped view.}
     measures}, and needs its own quantified check, not just the mechanism confirmed above. Checked
     across quartiles, not just quartile 4: the mismatch is present with similar shape and magnitude
     in every converged example too (Figures~\ref{fig:q1}--\ref{fig:q3}), so it is a
-    dataset-wide confound on \texttt{bad\_quality\_fraction}, not a quartile-4-specific artifact --
-    and correspondingly it does not by itself explain \emph{why} quartile 4 fails while quartiles
-    1--3 succeed. The top-panel amplitude envelope (present in quartiles 1--3, absent in quartile
-    4) remains the more likely primary differentiator, consistent with H3.
+    dataset-wide confound on \texttt{bad\_quality\_fraction}, not a quartile-4-specific artifact.
+    What actually differentiates quartile 4 remains open: multi-lobed envelope structure is present
+    in quartiles 3 and 4 alike (Section~\ref{sec:overlay}) and does not distinguish them; branch
+    continuity, tested directly, is smooth and monotonic in both the best- and worst-case examples
+    and also does not distinguish them (Section~\ref{sec:overlay}). \texttt{bad\_quality\_fraction}
+    itself is the clearest measured gap (0.41--0.56 vs.\ 0.888), but a mechanistic explanation for
+    that gap -- beyond H3's existence-threshold story at the aggregate level -- is not yet in hand.
   \item \textbf{A direct FastMspec-vs-single-taper coherence comparison, independent of the
-    seislib quality gate, is a real and currently missing check}, raised directly. Every
-    convergence number in this report and in Round 1 (FastMspec 26.1\% vs. single-taper 0\%) is
-    filtered through the picker's own gate -- and that gate is now known (above) to be sensitive
-    to reference-curve accuracy, not solely to the underlying coherence's own quality. Whether
-    FastMspec's real advantage over single-taper is larger, smaller, or the same once measured
-    directly on the coherence itself (e.g. an SNR or spectral-flatness metric computed before any
-    picking), rather than through the gate's pass/fail outcome, is not yet known and should be
-    checked before leaning further on the gated convergence rate as the primary comparison metric.
+    seislib quality gate, was raised directly and is now done} (Section~\ref{sec:overlay},
+    Figures~\ref{fig:overlay1}--\ref{fig:overlay4}). In every quartile, including quartile 4,
+    FastMspec's coherence sits as a visibly smoothed envelope through single-taper's noisy version
+    of the same real zero crossings -- a qualitative, gate-independent confirmation that FastMspec
+    resolves genuine structure single-taper only approximates noisily. A quantitative version of
+    this (an SNR or spectral-flatness metric, not just visual comparison) is still a real follow-up.
+  \item \textbf{Two direct mechanistic tests of \emph{why} quartile 4 fails -- branch-continuity
+    fragmentation and walk-reseeding -- both came back negative} (Section~\ref{sec:overlay}). This
+    is useful information, not a wasted test: it rules out two specific, plausible-sounding
+    mechanisms and narrows what Stage 5 (or a follow-up) should investigate next -- most likely a
+    genuine bidirectional walker (a real algorithm change, not a parameter change) or a
+    per-criterion breakdown of \texttt{bad\_quality} in quartile 4's own strongest region, both
+    flagged above as open, not yet attempted.
 \end{itemize}
 
 \section{Caveats}
