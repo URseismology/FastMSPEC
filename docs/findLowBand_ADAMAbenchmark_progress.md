@@ -109,24 +109,44 @@ low-level directory-hierarchy parsing (`glob`-ing a big nested tree) at read tim
 durable advantages for a notebook that will read this data repeatedly, not just once -- the
 one-time cost of acquiring the file is worth paying for that.
 
-**Status**: full 1.04 TB file transferring now, `repovibranium -> bluehive`
-(`/scratch/tolugboj_lab/FastMSPEC_dispcurve_batch/ADAMA_gvib.h5`), started 2026-09-05. Confirmed
-first (one targeted `find`, not a repeated crawl) that no local copy already existed on bluehive's
-own `Prj5_HarnomicRFTraces` tree (bluehive is likely the primary and terravibranium a backup --
-`bluehiveBackup` is literally in its path -- so a local copy was worth one check before a
-multi-hour transfer, but building a fresh one locally via `ppToHDF5.py` would itself require
-crawling and reading the entire multi-TB SAC tree, i.e. slower than a straight copy, not faster).
-No further tree-crawling searches on the SAC hierarchy from here -- established as unproductive,
-not to be repeated.
+**Status, corrected**: `ADAMA_gvib.h5` was already local on bluehive the whole time -- a first
+`find` was killed mid-run before completing (per the "stop crawling" correction) and read as
+"nothing found," which was wrong; the same `find`, left to finish, located it at
+`/scratch/tolugboj_lab/Prj5_HarnomicRFTraces/para_prepross/ADAMA_gvib.h5`. Confirmed via exact
+byte size (`1,040,173,798,832` -- identical to repovibranium's copy): this is the complete file,
+not a partial or older version. A ~1.04 TB cross-network transfer was started before this was
+known and has been killed, and the partial download deleted -- **no transfer is needed at all**;
+this notebook can read the file directly from where it already sits. Lesson worth stating
+plainly: killing an in-progress investigation early can produce a confident-sounding but wrong
+negative result -- the earlier "confirmed absent" claim should have waited for the check to
+actually finish, or been stated as "not found in the time available" instead.
+
+**Bonus finds in the same directory, inspected (cheap now -- local file, full random access, no
+transfer needed)**: `ADAMA_gvib_failed.h5` (593 GB) and `ADAMA_gvib_test.h5` (550 KB, likely a
+development-time sample, not further inspected). `_failed` is a real `obspyh5` waveform archive
+too, same indexing scheme, **1372 stations in the main file (matches ADAMA1's paper's "~1372
+stations" exactly), 857 in `_failed` -- and every one of those 857 is also present in the main
+file** (not a disjoint missing-stations list). So `_failed` isn't "stations we don't have" -- it
+holds specific day/window traces that failed some later processing step for stations that
+otherwise have good data in the main archive. All 33 of our XV stations appear in both files
+identically, meaning: none of our relevant stations are entirely missing or entirely failed, only
+possibly some individual days within them. This doesn't fully replace the function-based check
+above (a station having *some* good data doesn't guarantee the *specific* days needed for a given
+pair overlap correctly), but it rules out the worst-case failure mode (a station silently absent
+from the archive) directly and cheaply.
 
 **A real risk in `ADAMA_gvib.h5`, worth stating plainly, not assumed away**: `ppToHDF5.py`'s own
-error handling is `try: ... except: print(path)` -- it silently swallows failures. `gvib.h5` is
-therefore not guaranteed to be a complete 1:1 mirror of the SAC tree; some files could have failed
-during the original build (a bad SAC header, a read error, anything `obspy.read()` chokes on) and
-simply been skipped, with only a printed path (not retained anywhere we have access to) as the
-only record. **Verifying 1:1 SAC-vs-`gvib.h5` coverage, once the transfer completes, is a required
-step before trusting this file for the benchmark**, not a formality -- next concrete task after
-the transfer lands.
+error handling is `try: ... except: print(path)` -- it silently swallows failures, so some SAC
+files could in principle be missing from `gvib.h5` without any retained record. **The right check
+for this is not an inventory audit** (comparing every SAC path against every `gvib.h5` entry would
+itself mean crawling the SAC tree -- exactly what's already been ruled out as unproductive).
+**Correction, per direct user guidance**: verify by *function*, not by *inventory* -- pull a known
+pair's data back out of `gvib.h5` (e.g. `AF.SKRH`-`XV.BAND`, already validated in Stage 3 against
+Sayan's own precomputed MATLAB `coh_sum` -- `verification/skrh_band_real_data/`), run it through
+the same windowing/cross-correlation pipeline, and confirm the result matches that already-known-
+good baseline. If it recovers correctly for known pairs, `gvib.h5` is trustworthy for this
+purpose regardless of whether every single SAC file in the tree happens to have made it in --
+next concrete task after the transfer lands.
 
 **After that verification, the actual deliverable (per direct user request, explicit that prior
 documentation here wasn't sufficient)**: a properly designed, well-documented Python library --
