@@ -1849,3 +1849,40 @@ Direct back-and-forth on scope, before locking in stages further. Resolved, poin
 overhaul) -> a new, separate bandwidth-theory notebook using ADAMA's own pairs as a real benchmark.
 `ncfs_TT`'s format-compatibility check is the first concrete task whenever that new notebook
 starts -- not yet done.
+
+### 2026-09-05 (cont.) -- Clarification: the new notebook needs FastMspec-processable raw data,
+not just ADAMA's precomputed products; located and spot-verified
+
+Direct correction from the user: to run *our own* NW sweep (not just compare against ADAMA's
+already-fixed-NW products), we need the raw windowed time-domain data for ADAMA's benchmark
+pairs -- the equivalent of Sayan's own `S1_data_mat`/`S2_data_mat` arrays -- not a precomputed
+cross-spectrum. `ADAMA_ncfs_TT_fi/fr.h5` (already transferred) is ADAMA's *own* fixed-NW result,
+not raw material we can re-sweep NW over.
+
+**Located, both pieces**:
+- **Sayan's exact SAC-to-mat preparation script**:
+  `PRJ_SPAC/codes/test/matlab/madagascar/mdg_lib/ccf_prepare_data_T_mdg.m` (bluehive), reading raw
+  daily 3-component SAC from `parameters.datapath` (`<net>/<sta>/*<comp>.sac`) and writing the
+  exact `*_win_3_all_matched_data.mat` format our own pipeline already consumes.
+- **Raw SAC data, but not where expected**: Sayan's own bluehive archive
+  (`PRJ_SPAC/data/test/raw_data/madagascar_data/DataXV/`) has daily SAC for only the 28 *island*
+  stations -- the 6 mainland companions ADAMA's real pairs need (`MAPH`, `MOCU`, `MSGR`, `NAPU`,
+  `SENA`, `TETE`) are missing there. Found instead on **terravibranium**
+  (`/RAID6/bluehiveBackup/Prj5_HarnomicRFTraces/2_Data/preprocessed_data/DataXV/`) -- ADAMA's own
+  archive, all 34 XV stations (island and mainland both), identical daily 3-component SAC naming
+  convention (`STA.YYYY.DDD.hh.mm.ss.BH{Z,N,E}.sac`), directly matching what
+  `ccf_prepare_data_T_mdg.m` expects.
+
+**Quick verification run before trusting this, not assumed**: a format match alone doesn't mean
+two stations ever recorded simultaneously -- checked actual date ranges for a sample (`MAPH`
+2011.241-2013.241, `BITY` 2012.217-2013.244, `DGOS` 2011.270-2013.236, `MAGY`
+2012.074-2012.350). Real, substantial overlap confirmed (MAPH/BITY over a full year; MAGY's whole
+range sits inside DGOS's). Only a handful of the 34 stations spot-checked so far -- confirming
+overlap across all 141 pairs specifically is the natural next step before committing further.
+
+**Concrete path for the new notebook, now clear**: pull the relevant raw SAC (terravibranium ->
+bluehive) for the ADAMA-benchmark pairs, run (or faithfully reproduce in Python, matching this
+project's established MATLAB/Octave-verification pattern) `ccf_prepare_data_T_mdg.m`'s exact
+windowing convention to produce `S1_data_mat`/`S2_data_mat` arrays, then feed those into our own
+FastMspec NW sweep -- validating against ADAMA's own `co`/`cf` ground truth for the same pairs.
+Not yet started; still needs the full-141-pair overlap check and the actual SAC-to-mat run.
