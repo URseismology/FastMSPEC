@@ -1737,3 +1737,58 @@ deciding concretely what "extra caution below `CAUTION_PERIOD_S`" should mean fo
 corridor search (a period-dependent corridor width, vs. down-weighting low-confidence periods in
 the scoring function, are the two options raised but not yet chosen between). This needs a
 bluehive round-trip to test against real data once started.
+
+### 2026-09-05 -- Both corridor strategies tested head-to-head; sequencing plan for Round 2 approved
+
+Ran a real, apples-to-apples test on the 4 report example pairs (`eval_corridor_strategies.py`,
+job 31349488, bluehive): the hybrid curve as center, with three corridor strategies compared on
+identical picking calls where possible (BASELINE and APPROACH B share one picking pass over the
+same uniform-corridor family, differing only in scoring, so the comparison isn't confounded by
+picker run-to-run variance from separate scans):
+- **BASELINE**: unmodified `+/-0.8 km/s` uniform corridor, unmodified `work_unit.py` scoring.
+- **APPROACH A (widen corridor)**: same delta range/step/template count (cost-neutral vs.
+  baseline), but each template's period<12s portion gets `delta * 3.0` instead of `delta`.
+- **APPROACH B (down-weight in scoring)**: same uniform corridor as baseline, but the coverage
+  term in the score is scaled by the fraction of that template's actual accepted picks falling in
+  the trusted (period>=12s) band, computed directly from the returned picked-curve array -- no
+  picker instrumentation needed.
+Deliberately still running with `horizontal_polarization=False` unchanged, to isolate the
+reference-curve/corridor question as a single variable rather than conflating it with the
+still-unfixed Love-wave polarization bug.
+
+**Why this matters beyond Stage 4.5 itself, raised directly and discussed before results were in**:
+three concrete connections to Round 2's own open questions, recorded here so they don't need
+re-deriving later --
+1. Directly answers Round 2's own named-but-undone follow-up: "compare `bad_quality_fraction`
+   against an independent measure of reference-curve offset, per pair." The hybrid curve *is* that
+   independent measure -- `(old SDISPL.ASC value) - (new hybrid value)` at each period, per pair,
+   computable across all 380 without guessing, once this is wired in properly.
+2. Functions as a third mechanistic test of what differentiates quartile 4, continuing the same
+   thread as the branch-continuity and walk-reseeding tests (both negative). If Q4
+   (`XVDGOS_XVMAGY`) converges under the hybrid curve where it failed under the generic
+   `SDISPL.ASC`, that reframes part of H3's existence-threshold story as a reference-curve
+   artifact rather than a hard physical limit. If it still fails, that strengthens H3 instead.
+   Either outcome is informative.
+3. Caveat, stated plainly: results here are still confounded by the unfixed
+   `horizontal_polarization` bug -- "best case without that fix," not a final answer on their own.
+
+**Approved sequencing plan for revisiting Round 2's open questions (user-approved, not yet
+executed)** -- Stage 4.5 is the prerequisite, not a parallel track:
+1. `corridor_eval` finishes -> pick the winning strategy (baseline/A/B).
+2. Implement the `horizontal_polarization=True` fix in `work_unit.py` (not yet done -- still just
+   "settled as correct" in this tracker, no code change yet).
+3. Combine both (hybrid curve + winning corridor strategy + polarization fix) into one production
+   configuration in `work_unit.py`.
+4. **Small validation pass first** -- the same 4 report pairs, not the full 300-point sweep --
+   specifically to catch any interaction effect between the two fixes (e.g. fixing polarization
+   could change which corridor strategy is actually best) before committing real compute to a
+   larger rerun.
+5. Only then decide reruns scope: a full Round 2 redo (300 points, expensive) is one option, but
+   since the main open question is really "does Q4 differentiate itself once both fixes are in," a
+   smaller, targeted rerun (e.g. the 60-pair set at each quartile's best fraction, not the full
+   5-fraction sweep) might answer that just as well at a fraction of the cost. Leaning toward the
+   smaller option unless step 4 specifically shows a need for the full sweep's statistical power.
+Rationale for sequencing this way, not redoing Round 2 immediately: redoing the expensive 300-point
+sweep now, with only one of two known fixes in place, would produce a "Round 2 v2" that itself
+needs discarding once the polarization fix lands too -- paying for the expensive sweep twice for
+no reason.
