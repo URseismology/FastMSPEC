@@ -1687,3 +1687,53 @@ not yet decided: (1) whether/how to smooth the per-pair curve given real map-cel
 whether the shortest periods (6-10s) need extra caution given the ocean-crossing test case's large
 disagreement, even though our own paths don't cross ocean. Not yet wired into `work_unit.py` --
 still a standalone, validated module.
+
+### 2026-09-04 (cont.) -- Direct user feedback resolves both open items, generalizes the module
+into a library, and sets a global roadmap
+
+Five points of feedback, addressed in order:
+
+1. **Context correction, not a task**: the user built ADAMA and states the short-period Love
+   uncertainty found in validation is known and expected -- part of the motivation for FastMSPEC
+   itself (a more principled bandwidth choice is one route to doing better than AkiEstimate at
+   exactly the periods it's least confident in). This reframes the finding: not a defect in the
+   reference-curve approach to quietly work around, but the reason this whole project exists.
+   Recorded explicitly in the module docstring and README, not left implicit.
+2. **Wire into the picker, with short-period caution** -- direction given; not yet implemented
+   (see "Next" below). The library now exposes what the picker will need
+   (`CurveSample.low_confidence`, `ReferenceCurve.low_confidence_periods`) but `work_unit.py`
+   itself hasn't been touched yet.
+3. **Smoothing spline, evaluated concretely, not just discussed.** Tested an unconstrained cubic
+   `UnivariateSpline` first: it overshoots to unphysical values (5.75 km/s against a raw data
+   range of 3.8-4.8 km/s) right at the noisy short-period end (`docs/smoothing_eval.png`) -- a
+   real, demonstrated risk, matching exactly the kind of failure the user's own physical intuition
+   ("weak second derivative, strong gradient only at a few periods") was probing for, just in the
+   opposite direction from what a naive read of that intuition might suggest (unconstrained
+   splines can *manufacture* strong curvature near sparse/noisy points, not just fail to capture
+   real strong gradients). Tested a proper penalized regression spline
+   (`scipy.interpolate.make_smoothing_spline`, GCV-selected smoothing) instead: stays within the
+   data range, no overshoot, smooth without chasing individual-cell noise
+   (`docs/smoothing_eval2.png`). Adopted.
+4. **Generalized into a library**, per direct request ("someone can call it as a library"). Fully
+   rewrote `hybrid_reference_curve.py` around a pluggable `PhaseVelocitySource` interface --
+   `AdamaMap` and `Gdm52Map` both implement `covers(lat,lon)` + `path_average_velocity(...)`, and
+   `build_reference_curve(lat1,lon1,lat2,lon2,sources=[...],wave=...)` just asks each source in
+   priority order, rather than being hardcoded to exactly two fixed sources or to Madagascar.
+   `wave='love'/'rayleigh'` is wired through (both ADAMA_Maps and GDM52 publish Rayleigh products
+   in the same layout; not validated against real data the way Love was here). Re-validated against
+   both prior test pairs after the rewrite -- identical raw values to the first version, confirming
+   the refactor preserved correctness while adding source/confidence metadata per sample.
+5. **Global roadmap, architected for but not built**: once FastMSPEC is validated at scale, its own
+   large-scale measurements could become a third `PhaseVelocitySource` -- a FastMSPEC-derived
+   global short-period map, positioned ahead of `Gdm52Map` (and filling the gap `AdamaMap` leaves
+   outside Africa) the same way `AdamaMap` already sits ahead of `Gdm52Map` today. This is exactly
+   why sources are pluggable rather than hardcoded -- adding a third shouldn't require
+   restructuring the module. Documented explicitly in both the module docstring and the README so
+   this doesn't need to be re-derived later.
+
+**Next, not yet started**: wiring `build_reference_curve` into `work_unit.py` as the per-pair
+center curve fed into `build_template_family` (replacing the single generic `SDISPL.ASC`), and
+deciding concretely what "extra caution below `CAUTION_PERIOD_S`" should mean for the picker's
+corridor search (a period-dependent corridor width, vs. down-weighting low-confidence periods in
+the scoring function, are the two options raised but not yet chosen between). This needs a
+bluehive round-trip to test against real data once started.
