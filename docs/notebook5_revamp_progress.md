@@ -21,13 +21,21 @@ next stage.
       Round 2 -- NW sweep, 300 points, complete)
 - [ ] **Stage 4.5** -- Reference-curve accuracy & wave-polarization correction (new work stream,
       inserted ahead of Stage 5 -- see log 2026-09-04 entries): (a) fix/quantify the
-      `horizontal_polarization` Love-wave bug in the picker, (b) build a hybrid ADAMA (5-40s) +
-      GDM52 (>40s) per-pair reference curve replacing the single generic `SDISPL.ASC` -- the scope
-      of *this* stage; a true pair-to-pair correlation/dispersion benchmark against ADAMA is a
-      separate, deferred future stage (needs a newly-constructed matched dataset, see log --
-      Sayan's 380 and ADAMA's own catalog are confirmed disjoint, so no existing data supports it)
+      `horizontal_polarization` Love-wave bug in the picker (done), (b) build a hybrid ADAMA
+      (6-40s) + GDM52 (45-150s) per-pair reference curve replacing the single generic `SDISPL.ASC`
+      (built + validated). **Scope is exactly this, confirmed complete as-is 2026-09-05**: no
+      other confound was found needing a fix (branch-continuity and walk-reseeding were both
+      tested and came back negative -- real picker-architecture limitations, not fixable
+      confounds). Ends at a small validation pass (same 4 report pairs, modest-scale check), not a
+      full Round 2 rerun.
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
 - [ ] **Stage 6** -- Packaging + docs cleanup, Notebook 3 Section 4 ref_curve fix
+- [ ] **New notebook (post-Stage-5, not yet numbered)** -- bandwidth-selection theory (`NW_low`,
+      the bias-variance MSE framework) confirmed or revised against a *true* ADAMA benchmark
+      (ADAMA's own real pairs -- `ADAMA_ncfs_TT_fi/fr.h5`, already on bluehive -- validated against
+      ADAMA's own `co`/`cf` ground-truth dispersion curves), not Sayan's 380 (confirmed disjoint
+      from ADAMA's catalog). Deliberately sequenced after Stage 5, not before and not folded into
+      Stage 4.5 -- see 2026-09-05 log for the full reasoning.
 
 ## Deferred / requirement log
 
@@ -1792,3 +1800,52 @@ Rationale for sequencing this way, not redoing Round 2 immediately: redoing the 
 sweep now, with only one of two known fixes in place, would produce a "Round 2 v2" that itself
 needs discarding once the polarization fix lands too -- paying for the expensive sweep twice for
 no reason.
+
+**Correction to step 5 above, decided 2026-09-05**: the full `NW_low`/H2 retest does NOT belong to
+Stage 4.5 -- see the next log entry. Step 5 here is narrowed to just confirming the two fixes
+behave sensibly at slightly-larger-than-4-pair scale (e.g. the 60-pair Round 2 subset at a single
+fixed fraction, not the full 5-fraction sweep); the bigger bandwidth-theory question moves
+entirely to a new, separate notebook.
+
+### 2026-09-05 (cont.) -- Scoping session: where the bandwidth-selection theory (`NW_low`) and a
+true ADAMA benchmark actually belong
+
+Direct back-and-forth on scope, before locking in stages further. Resolved, point by point:
+
+1. **Stage 4.5 does not touch bandwidth-selection theory.** Its two deliverables (hybrid reference
+   curve, polarization fix) remove confounds contaminating past *tests* of bandwidth-selection
+   hypotheses (H1-H4) -- they don't advance `NW_low`/the bias-variance MSE theory itself. Precise
+   distinction worth keeping: "cleans the instrument" vs. "advances the theory."
+2. **Stage 4.5's scope is complete as-is, nothing else to fold in.** Checked directly: of
+   everything tested this session, only the reference-curve mismatch and the polarization bug
+   turned out to be real, fixable confounds. Branch-continuity fragmentation and walk-reseeding
+   were both tested and came back negative -- real limitations of the picker's walk architecture,
+   worth naming as future work, but not confounds Stage 4.5 can "fix."
+3. **`NW_low`/H2 confirmation moves to its own new notebook, built after Stage 5** -- not part of
+   Stage 4.5, and not a prerequisite for Stage 5 either. Corrects the step-5 sequencing item above:
+   Stage 4.5's own validation stays narrow (confirm the two fixes work correctly, small-to-modest
+   scale); the full extended-NW-range H2 retest is a separate, later empirical exercise.
+   Sequencing this way doesn't block anything -- Stage 4.5's deliverables are durable, reusable
+   artifacts that don't get consumed by Stage 5, and Stage 5's own honest "`NW_low` still open"
+   discussion becomes natural motivation for the later notebook rather than something bolted on.
+4. **That new notebook should use a true ADAMA benchmark, not try to force-fit Sayan's 380.**
+   Resolves an earlier objection cleanly: Sayan's 380 and ADAMA's own catalog are confirmed
+   disjoint (see the 2026-09-04 log), so a pair-to-pair benchmark against Sayan's exact pairs would
+   need an entirely new matched dataset. Using **ADAMA's own real pairs** instead sidesteps that --
+   no new dataset construction needed. Concrete resource already in hand, untouched so far:
+   `ADAMA_ncfs_TT_fi.h5`/`_fr.h5` (Love, real+imaginary Fourier parts of the correlation spectrum),
+   fully transferred to bluehive, for the same 141 island-touching pairs (724-2220 km -- a real
+   distance range). If this format is directly usable as frequency-domain input to our own
+   multitaper machinery (**not yet verified** -- flagged explicitly, not assumed), the new notebook
+   could run our own NW sweep on ADAMA's real correlations and validate against ADAMA's own
+   ground-truth `co`/`cf` dispersion curves for the *same* pairs -- a true, apples-to-apples
+   benchmark for the bandwidth-selection theory.
+5. Stage 5 itself is unaffected and remains valuable without a complete `NW_low` theory --
+   consistent with this project's established practice of reporting genuine negative/open results
+   as real findings (H2, branch-continuity, walk-reseeding), not something to smooth over before
+   shipping.
+
+**Net effect on near-term plan**: Stage 4.5 -> (small validation pass) -> Stage 5 (Notebook 5
+overhaul) -> a new, separate bandwidth-theory notebook using ADAMA's own pairs as a real benchmark.
+`ncfs_TT`'s format-compatibility check is the first concrete task whenever that new notebook
+starts -- not yet done.
