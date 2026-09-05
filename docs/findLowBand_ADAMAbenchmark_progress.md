@@ -145,8 +145,18 @@ pair's data back out of `gvib.h5` (e.g. `AF.SKRH`-`XV.BAND`, already validated i
 Sayan's own precomputed MATLAB `coh_sum` -- `verification/skrh_band_real_data/`), run it through
 the same windowing/cross-correlation pipeline, and confirm the result matches that already-known-
 good baseline. If it recovers correctly for known pairs, `gvib.h5` is trustworthy for this
-purpose regardless of whether every single SAC file in the tree happens to have made it in --
-next concrete task after the transfer lands.
+purpose regardless of whether every single SAC file in the tree happens to have made it in.
+
+**Done** (`verification/gvib_skrh_band_test/`, full writeup and figure there). Found and fixed a
+real bug in the process (station 2's rotation was missing `+180` degrees, caught because the
+first attempt came back the same shape but opposite sign of the known-good reference -- a
+sign-flip failure mode worth naming explicitly, since it looks like real structured coherence
+rather than obviously broken data). After the fix: correctly in phase with the reference across
+the full band. `gvib.h5` gave 249 overlapping full days for this pair (`coh_num=3735`) vs.
+Sayan's `matched_data.mat`'s 107 (`coh_num=1605`) -- 142 more days, 2130 more (day,window) units;
+not yet confirmed whether Sayan's 107 are a strict subset of the 249 or something else explains
+the gap. Peak amplitude differs accordingly (more independent averaging shrinks apparent
+coherence toward the true value) -- expected, not a discrepancy.
 
 **After that verification, the actual deliverable (per direct user request, explicit that prior
 documentation here wasn't sufficient)**: a properly designed, well-documented Python library --
