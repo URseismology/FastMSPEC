@@ -44,6 +44,17 @@ PICK_FREQMIN, PICK_FREQMAX = 0.01, 0.5
 PICK_CMIN, PICK_CMAX = 1.2, 4.8
 CORRIDOR_KM_S, CORRIDOR_STEP_KM_S = 0.8, 0.05
 
+# This project's data is Love-wave throughout (matched-data files live under
+# .../processed_data/love/madagascar/, and SDISPL.ASC -- data/reference/README.md -- is itself a
+# Love-wave curve). get_zero_crossings' own docstring: horizontal_polarization should be True for
+# Love and radially-polarized Rayleigh waves (J0-J2 Bessel model, Kastle et al. 2016), False (the
+# module's own default) for vertical-component Rayleigh only (pure J0). Every pick this project
+# has made through 2026-09-04 used the default False -- a real, confirmed mismatch, not a design
+# choice -- quantified in docs/notebook5_revamp_progress.md's 2026-09-04 log (J0 vs. J0-J2 zero
+# locations differ ~23% at the first Bessel zero, near-field/short-period/near-pair regime;
+# converge to <0.1% by the far field). Fixed here.
+HORIZONTAL_POLARIZATION = True
+
 
 @dataclass
 class WorkUnitResult:
@@ -182,8 +193,8 @@ def process(pair: Pair, technique: str, ref_curve_path: Path,
                     faxis_pos, coh_pos, dist_km, ref_curve_arr,
                     freqmin=f_lo, freqmax=f_hi, cmin=PICK_CMIN, cmax=PICK_CMAX,
                     filt_width=10, filt_height=1.0, x_step=0.05, pick_threshold=0,
-                    horizontal_polarization=False, manual_picking=False, plotting=False,
-                    return_diagnostics=True,
+                    horizontal_polarization=HORIZONTAL_POLARIZATION, manual_picking=False,
+                    plotting=False, return_diagnostics=True,
                 )
             except DispersionCurveExceptionWithDiagnostics as e:
                 diag = e.diagnostics
