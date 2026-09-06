@@ -53,30 +53,87 @@ station's azimuth convention backwards and the result still *looks* like real, s
 coherence (same shape) rather than obviously broken, making it easy to miss without a known-good
 comparison to catch it against.
 
-## Result (2026-09-05, after the rotation fix)
+## A second real bug found and fixed (2026-09-05): zero-filled "dead" days diluting the average
+
+After the rotation fix, `gvib.h5`-sourced coherence was correctly *in phase* with both references
+across the whole band, but its peak amplitude was roughly half the reference's -- e.g. main-burst
+peak ~0.04 vs. the reference's ~0.08. The first-pass explanation (below, now known wrong) was that
+this was just an averaging-over-more-days effect: 249 overlapping full days found in `gvib.h5`
+vs. 107 in Sayan's own `matched_data.mat`, and more independent days shrinks apparent coherence
+toward a lower-variance true value. That explanation did not survive testing.
+
+The user pushed back with a sequence of specific alternative hypotheses, each tested directly
+rather than accepted or waved off:
+- **Day-count/averaging dilution**: tested by randomly subsampling the 249-day set down to 107,
+  50, and 20 days and recomputing. Amplitude stayed ~0.04-0.048 regardless of day count --
+  ruled out. Real averaging dilution would show a clear day-count trend; none was found.
+- **Windowing/overlap mismatch**: found and fixed a real (if separate) bug -- the 50%-overlap
+  window *step* had used `win_length` (10801, the per-window sample count including MATLAB's
+  inclusive-endpoint `+1`) instead of `win_core` (10800, the actual MATLAB stepping unit), and the
+  per-day `Nstart_sec=50` production offset (`ccf_setup_params_T_mdg.m`) had been omitted entirely
+  (assumed 0). Both fixed in `gvib_loader.py`. Amplitude was essentially unchanged by this fix
+  (0.0398 -> 0.0399) -- a real correctness improvement, but not the cause of the discrepancy.
+- **Taper bias / normalization differences**: reasoned through and ruled out -- taper bias would
+  affect both day-counts identically (same `NW`/`K`), and FFT normalization was already controlled
+  for since the Sayan-sourced run (same FastMspec code path) already matched the original MATLAB
+  reference to ~3%.
+- **Raw amplitude scale, checked directly per station**: compared RMS of `gvib.h5`'s raw rotated
+  traces against Sayan's own `matched_data.mat` traces for the *same* days. Found the discrepancy
+  was **station-specific, not global**: SKRH's `gvib.h5` amplitude was only ~0.60x Sayan's, while
+  BAND's matched almost exactly (~1.0001x). A global effect (rotation, normalization, taper) would
+  hit both stations equally -- this pointed straight at something wrong with SKRH's data
+  specifically.
+- **Zero-filled/dead-day gaps** (the user's own next hypothesis: "rotation angle orientation and
+  possibly the new patch on Python code with zeros and nulls"): checked directly. **`AF.SKRH`'s
+  `gvib.h5` data is 56.6% zero-filled on average across its nominal "full" days, with 141 of 249
+  days having >1% zeros and a median per-day RMS of exactly zero** -- i.e. many of SKRH's "full,
+  present" days are actually dead/gap-filled with zeros, not real recorded signal. `XV.BAND`, by
+  contrast, was completely clean (0.0% zero-fraction on every day). The day-selection filter in
+  the first version of `gvib_loader.py` checked only that a day chunk was *present* and *long
+  enough* -- it never checked that the data inside was non-trivial. This is exactly the check
+  `ccf_prepare_data_T_mdg.m` already has and skips explicitly (an `"All zeros!"` day-skip guard)
+  that had not been ported into the Python loader.
+
+**Root cause, confirmed**: roughly half of SKRH's "full days" in `gvib.h5` are zero-filled dead
+data, silently diluting the coherence sum with (day, window) units that contribute zero real
+signal but still count toward `coh_num` -- not a day-count/averaging effect, not a windowing bug,
+not taper bias or normalization, and not a further rotation error (the rotation fix from the first
+bug was already correct and stayed correct).
+
+**Fix**: `gvib_loader.build_pair_matched_data` now excludes any day where either station's raw
+N-component is entirely zero before windowing/rotation (matching MATLAB's own unported check),
+switching the array assembly from a pre-sized fixed-day-count array to a dynamic list + `np.stack`
+since the usable day count is now data-dependent.
+
+## Result (2026-09-05, after both fixes)
 
 - **Distance cross-check**: 289.2 km (from `ADAMA_stalist.csv` coordinates, independent of Stage
   3's own SAC-header-derived value) vs. Stage 3's known 290.3 km -- 0.4% apart, confirms the right
   stations and geometry.
-- **249 full-day, all-3-component overlapping days found** (2012-10-26 to 2013-07-01), all 15
-  windows/day usable (`coh_num=3735 = 249*15` exactly, no truncation needed).
+- **108 usable days after zero-day exclusion** (down from 249 nominally-full days; `coh_num=1620
+  = 108*15`), closely matching Sayan's own 107-day `matched_data.mat` -- strong independent
+  evidence the fix identifies genuinely dead data rather than over-excluding.
 - **Sayan-sourced (our FastMspec on `matched_data.mat`) vs. original MATLAB `coh_sum`**: 2.7%
   relative L2 error -- reproduces Stage 3's own ~3% baseline, confirming this comparison's
   reference point is sound.
-- **`gvib.h5`-sourced vs. both references, correctly in phase**: every peak and trough aligns with
-  the reference across the entire 0-0.35 Hz band (the main burst at 0.06-0.11 Hz, secondary bursts
-  at 0.16-0.20 and 0.25-0.31 Hz -- all match, not just approximately). Peak amplitude is roughly
-  half the reference's (249 days here vs. 107 in Sayan's `matched_data.mat`) -- expected, not a
-  bug: averaging over more independent days shrinks apparent coherence toward the true,
-  lower-variance value, while a smaller sample shows inflated peaks. `matched_data.mat` is very
-  likely an earlier, less complete snapshot of the same underlying archive.
-- Plot: `docs/gvib_vs_reference_skrh_band.png`.
+- **Raw amplitude scale, corrected**: SKRH ratio improved from 0.60x to 0.911x Sayan's own values;
+  BAND stayed at 0.994x (was 1.0001x) -- both now close to 1, consistent with the same underlying
+  station data once dead days are excluded from both sides' effective sample.
+- **`gvib.h5`-sourced vs. both references, in phase AND in amplitude**: coherence real-part range
+  -0.0920 to 0.0825, closely matching the Sayan-sourced reference's -0.1033 to 0.0834 -- every peak
+  and trough aligns across the entire 0-0.35 Hz band (the main burst at 0.06-0.11 Hz, secondary
+  bursts at 0.16-0.20 and 0.25-0.31 Hz), and now the *heights* match too, not just the shape.
+- Plot: `docs/gvib_vs_reference_skrh_band.png` (regenerated after the fix).
 
 **Net conclusion**: `ADAMA_gvib.h5` is a trustworthy data source for this notebook, for at least
-this pair, with the rotation now verified correct end-to-end against a known-good reference.
-Doesn't rule out isolated failures elsewhere in the archive (per `ppToHDF5.py`'s silent-failure
-risk, documented in the main tracker) -- this is one functional spot-check, not an exhaustive
-guarantee.
+this pair, with both the rotation and the zero-day-exclusion now verified correct end-to-end
+against a known-good reference. Doesn't rule out isolated failures elsewhere in the archive (per
+`ppToHDF5.py`'s silent-failure risk, documented in the main tracker, and independently, the
+zero-fill pattern found here for SKRH specifically) -- this is one functional spot-check, not an
+exhaustive guarantee. **Practical implication for the eventual library/notebook**: any station may
+have a nontrivial zero-filled fraction in its nominal "full" days; the zero-day-exclusion check
+this bug forced into `gvib_loader.py` is not an edge-case nicety, it is necessary for correct
+results on real ADAMA stations, and should be treated as a required step, not optional hardening.
 
 ## Performance/architecture note, for the eventual library (2026-09-05)
 

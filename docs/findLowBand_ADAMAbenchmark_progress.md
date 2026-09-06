@@ -147,16 +147,33 @@ the same windowing/cross-correlation pipeline, and confirm the result matches th
 good baseline. If it recovers correctly for known pairs, `gvib.h5` is trustworthy for this
 purpose regardless of whether every single SAC file in the tree happens to have made it in.
 
-**Done** (`verification/gvib_skrh_band_test/`, full writeup and figure there). Found and fixed a
-real bug in the process (station 2's rotation was missing `+180` degrees, caught because the
-first attempt came back the same shape but opposite sign of the known-good reference -- a
-sign-flip failure mode worth naming explicitly, since it looks like real structured coherence
-rather than obviously broken data). After the fix: correctly in phase with the reference across
-the full band. `gvib.h5` gave 249 overlapping full days for this pair (`coh_num=3735`) vs.
-Sayan's `matched_data.mat`'s 107 (`coh_num=1605`) -- 142 more days, 2130 more (day,window) units;
-not yet confirmed whether Sayan's 107 are a strict subset of the 249 or something else explains
-the gap. Peak amplitude differs accordingly (more independent averaging shrinks apparent
-coherence toward the true value) -- expected, not a discrepancy.
+**Done** (`verification/gvib_skrh_band_test/`, full writeup and figure there). Found and fixed two
+real bugs in the process:
+1. **Rotation**: station 2's rotation was missing `+180` degrees, caught because the first attempt
+   came back the same shape but opposite sign of the known-good reference -- a sign-flip failure
+   mode worth naming explicitly, since it looks like real structured coherence rather than
+   obviously broken data.
+2. **Zero-filled dead days**: after the rotation fix, `gvib.h5`-sourced coherence was correctly in
+   phase but only ~half the reference's amplitude. The first-pass explanation (more of `gvib.h5`'s
+   249 nominal "full" days vs. Sayan's 107, so more averaging shrinks apparent coherence) did NOT
+   survive testing -- subsampling the 249 days down to 107/50/20 showed no day-count trend at all.
+   Systematically ruled out windowing-step-size (real separate bug, fixed, no amplitude effect),
+   taper bias, and normalization, before isolating the effect to `AF.SKRH` specifically via raw
+   RMS comparison (SKRH at 0.60x Sayan's own values, BAND at ~1.0x). Root cause: **`AF.SKRH`'s
+   `gvib.h5` data is 56.6% zero-filled on average across its nominal "full" days** (141/249 days
+   with >1% zeros, median per-day RMS of exactly zero) -- dead/gap-filled data that the day-
+   selection filter let through because it only checked day presence and length, not validity.
+   This is exactly `ccf_prepare_data_T_mdg.m`'s own `"All zeros!"` day-skip guard, which had not
+   been ported. Fixed in `gvib_loader.py`; usable days dropped from 249 to 108 (closely matching
+   Sayan's own 107), and amplitude is now correctly matched (coherence range -0.0920 to 0.0825 vs.
+   the reference's -0.1033 to 0.0834). Full hypothesis-elimination sequence documented in
+   `verification/gvib_skrh_band_test/README.md`.
+
+**Practical implication for this notebook**: the zero-day-exclusion check is not optional
+hardening -- it is required for correct results on real ADAMA stations, since a station can have a
+large zero-filled fraction hiding inside data that otherwise looks "present." Any later station-
+list-completeness or overlap check (Goal 2 above) should be read as necessary-but-not-sufficient;
+a day being present and long enough doesn't mean it carries real data.
 
 **After that verification, the actual deliverable (per direct user request, explicit that prior
 documentation here wasn't sufficient)**: a properly designed, well-documented Python library --
