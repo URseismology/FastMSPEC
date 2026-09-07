@@ -1,12 +1,24 @@
 """Core per-(pair, technique) processing: load matched raw data, compute the cross-spectrum with
 the right preprocessing for that technique, optionally cross-validate against Sayan Swar's own
-precomputed MATLAB cross-spectrum, then scan the SDISPL.ASC +/- 0.8 km/s template family through
-the instrumented picker and keep the best-scoring template as that work unit's pick.
+precomputed MATLAB cross-spectrum, then scan a +/-0.8 km/s (widened at low-confidence periods)
+template family -- built from that pair's own hybrid ADAMA+GDM52 reference curve, not one shared
+generic curve -- through the instrumented picker, and keep the best-scoring template as that work
+unit's pick.
 
 Everything here was validated on real data first, at small scale, in
 verification/skrh_band_real_data/ (Stage 3 of the Notebook 5 revamp) -- this module is that
 validated logic, generalized from one hardcoded pair to any (Pair, technique) work unit. See
 NOTES.md for the precomputed-MATLAB path pattern and why single-taper alone needs detrend+taper.
+
+Stage 4.5 (docs/notebook5_revamp_progress.md, 2026-09 log) replaced the original single shared
+SDISPL.ASC reference curve and uniform corridor with the per-pair hybrid curve
+(REFERENCE_SOURCES/build_reference_curve) and the widened-corridor strategy
+(build_template_family_widened) -- both chosen from real evaluations against the 4 report example
+pairs, combined with the already-present horizontal_polarization fix. This is the current, correct
+behavior for any future run of this module; it does not reproduce Round 1/Round 2's original
+numbers (those used SDISPL.ASC, an uniform corridor, and -- Round 2 -- no polarization fix; check
+out the commit those rounds were run at for byte-for-byte reproduction, per this project's
+established practice of using git history as the record rather than preserving stale code paths).
 """
 from __future__ import annotations
 
@@ -23,8 +35,9 @@ from ccf_pipeline.crosscorr_mtc import (
 )
 from dispcurve_pick import (
     extract_dispcurve, DispersionCurveExceptionWithDiagnostics,
-    load_reference_curve, build_template_family,
+    build_template_family_widened,
 )
+from dispcurve_pick.hybrid_reference_curve import AdamaMap, Gdm52Map, build_reference_curve
 
 from .manifest import Pair
 
@@ -40,9 +53,17 @@ MATLAB_RESULTS_BASE = (
     "results/test/love/madagascar/{technique_dir}/ccf/window3hr/fullStack/ccfTT/{sta1}/{sta1}_{sta2}_f.mat"
 )
 
-PICK_FREQMIN, PICK_FREQMAX = 0.01, 0.5
 PICK_CMIN, PICK_CMAX = 1.2, 4.8
 CORRIDOR_KM_S, CORRIDOR_STEP_KM_S = 0.8, 0.05
+# Corridor strategy: widen the corridor at low-confidence (short) periods rather than scan it
+# uniformly -- the winner of Stage 4.5's 3-way strategy evaluation (BASELINE / widen / down-weight
+# scoring) run on the 4 report example pairs, bluehive job 31351542
+# (docs/notebook5_revamp_progress.md, 2026-09 log). Never worse than the uniform baseline, and a
+# clear win on Q3 (coverage 0.904->0.923, bad_quality 0.125->0.062). See
+# build_template_family_widened's own docstring for the full result and the physical-floor
+# rationale. Defaults (caution_period_s=12.0, short_multiplier=3.0, floor_km_s=0.3) match what was
+# evaluated -- not re-tuned here.
+CAUTION_PERIOD_S, SHORT_MULTIPLIER, CORRIDOR_FLOOR_KM_S = 12.0, 3.0, 0.3
 
 # This project's data is Love-wave throughout (matched-data files live under
 # .../processed_data/love/madagascar/, and SDISPL.ASC -- data/reference/README.md -- is itself a
@@ -54,6 +75,20 @@ CORRIDOR_KM_S, CORRIDOR_STEP_KM_S = 0.8, 0.05
 # locations differ ~23% at the first Bessel zero, near-field/short-period/near-pair regime;
 # converge to <0.1% by the far field). Fixed here.
 HORIZONTAL_POLARIZATION = True
+
+# Per-pair hybrid ADAMA+GDM52 reference curve (python/dispcurve_pick/hybrid_reference_curve.py),
+# replacing the single generic SDISPL.ASC curve every pair previously shared -- Stage 4.5's other
+# named fix, validated standalone (data/reference/hybrid_curve_README.md) and now the deliverable
+# combined with build_template_family_widened below. Sources built once at import time (cheap --
+# constructors just store the directory path; per-period grids are lazily loaded and cached inside
+# each source on first use, so a long-running worker only pays the load cost once per period it
+# actually needs, not once per pair).
+ADAMA_MAPS_DIR = "/scratch/tolugboj_lab/FastMSPEC_dispcurve_batch/data/reference/adama_maps"
+GDM52_DIR = "/scratch/tolugboj_lab/FastMSPEC_dispcurve_batch/data/reference/gdm52"
+_ADAMA = AdamaMap(ADAMA_MAPS_DIR)
+_GDM52 = Gdm52Map(GDM52_DIR)
+REFERENCE_SOURCES = [_ADAMA, _GDM52]  # priority order: ADAMA (Africa, higher-res) first, GDM52
+# (global fallback, long-period-only) second -- see build_reference_curve's own docstring.
 
 
 @dataclass
@@ -155,7 +190,7 @@ def _score(diag) -> float:
     return diag.freq_coverage_fraction + 0.5 * bad_q_term + 0.5 * amp_term
 
 
-def process(pair: Pair, technique: str, ref_curve_path: Path,
+def process(pair: Pair, technique: str,
             wband_override: float | None = None) -> WorkUnitResult:
     t0 = time.time()
     try:
@@ -181,8 +216,22 @@ def process(pair: Pair, technique: str, ref_curve_path: Path,
         pos = faxis > 0
         faxis_pos, coh_pos = faxis[pos], coh_sum[pos].real / coh_num
 
-        c_ref, f_lo, f_hi = load_reference_curve(ref_curve_path, PICK_FREQMIN, PICK_FREQMAX)
-        templates = build_template_family(c_ref, f_lo, f_hi, corridor_km_s=CORRIDOR_KM_S, step_km_s=CORRIDOR_STEP_KM_S)
+        # Per-pair hybrid curve (ADAMA where it covers, GDM52 elsewhere/long-period) instead of one
+        # shared SDISPL.ASC curve -- see REFERENCE_SOURCES above. f_lo/f_hi come from the hybrid
+        # curve's own actual data range (ADAMA 6-40s + GDM52 45-150s -> ~0.0067-0.167 Hz), not the
+        # old fixed PICK_FREQMIN/PICK_FREQMAX -- narrower at the high-frequency end than the old
+        # 0.01-0.5 Hz band, since GDM52 doesn't reach past its own 45s floor and ADAMA stops at 6s.
+        # ValueError here (fewer than 4 period samples along the path -- e.g. a path ADAMA can't
+        # cover that also somehow fails GDM52's global coverage) is caught by this function's own
+        # broad except below and recorded as a normal error result, not a crash.
+        hybrid = build_reference_curve(pair.lat1, pair.lon1, pair.lat2, pair.lon2,
+                                        sources=REFERENCE_SOURCES, wave="love")
+        f_lo, f_hi = hybrid.f_lo, hybrid.f_hi
+        templates = build_template_family_widened(
+            hybrid.func, f_lo, f_hi, corridor_km_s=CORRIDOR_KM_S, step_km_s=CORRIDOR_STEP_KM_S,
+            caution_period_s=CAUTION_PERIOD_S, short_multiplier=SHORT_MULTIPLIER,
+            floor_km_s=CORRIDOR_FLOOR_KM_S,
+        )
 
         best_score, best_delta, best_diag = -1.0, None, None
         n_converged = 0

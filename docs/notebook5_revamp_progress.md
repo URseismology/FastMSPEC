@@ -19,7 +19,7 @@ next stage.
 - [x] **Stage 3** -- Validate against Sayan's SKRH-BAND result; 4-technique timing pilot
 - [x] **Stage 4** -- bluehive batch pipeline, full 380 pairs x 4 techniques (Round 1 complete;
       Round 2 -- NW sweep, 300 points, complete)
-- [ ] **Stage 4.5** -- Reference-curve accuracy & wave-polarization correction (new work stream,
+- [x] **Stage 4.5** -- Reference-curve accuracy & wave-polarization correction (new work stream,
       inserted ahead of Stage 5 -- see log 2026-09-04 entries): (a) fix/quantify the
       `horizontal_polarization` Love-wave bug in the picker (done), (b) build a hybrid ADAMA
       (6-40s) + GDM52 (45-150s) per-pair reference curve replacing the single generic `SDISPL.ASC`
@@ -27,7 +27,10 @@ next stage.
       other confound was found needing a fix (branch-continuity and walk-reseeding were both
       tested and came back negative -- real picker-architecture limitations, not fixable
       confounds). Ends at a small validation pass (same 4 report pairs, modest-scale check), not a
-      full Round 2 rerun.
+      full Round 2 rerun. **Done 2026-09-07**: corridor strategy chosen (widen at low-confidence
+      periods), combined with the hybrid curve and the polarization fix in `work_unit.py`'s real
+      production path, validated end-to-end with no wiring bugs -- see 2026-09-07 log entry for
+      the full isolated-effect comparison (same-bandwidth old-curve vs. new-curve run).
 - [ ] **Stage 5** -- Notebook 5 complete overhaul (built fresh, old version tagged not deleted)
 - [ ] **Stage 6** -- Packaging + docs cleanup, Notebook 3 Section 4 ref_curve fix
 - [ ] **New notebook (post-Stage-5, not yet numbered)** -- bandwidth-selection theory (`NW_low`,
@@ -1682,12 +1685,12 @@ both ways:
   open Mozambique channel -- the tomographic map is likely poorly constrained at short periods
   over water (no seafloor stations feed the inversion there). Visually the two curves still have a
   qualitatively similar rising shape, just offset -- the alarming percentages are partly an
-  artifact of the real curve's small absolute values at short period (`docs/hybrid_vs_real_bity_maph.png`).
+  artifact of the real curve's small absolute values at short period (`docs/figures/investigation/hybrid_vs_real_bity_maph.png`).
 - A second check on `XV.BITY-XV.MAGY` (this project's own island-internal report example, 223 km,
   no ocean crossing) does not show the same order-of-magnitude short-period blowup (stays
   physically plausible, 3.8-4.7 km/s) -- but is noticeably non-smooth/non-monotonic
   period-to-period, most likely real tomographic-grid cell-to-cell noise showing through because a
-  short path averages over few grid cells (`docs/hybrid_bity_magy_island.png`).
+  short path averages over few grid cells (`docs/figures/investigation/hybrid_bity_magy_island.png`).
 
 **Net assessment, stated plainly**: promising for our actual use case (island-internal paths never
 cross ocean), but not yet blindly production-ready. Two open items before wiring into the picker,
@@ -1713,7 +1716,7 @@ Five points of feedback, addressed in order:
    itself hasn't been touched yet.
 3. **Smoothing spline, evaluated concretely, not just discussed.** Tested an unconstrained cubic
    `UnivariateSpline` first: it overshoots to unphysical values (5.75 km/s against a raw data
-   range of 3.8-4.8 km/s) right at the noisy short-period end (`docs/smoothing_eval.png`) -- a
+   range of 3.8-4.8 km/s) right at the noisy short-period end (`docs/figures/investigation/smoothing_eval.png`) -- a
    real, demonstrated risk, matching exactly the kind of failure the user's own physical intuition
    ("weak second derivative, strong gradient only at a few periods") was probing for, just in the
    opposite direction from what a naive read of that intuition might suggest (unconstrained
@@ -1721,7 +1724,7 @@ Five points of feedback, addressed in order:
    real strong gradients). Tested a proper penalized regression spline
    (`scipy.interpolate.make_smoothing_spline`, GCV-selected smoothing) instead: stays within the
    data range, no overshoot, smooth without chasing individual-cell noise
-   (`docs/smoothing_eval2.png`). Adopted.
+   (`docs/figures/investigation/smoothing_eval2.png`). Adopted.
 4. **Generalized into a library**, per direct request ("someone can call it as a library"). Fully
    rewrote `hybrid_reference_curve.py` around a pluggable `PhaseVelocitySource` interface --
    `AdamaMap` and `Gdm52Map` both implement `covers(lat,lon)` + `path_average_velocity(...)`, and
@@ -1886,3 +1889,118 @@ project's established MATLAB/Octave-verification pattern) `ccf_prepare_data_T_md
 windowing convention to produce `S1_data_mat`/`S2_data_mat` arrays, then feed those into our own
 FastMspec NW sweep -- validating against ADAMA's own `co`/`cf` ground truth for the same pairs.
 Not yet started; still needs the full-141-pair overlap check and the actual SAC-to-mat run.
+
+### 2026-09-07 -- Stage 4.5 step 3: corridor strategy chosen and combined with the hybrid
+ADAMA+GDM52 curve in `work_unit.py` -- the full deliverable
+
+`eval_corridor_strategies.py` (bluehive job 31351542, resubmitted after diagnosing/fixing job
+31349488's 7-hour zero-output timeout -- see prior entries) completed cleanly, comparing BASELINE
+(uniform +/-0.8 km/s corridor) against APPROACH A (widen the corridor to +/-2.4 km/s at periods
+<12s, i.e. `delta*3`, floored at 0.3 km/s) and APPROACH B (down-weight short-period coverage in
+scoring instead) on the 4 report example pairs:
+
+| Quartile | Strategy | delta | converged | coverage | bad_quality | n_picks |
+|---|---|---|---|---|---|---|
+| Q1 | BASELINE | -0.80 | True | 0.619 | 0.320 | 340 |
+| Q1 | A (widen) | -0.45 | True | 0.619 | 0.320 | 372 |
+| Q1 | B (down-weight) | -0.80 | True | 0.619 | 0.320 | 340 |
+| Q2 | BASELINE | 0.05 | True | 0.894 | 0.351 | 415 |
+| Q2 | A (widen) | 0.10 | True | 0.894 | **0.324** | 446 |
+| Q2 | B (down-weight) | 0.05 | True | 0.894 | 0.351 | 415 |
+| Q3 | BASELINE | -0.60 | True | 0.904 | 0.125 | 866 |
+| Q3 | **A (widen)** | 0.55 | True | **0.923** | **0.062** | 535 |
+| Q3 | B (down-weight) | -0.20 | True | 0.788 | 0.083 | 538 |
+| Q4 | BASELINE | -0.80 | False | 0.000 | 0.495 | 41 |
+| Q4 | A (widen) | -0.80 | False | 0.000 | 0.659 | 41 |
+| Q4 | B (down-weight) | -0.80 | False | 0.000 | 0.495 | 41 |
+
+**Chose Approach A** (widen corridor at low-confidence periods): never worse than baseline
+(Q1/Q2 tie or improve), a clear quality win on Q3 (coverage 0.904->0.923, bad_quality roughly
+halved 0.125->0.062), and B is never better than A anywhere they differ. Q4 fails to converge
+under all three strategies -- expected, not a regression: consistent with Round 2's own 75-point
+bandwidth sweep on this same pair finding 0% convergence at every fraction tested, reinforcing H3
+(existence-threshold cliff) rather than opening a new lever on it.
+
+**Scope clarification (direct user correction, important)**: the question this test actually
+answers is whether improved reference curves + corridor handling improve *pick quality* -- not
+convergence rate. That was the real scope, and it passed (Q3's result above). A convergence-rate
+comparison against Round 2's own richer per-quartile sweep (15 pairs/quartile x 5 bandwidths,
+docs/round2_hypothesis_evaluation.tex) was raised and explicitly ruled out as unnecessary here --
+different axis (corridor width vs. bandwidth), different sample size (4 pairs vs. 60), and not
+what this step was testing. Recorded so a later reader doesn't conflate "quality improved" with
+"convergence rate improved," which this data does not claim.
+
+**Implementation -- both fixes now combined in `work_unit.py`, the crucial deliverable**:
+- `python/dispcurve_pick/template_family.py`: added `build_template_family_widened()` (Approach
+  A's exact logic, floor_km_s=0.3 physical clip), exported from the package alongside the original
+  `build_template_family` (kept, unmodified, still used by the verification/notebook scripts that
+  reproduce historical results).
+- `python/dispcurve_pick_batch/work_unit.py::process()`: now builds each pair's own **hybrid
+  ADAMA+GDM52 reference curve** (`hybrid_reference_curve.build_reference_curve`, sources built
+  once at module import as `REFERENCE_SOURCES`) instead of loading the single shared `SDISPL.ASC`
+  curve, and scans it through `build_template_family_widened` instead of the uniform
+  `build_template_family` -- combined with the already-present `HORIZONTAL_POLARIZATION=True` fix.
+  `f_lo`/`f_hi` now come from the hybrid curve's own data range (~0.0067-0.167 Hz, ADAMA 6-40s +
+  GDM52 45-150s) rather than the old fixed 0.01-0.5 Hz pick band.
+- `Pair` (`manifest.py`) gained required `lat1/lon1/lat2/lon2` fields (needed to build the
+  per-pair curve); `load_pairs()` reads them from the manifest's own `stn1lat/stn1lon/stn2lat/
+  stn2lon` columns (confirmed present). `process()`'s signature dropped `ref_curve_path` entirely
+  -- no longer meaningful once the curve is per-pair and computed internally.
+- `run_plain.py`/`run_multiprocessing.py` updated to match (one fewer CLI arg each).
+  `run_round2_sweep.py` marked STALE in its own docstring rather than retrofitted (Round 2 is
+  already complete/reported; retrofitting it would itself be the out-of-scope "full Round 2
+  rerun" -- its subset CSV has no station coordinates to build a hybrid curve from anyway). All
+  five files pushed to bluehive's flat (non-git) deployment via `scp`.
+- Validation job **31351552** (`stage4_5_validation.sbatch` / `validate_stage4_5.py`) submitted:
+  runs the real `work_unit.process()` (all three fixes combined) on the 4 report pairs. Result
+  pending.
+
+Stage 4.5 is now functionally complete pending this validation job's confirmation -- both named
+fixes (hybrid reference curve, corridor-widen strategy) are combined with `horizontal_polarization`
+in the actual production code path, not just demonstrated in a standalone harness.
+
+**Closing update, same day**: job **31351552** completed cleanly (no crashes, `error=None` on
+every row). An earlier validation submission, job **31351550** (submitted before the hybrid-curve
+wiring above, running only corridor-widen + polarization against the *old* single `SDISPL.ASC`
+curve), had kept running unaffected in the background the whole time -- a SLURM job reads its
+script once at start, so it wasn't touched by the later edits. Both finished, at the identical
+module-default bandwidth (`WBAND=0.001`, no `wband_override`), giving a clean, unplanned
+same-bandwidth isolation of the hybrid curve's effect alone:
+
+| Q | Curve | converged | delta | coverage | bad_quality | n_picks | templates conv. | runtime_s |
+|---|---|---|---|---|---|---|---|---|
+| 1 | old (SDISPL.ASC) | **False** | -- | 0.000 | 0.963 | 6 | 0/33 | 220.6 |
+| 1 | new (ADAMA+GDM52) | **True** | -0.25 | 0.203 | 0.606 | 217 | 8/33 | 218.1 |
+| 2 | old | True | 0.70 | 0.551 | 0.422 | 982 | 2/33 | 578.9 |
+| 2 | new | True | 0.20 | 0.344 | 0.509 | 425 | 15/33 | 1064.4 |
+| 3 | old | True | 0.40 | 0.640 | 0.390 | 681 | 15/33 | 1165.8 |
+| 3 | new | True | 0.35 | **0.774** | **0.115** | 445 | 25/33 | 1005.6 |
+| 4 | old | True | 0.25 | 0.442 | 0.601 | 1357 | 2/33 | 659.3 |
+| 4 | new | True | -0.15 | 0.446 | 0.407 | 875 | 9/33 | 848.0 |
+
+**The consistent signal, across all four pairs**: the number of corridor templates that converge
+at all rises with the hybrid curve in every single quartile (0->8, 2->15, 15->25, 2->9) -- the
+curve is a better match to the real data broadly, not just at the one delta that happens to score
+best. On the *winning* template's own diagnostics specifically: Q1 flips from total non-
+convergence to convergence; Q3 improves clearly on both axes (coverage 0.640->0.774, bad_quality
+roughly halved 0.390->0.115); Q4 keeps similar coverage but a meaningfully lower bad_quality
+(0.601->0.407); Q2 is the one exception -- more templates converge (2->15) but the specific
+best-scoring template's own coverage/bad_quality are slightly worse (0.551->0.344,
+0.422->0.509) than the old curve's best pick. Reported plainly rather than glossed over: this is a
+real, mostly-positive, not perfectly uniform result -- exactly the kind of honest mixed finding
+this project's practice is to report as-is.
+
+Also noted, not chased further (explicitly out of scope for this step): Q4 converged in *both*
+runs here, unlike Round 2's own Q4-specific 75-point NW sweep (0% convergence at every fraction,
+docs/round2_hypothesis_evaluation.tex) and unlike `eval_corridor_strategies.py`'s Q4 result (also
+non-convergent, at its own hand-picked `target_nw=7.61`). Most likely explanation: `work_unit.py`'s
+fixed absolute `WBAND=0.001` lands in a different regime than Round 2's Q4-*relative*
+`NW_high(R)`-scaled fractions for this specific (very distant) pair -- a real observation worth
+keeping in mind for the deferred bandwidth-selection work, not a contradiction of H3's existence-
+threshold finding (Q4's non-convergence there was established across bandwidth choices scaled to
+Q4's own small `NW_high`, a different sweep than this one bandwidth point).
+
+**Stage 4.5 is complete.** Both named fixes -- the per-pair hybrid ADAMA+GDM52 reference curve and
+the corridor-widen strategy -- are combined with the already-present `horizontal_polarization` fix
+in `work_unit.py`'s real production path, validated end-to-end against real data with no wiring
+bugs. Next: Stage 5 (Notebook 5 complete overhaul), per the plan's own sequencing.

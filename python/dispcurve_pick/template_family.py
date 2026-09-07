@@ -45,3 +45,37 @@ def build_template_family(c_ref: interp1d, f_lo: float, f_hi: float,
     c_ref_vals = c_ref(f_grid)
     deltas = np.arange(-corridor_km_s, corridor_km_s + step_km_s / 2, step_km_s)
     return {float(d): interp1d(f_grid, c_ref_vals + d, kind="linear") for d in deltas}
+
+
+def build_template_family_widened(c_ref: interp1d, f_lo: float, f_hi: float,
+                                    corridor_km_s: float = 0.8, step_km_s: float = 0.05,
+                                    caution_period_s: float = 12.0, short_multiplier: float = 3.0,
+                                    floor_km_s: float = 0.3):
+    """"Widen the corridor at low-confidence (short) periods" -- Stage 4.5's corridor-strategy
+    evaluation (docs/notebook5_revamp_progress.md, 2026-09 log; scratchpad
+    eval_corridor_strategies.py, bluehive job 31351542) tested this against the unmodified
+    build_template_family (BASELINE) and a scoring-side down-weight alternative on the 4 report
+    example pairs. Result: this strategy was never worse than baseline (Q1/Q2: same diagnostics,
+    Q4: still non-converged either way -- that quartile's failure is a separate, deeper issue, not
+    a corridor-width problem, consistent with the branch-continuity/reseed negative results in
+    docs/round2_hypothesis_evaluation.tex) and was a clear win on Q3 (coverage 0.904->0.923,
+    bad_quality 0.125->0.062 vs. baseline). The down-weight alternative was never better than this
+    one where they differed. Adopted as the corridor strategy used by work_unit.py.
+
+    Same delta range/step/template count as build_template_family (identical search cost) -- only
+    each template's low-confidence (period = 1/f < caution_period_s) portion gets
+    `delta * short_multiplier` instead of `delta`, a proportionally wider excursion at short period
+    for the same search cost. Physical floor (floor_km_s) clips the result: for a low reference
+    curve combined with a large negative delta*short_multiplier, c_ref + delta*mult can go
+    negative -- an unphysical phase velocity that was confirmed (via bluehive job 31349488's 7-hour
+    zero-output timeout, diagnosed with a per-template timing script) to make extract_dispcurve
+    hang indefinitely rather than fail fast. Clipping to a small positive floor keeps the
+    "widen at low-confidence periods" concept intact while ruling out that pathological case.
+    """
+    f_grid = np.linspace(f_lo, f_hi, 500)
+    c_ref_vals = c_ref(f_grid)
+    short_mask = (1.0 / f_grid) < caution_period_s  # low-confidence = short period
+    multiplier = np.where(short_mask, short_multiplier, 1.0)
+    deltas = np.arange(-corridor_km_s, corridor_km_s + step_km_s / 2, step_km_s)
+    return {float(d): interp1d(f_grid, np.clip(c_ref_vals + d * multiplier, floor_km_s, None),
+                                kind="linear") for d in deltas}

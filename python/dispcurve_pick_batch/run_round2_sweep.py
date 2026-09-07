@@ -3,6 +3,17 @@ NW-sweep subset selected by round2_prep.py. One work unit per SLURM array task (
 run_plain.py's model -- no shared-node contention, each sweep point gets its own dedicated time
 budget). See docs/notebook5_revamp_progress.md's "Round 2 design" section for the full rationale.
 
+STALE as of Stage 4.5 (docs/notebook5_revamp_progress.md, 2026-09 log): Round 2 already ran and
+was reported before work_unit.process() dropped its ref_curve_path parameter and Pair gained
+required lat1/lon1/lat2/lon2 fields (needed for the new per-pair hybrid ADAMA+GDM52 curve). This
+driver was deliberately not retrofitted -- Round 2's own subset CSV (round2_prep.py's output)
+carries no station coordinates, and adding that plumbing would be exactly the "full Round 2 rerun"
+scope explicitly deferred to the post-Stage-5 findLowBand_ADAMAbenchmark notebook, not something to
+fold in silently here. Running this file as-is today will fail (Pair(...) below is missing
+required arguments) -- check out the commit Round 2 was actually run at for a working copy, per
+this project's practice of using git history as the record rather than preserving stale code paths
+change-for-change.
+
 Usage (run as a module, from the `python/` directory):
     python3 -m dispcurve_pick_batch.run_round2_sweep <subset_csv> <main_manifest_csv> \
         <ref_curve_path> <results_dir> <work_unit_index>

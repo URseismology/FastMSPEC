@@ -10,7 +10,11 @@ Each work unit's result is written as its own small JSON file (not appended to a
 
 Usage (run as a module, from the `python/` directory, so the relative imports below resolve --
 NOT `python3 run_plain.py`):
-    python3 -m dispcurve_pick_batch.run_plain <manifest_csv> <ref_curve_path> <results_dir> <work_unit_index>
+    python3 -m dispcurve_pick_batch.run_plain <manifest_csv> <results_dir> <work_unit_index>
+
+(No ref_curve_path argument since Stage 4.5: work_unit.process() now builds each pair's own hybrid
+ADAMA+GDM52 reference curve internally from that pair's coordinates -- see work_unit.py's module
+docstring.)
 """
 from __future__ import annotations
 
@@ -23,10 +27,10 @@ from .work_unit import process
 
 
 def main():
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 4:
         print(__doc__)
         sys.exit(1)
-    manifest_csv, ref_curve_path, results_dir, index_str = sys.argv[1:5]
+    manifest_csv, results_dir, index_str = sys.argv[1:4]
     index = int(index_str)
 
     work_units = build_work_units(manifest_csv)
@@ -41,7 +45,7 @@ def main():
         print(f"skip (already done): {wu.work_unit_id}")
         return
 
-    result = process(wu.pair, wu.technique, Path(ref_curve_path))
+    result = process(wu.pair, wu.technique)
     out_path.write_text(json.dumps(result.as_dict(), indent=2))
     print(f"{wu.work_unit_id}: converged={result.converged} runtime={result.runtime_s:.1f}s "
           f"error={result.error}")

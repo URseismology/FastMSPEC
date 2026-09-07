@@ -55,9 +55,9 @@ path, not a simple velocity average -- matches how phase velocity actually combi
 uncertainty, worse for short paths averaging over few cells). Evaluated an unconstrained cubic
 `scipy.interpolate.UnivariateSpline` first -- it overshot to unphysical values (5.75 km/s against
 a raw data range of 3.8-4.8 km/s) right at the noisy short-period end, a concretely demonstrated
-risk (`docs/smoothing_eval.png`). Switched to `scipy.interpolate.make_smoothing_spline` (a proper
+risk (`docs/figures/investigation/smoothing_eval.png`). Switched to `scipy.interpolate.make_smoothing_spline` (a proper
 penalized regression spline, GCV-selected smoothing) -- stays within the data range, no overshoot,
-smooth without chasing individual-cell noise (`docs/smoothing_eval2.png`).
+smooth without chasing individual-cell noise (`docs/figures/investigation/smoothing_eval2.png`).
 
 ## Validation (2026-09-04)
 
@@ -69,11 +69,11 @@ curve is known independently -- see `docs/notebook5_revamp_progress.md`'s 2026-0
   open Mozambique channel; the tomographic map is likely poorly constrained at short periods over
   water (no seafloor stations feed the inversion there). Visually the two curves still have a
   qualitatively similar rising shape, just offset -- the alarming percentages are partly an
-  artifact of the real curve's small absolute values at short period (`docs/hybrid_vs_real_bity_maph.png`).
+  artifact of the real curve's small absolute values at short period (`docs/figures/investigation/hybrid_vs_real_bity_maph.png`).
 - A second check on `XV.BITY-XV.MAGY` (this project's own island-internal report example, 223 km,
   no ocean crossing) does not show the same magnitude of short-period blowup (stays physically
   plausible, 3.8-4.7 km/s) but is noticeably noisy period-to-period before smoothing
-  (`docs/hybrid_bity_magy_island.png`) -- addressed by the smoothing-spline switch above.
+  (`docs/figures/investigation/hybrid_bity_magy_island.png`) -- addressed by the smoothing-spline switch above.
 
 **Context that matters for how to read this** (direct user note): ADAMA's own short-period Love
 uncertainty is a *known, expected* limitation -- the user built ADAMA and states this uncertainty

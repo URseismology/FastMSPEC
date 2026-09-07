@@ -14,7 +14,7 @@ Matching to Instrumented Reference-Guided Picking").
 """
 from ._vendored_seislib_an_processing import extract_dispcurve
 from .diagnostics import PickDiagnostics, DispersionCurveExceptionWithDiagnostics
-from .template_family import load_reference_curve, build_template_family
+from .template_family import load_reference_curve, build_template_family, build_template_family_widened
 
 __all__ = [
     "extract_dispcurve",
@@ -22,4 +22,5 @@ __all__ = [
     "DispersionCurveExceptionWithDiagnostics",
     "load_reference_curve",
     "build_template_family",
+    "build_template_family_widened",
 ]

@@ -23,6 +23,12 @@ class Pair:
     stn2: str
     dist_km: float
     matched_data_path: str
+    # Added for Stage 4.5's per-pair hybrid ADAMA+GDM52 reference curve (build_reference_curve
+    # needs both stations' coordinates, not just distance) -- see work_unit.py.
+    lat1: float
+    lon1: float
+    lat2: float
+    lon2: float
 
     @property
     def pair_id(self) -> str:
@@ -45,6 +51,8 @@ def load_pairs(manifest_csv: str) -> list[Pair]:
         Pair(
             net1=row.net1, stn1=row.stn1, net2=row.net2, stn2=row.stn2,
             dist_km=float(row.stndist), matched_data_path=row.filelocation,
+            lat1=float(row.stn1lat), lon1=float(row.stn1lon),
+            lat2=float(row.stn2lat), lon2=float(row.stn2lon),
         )
         for row in df.itertuples()
     ]

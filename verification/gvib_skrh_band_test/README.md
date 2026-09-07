@@ -123,7 +123,7 @@ since the usable day count is now data-dependent.
   -0.0920 to 0.0825, closely matching the Sayan-sourced reference's -0.1033 to 0.0834 -- every peak
   and trough aligns across the entire 0-0.35 Hz band (the main burst at 0.06-0.11 Hz, secondary
   bursts at 0.16-0.20 and 0.25-0.31 Hz), and now the *heights* match too, not just the shape.
-- Plot: `docs/gvib_vs_reference_skrh_band.png` (regenerated after the fix).
+- Plot: `docs/figures/investigation/gvib_vs_reference_skrh_band.png` (regenerated after the fix).
 
 **Net conclusion**: `ADAMA_gvib.h5` is a trustworthy data source for this notebook, for at least
 this pair, with both the rotation and the zero-day-exclusion now verified correct end-to-end
