@@ -1,0 +1,5 @@
+net1,stn1,net2,stn2,dist_km,technique,converged,best_delta_km_s,bad_quality_fraction,n_candidate_crossings,n_accepted_picks,freq_coverage_fraction,mean_amp_ratio,n_templates_converged,n_templates_scanned,matlab_coh_num,matlab_rel_l2_error,runtime_s,error,wband_used,quartile
+XV,BITY,XV,MAGY,222.98838,FastMspec,False,,0.9625,80,6,0.0,inf,0,33,1980,3.414767e-08,220.643908,,,1
+XV,BAEL,XV,ZAKA,369.38633,FastMspec,True,0.7,0.421769,147,982,0.550725,inf,2,33,4425,0.001931479,578.857506,,,2
+XV,BAND,XV,MAJA,520.113812,FastMspec,True,0.4,0.390374,187,681,0.64,inf,15,33,5805,0.001228069,1165.831465,,,3
+XV,DGOS,XV,MAGY,783.366562,FastMspec,True,0.25,0.601351,296,1357,0.441558,4.635605,2,33,4125,5.962988e-05,659.274762,,,4

@@ -66,39 +66,90 @@ confuse a fresh session): the pre-renumbering state of every notebook is preserv
   concise, matches the `NN_topic_words.ipynb` convention of 01/02, names the question being tested
   (bandwidth selection) rather than the data source.
 
-**Not yet done:**
-- **Stage 5 (next immediate task, in progress this session)** -- `04_dispersion_curve_picking.ipynb`
-  rebuilt fresh around the phase-velocity/instrumented-picker framework (not a patch on the old
-  zero-crossing/max-min barcode content it currently still holds). Sub-steps: (5a) tag old version
-  -- done, `notebook5-v1-event-scanning` -- (5b) write `_lib/build_nb4.py` fresh -- SKRH-BAND
-  worked example + full-380-pair aggregate result (using Stage 4.5's now-fixed pipeline, which
-  means **the notebook needs its own fresh run of the batch pipeline with today's `work_unit.py`,
-  not Round 1/2's committed manifest.csv**, since those predate all three Stage 4.5 fixes) + 2-way
-  good/bad-quality-crossing barcode + honest discussion, (5c) explicitly defer any further
-  enrichment decision until after this fresh version is reviewed. `_lib/nb4_helpers.py` gets the
-  same fresh treatment (keep `load_reference_curve`/`build_template_family`, drop the old scorer,
-  add a thin wrapper + the new barcode helpers). **Two content directives from direct user
-  feedback, 2026-09-08, to hold throughout the build**: (i) the Motivation section must keep the
-  FastMspec-vs-single-taper thread alive -- FastMspec producing better cross-spectra than
-  single-taper (N1-N3's own established result) is the principled, if not fully proven-optimal,
-  grounding for why this whole pipeline is worth the complexity, not a fact to let drop once the
-  notebook moves on to dispersion-picking specifically; (ii) every comparison figure (technique vs.
-  technique, old-curve vs. hybrid-curve, etc.) should report quality metrics
-  (`bad_quality_fraction`, `freq_coverage_fraction`, template-convergence-count) alongside
-  convergence, not convergence alone -- lean on "better zero-crossings once reference-curve/corridor
-  issues are resolved," not just "did it converge."
-- **Stage 6** -- packaging + docs cleanup. The original scope item ("swap Notebook 3 Section 4's
-  placeholder `ref_curve` for the real `SDISPL.ASC` curve") is now **moot** -- Section 4 was removed
-  entirely in the renumbering above, not patched. Remaining Stage 6 scope: whatever final
-  packaging/doc polish the Stage 5 build surfaces as needed (e.g. `notebooks/README.md`
-  cross-check once Notebook 4's real content exists, not just its renamed placeholder).
-- **The new notebook, `05_bandwidth_selection.ipynb`** -- scoped and partially investigated
-  (data-location/access-strategy work done, tracker at
-  `docs/findLowBand_ADAMAbenchmark_progress.md`), execution not started. Per direct user
-  confirmation (2026-09-08): **this conversation finishes Stage 5 and Stage 6 before retiring** --
-  Notebook 05's actual build happens in a *new* conversation, picking up from
-  `docs/findLowBand_ADAMAbenchmark_progress.md`'s "Start here" section, which is written to stand
-  on its own without needing this conversation's history.
+**Stage 5 -- DONE, both notebooks rebuilt and executed against real data, 2026-09-08:**
+- **`04_dispersion_curve_picking.ipynb`**: fully rebuilt (`_lib/build_nb4.py`, `_lib/nb4_helpers.py`
+  written fresh), **executed end-to-end successfully, real data, zero errors** -- confirmed via
+  `nbclient`, outputs spot-checked against every previously-established number (Round 1
+  convergence 0%/15.3%/26.1%/26.3%, Round 2's H1-H4 table exact match to
+  `round2_hypothesis_evaluation.tex`, SKRH-BAND's coherence range exact match to the known-good
+  MATLAB result). 8 sections + Summary, 52 cells: Sections 1-3 carry over old Notebook 5's real
+  content (SA53/58 motivation, zero-crossing stability, resolution-bandwidth principle); 4-8 are
+  new (the vendored/instrumented picker with a synthetic 2-way-barcode demo, SKRH-BAND as a real
+  worked example including a live single-pair old-curve-vs-hybrid-curve comparison, the full
+  380-pair Round 1/Round 2 results loaded and recomputed live from committed files, Stage 4.5's
+  corridor-strategy and isolated-curve-effect results, and an honest discussion section bridging to
+  Notebook 05). A real per-call timeout (`PER_CALL_TIMEOUT_S=90`, same defense-in-depth pattern as
+  `eval_corridor_strategies.py`) fired once during the live corridor scan and was handled cleanly --
+  confirms the mechanism works, not just in theory. **A real, small instrumentation addition** was
+  needed and made to the vendored picker itself: `PickDiagnostics` gained
+  `candidate_crossing_freqs`/`candidate_crossing_bad_quality` (additive-only, empty-array defaults,
+  populated only inside the existing `return_diagnostics=True` path) so the 2-way barcode has real
+  per-crossing data to plot, not just the aggregate fraction it exposed before. Real local data
+  pulled from bluehive for genuine execution (all gitignored, not committed -- matching this
+  project's established large-binary-data practice): SKRH-BAND's 267MB matched-data file, the 39MB
+  ADAMA_Maps+GDM52 hybrid-curve source data, and the manifest CSV. Three small (~1KB each) Stage 4.5
+  result CSVs pulled and committed fresh to `data/results/dispcurve_quality/stage4_5/` (the
+  old-curve run's CSV reconstructed by parsing its own stdout log, since its file output was later
+  overwritten by the new-curve run's write to the same path).
+- **`03_fastmspec_application.ipynb`**: substantially reworked per direct user feedback
+  (2026-09-08), beyond the earlier Section-4 trim --
+  1. Added a new Section 1c, the `r`/`K` mechanism (`FastMultitaper.r` stays bounded 11-20 across
+     `NW`=5-400 while `K` grows linearly -- verified live in the notebook itself via a real
+     `FastMultitaper` sweep, not just cited) explaining *why* Section 1b's empirical finding (K=13
+     fused beats K=21 classical) happens -- this argument previously existed only in this tracker's
+     2026-09-03 log entry, not in any notebook; that gap is now closed. Old Section 1c (SA53/58
+     single-taper-vs-FastMspec, computed identically to Notebook 4 Section 1) trimmed to a short
+     pointer at Notebook 4 instead of a real duplicate computation -- direct user decision, real
+     redundancy found and confirmed, not assumed.
+  2. Removed old Section 1d entirely (the synthetic 10^9-dynamic-range leakage/amplitude-recovery
+     test) -- per direct user request, doesn't serve the real-data noise-correlation argument.
+  3. **A real bug found and fixed**: `nb3_helpers.nlnm_synthetic`'s signal-shaping had a spurious
+     `* m` factor (numpy's `rfft` is unnormalized, so unit-variance white noise already carries
+     variance `m` per bin -- the code double-counted that), inflating the synthetic NLNM signal's
+     power by ~262,000x -- this is what the user's own "the last NLNM plots have an offset" report
+     was catching. Verified numerically before/after (var(x) vs. the target PSD's own integral: off
+     by ~251,000x before the fix, within 4% after). Also fixed a smaller, correct-by-convention
+     factor-of-2 (the demo cell's periodogram/multitaper estimates are two-sided; `target_psd` from
+     `get_nlnm` is one-sided).
+  4. Reworked Section 2 (MTAN/RUNG): led with a new frequency-domain argument (2a) -- a real,
+     per-frequency ADAMA+GDM52 hybrid-curve Bessel prediction (reusing the same
+     `hybrid_reference_curve.py` infrastructure Stage 4.5/Notebook 4 already built, explicitly
+     **not** the independently-measured ADAMA ground truth Notebook 05 will benchmark against --
+     this distinction stated directly in the notebook itself, not just here, to avoid reader
+     confusion), scored by a new, amplitude-normalized correlation metric
+     (`bessel_curve_fit_quality`, `nb3_helpers.py`) that fixes the already-self-flagged weakness of
+     the old unnormalized-RMS `bessel_fit_quality` metric. The report's own SNR metric (now 2b) is
+     kept as an honest secondary finding, demoted from the section's lead argument -- its
+     already-documented anomaly (single-taper "winning" 25.7 vs. 13.8 dB) still stands, still
+     explained by the same `win_min`/`win_max` clamp mechanism already found. Old 2b/envelope
+     renumbered to 2c/2d for consistency; every internal cross-reference checked and fixed, not
+     assumed to still be correct after the renumbering.
+  - Rebuilt from scratch (`python3 _lib/build_nb4.py` then `_lib/build_nb3.py`, run from
+    `notebooks/`) and **executed** via `nbclient` -- **execution launched and confirmed started
+    cleanly (no import/early errors) but full completion was not yet confirmed when this entry was
+    written**, due to an approaching session boundary. **If a fresh session finds
+    `03_fastmspec_application.ipynb` without real cell outputs (check: does cell 0's output exist,
+    or do all code cells show empty `outputs: []`), re-run it**: from `notebooks/`, `python3
+    _lib/build_nb3.py` (regenerates from the already-correct, already-committed script -- takes
+    seconds) then execute via `nbclient` (see the pattern in `04_dispersion_curve_picking.ipynb`'s
+    own build history, or just `jupyter nbconvert --to notebook --execute --inplace
+    03_fastmspec_application.ipynb` after installing `nbclient`/`ipykernel` and registering a
+    `python3` kernel, `python3 -m ipykernel install --user --name python3` if needed) -- expect
+    ~10-15 minutes (SA53/58 + MTAN/RUNG + envelope conditioning + the new hybrid-curve Bessel
+    section + NLNM, all real-data/real-compute cells). Commit the result once it completes cleanly.
+
+**Stage 6** -- packaging + docs cleanup. The original scope item ("swap Notebook 3 Section 4's
+placeholder `ref_curve`") is moot (Section 4 removed, not patched). `notebooks/README.md` already
+updated for the renumbering; a final pass once Notebook 3's execution is confirmed (updating its
+row's "Status" column, timing estimates) is the only real remaining item.
+
+**The new notebook, `05_bandwidth_selection.ipynb`** -- scoped and partially investigated
+(data-location/access-strategy work done, tracker at
+`docs/findLowBand_ADAMAbenchmark_progress.md`), execution not started. **This is where the next
+conversation picks up** -- Stage 5/6 are done (pending only the Notebook 3 execution-completion
+check above), so per the user's own stated plan this conversation retires here. Read
+`docs/findLowBand_ADAMAbenchmark_progress.md`'s "Start here" section next; it's written to stand on
+its own without needing this conversation's history.
 
 **Deferred, recorded so it isn't silently lost (not blocking, not currently scheduled):**
 - M/N (maxima/minima) event quality gate for a 3-way barcode -- v2 deliberately ships Z-events
@@ -2108,3 +2159,76 @@ Q4's own small `NW_high`, a different sweep than this one bandwidth point).
 the corridor-widen strategy -- are combined with the already-present `horizontal_polarization` fix
 in `work_unit.py`'s real production path, validated end-to-end against real data with no wiring
 bugs. Next: Stage 5 (Notebook 5 complete overhaul), per the plan's own sequencing.
+
+### 2026-09-08 -- Stage 5: `04_dispersion_curve_picking.ipynb` built and executed against real data
+
+Notebook renumbering (see the top-of-file "Notebook renumbering" note above the Status summary)
+cleared the way; this entry covers the actual Stage 5 content build.
+
+**Real local data pulled from bluehive for genuine execution** (not simulated/mocked), all
+gitignored (large/binary, matching this project's established practice -- `.gitignore` updated
+with explicit re-exclusion rules for the two new reference-data directories since `data/reference/`
+is otherwise un-ignored):
+- `AFSKRH_XVBAND_win_3_all_matched_data.mat` (267 MB) -- the Stage-3 validation pair's real matched
+  data. Recomputing its FastMspec cross-spectrum locally reproduced the exact already-validated
+  coherence range (-0.1033 to 0.0834) and day count (107) from `gvib_loader.py`'s own docstring --
+  confirms this is the right, already-validated file, not a fresh unverified pull.
+- `adama_maps/` + `gdm52/` (39 MB combined) -- the hybrid reference curve's own source data, needed
+  to build a real per-pair curve live in the notebook.
+- `madagascar_stn_conn_ccflist.csv` -- station coordinates, needed for both the hybrid curve and
+  matching results rows to pairs.
+
+**A real, small instrumentation addition to the vendored picker**, found necessary while designing
+the 2-way quality barcode: `PickDiagnostics` previously exposed only `bad_quality_fraction` (the
+mean), not the per-crossing frequency/bad-quality arrays a barcode plot actually needs. Added
+`candidate_crossing_freqs`/`candidate_crossing_bad_quality` (both default to empty arrays,
+additive-only, populated only inside the existing `if return_diagnostics:` block) --
+`_vendored_seislib_an_processing.py` already computed and held these internally (`w_axis`/
+`bad_quality`), captured at the same point the aggregate fraction already was. Verified via a
+direct synthetic smoke test (not just code review) that `n_candidate_crossings` and
+`bad_quality_fraction` match the new arrays' own length/mean exactly. Doesn't touch
+`return_diagnostics=False`'s behavior or the picking algorithm itself --
+`test_matches_upstream.py`'s own assertions don't inspect `diagnostics.*` fields at all, so this
+is safe by inspection even though the real `seislib` pip package (needed for that specific test's
+upstream comparison) fails to build on this machine's macOS/clang toolchain
+(`-march=native`/`-fopenmp` unsupported) and the test couldn't be run directly here.
+
+**Timing, measured directly, not assumed** (relevant since one earlier bluehive job in this same
+project hung 7 hours before a per-call timeout was added -- same defense-in-depth timeout pattern
+ported into `notebooks/_lib/nb4_helpers.py`'s own `scan_templates_with_picker`, `PER_CALL_TIMEOUT_S
+= 90` here): SKRH-BAND's FastMspec cross-spectrum takes ~130s locally; one picker call against a
+real (non-synthetic) coherence spectrum averages ~27-40s. A full production-resolution corridor
+scan (33 templates, 0.05 km/s step) would take 15-30 minutes per curve -- reasonable for a
+one-time bluehive batch job, not for a notebook meant to execute in a bounded, human-scale time
+budget, so the notebook's own live worked-example scan uses a deliberately coarser 9-template grid
+(0.2 km/s step), explicitly captioned as such, distinct from the full-resolution scan that
+produced the committed Round 1/2/Stage 4.5 result files the "at scale" sections load instead of
+recomputing.
+
+**Content**: 8 sections + Summary, 52 cells. Sections 1-3 carry over old Notebook 5's real content
+(SA53/58 motivation, zero-crossing stability, the resolution-bandwidth principle) with light
+retitling, verified to still execute cleanly against real data unchanged. Sections 4-8 are new:
+the vendored/instrumented picker (with a synthetic demonstration of the new 2-way barcode),
+SKRH-BAND as a real worked example (including a live, single-pair old-curve-vs-hybrid-curve
+comparison), the full 380-pair Round 1/Round 2 results loaded and recomputed live from committed
+result files (reproduced the round2_hypothesis_evaluation.tex H1-H4 numbers exactly, live, not
+copied), Stage 4.5's corridor-strategy and isolated-hybrid-curve-effect results (loaded from three
+small CSVs pulled from bluehive and committed fresh --
+`data/results/dispcurve_quality/stage4_5/`, including reconstructing the old-curve run's CSV by
+parsing its own stdout log, since its file output path was later overwritten by the new-curve
+run), and an honest discussion section naming what's still open (Q4's existence threshold, the
+bandwidth lower bound, deferred M/N gate, the Rayleigh-validation gap) with an explicit bridge to
+Notebook 5.
+
+**Two content directives held throughout, per direct user feedback** (see the Status summary's
+Stage 5 entry for the verbatim commitment): Section 1's framing explicitly foreshadows Section 6's
+headline single-taper-vs-multitaper convergence gap rather than treating FastMspec's advantage as
+established-and-moved-past; every technique/curve comparison figure (Section 6's Round 1 panel,
+Section 7's isolated-effect panels) reports quality metrics (`bad_quality_fraction`,
+`freq_coverage_fraction`, templates-converged count) alongside convergence, and Section 6
+explicitly surfaces the one place this matters (`Mspec` converges less often but its survivors are
+higher quality) rather than only reporting the convergence headline.
+
+Execution status: Sections 1-3 executed successfully standalone first (a real checkpoint, not
+assumed); full 8-section notebook execution against real data in progress/completing this session
+-- see the next log entry for the result.

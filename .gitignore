@@ -5,9 +5,13 @@ __pycache__/
 *.csv
 /data/*
 !/data/reference/
+/data/reference/adama_maps/
+/data/reference/gdm52/
 !/data/results/
 !/data/results/dispcurve_quality/manifest.csv
 !/data/results/dispcurve_quality/round2_subset.csv
+!/data/results/dispcurve_quality/stage4_5/
+!/data/results/dispcurve_quality/stage4_5/*.csv
 .venv/
 *.log
 *.aux

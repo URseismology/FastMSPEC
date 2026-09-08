@@ -163,6 +163,37 @@ def prepare_transverse_pair(datadir: Path, metadata_dir: Path, sta1: str, sta2: 
     return np.stack(t1_days, axis=0), np.stack(t2_days, axis=0), dist_km
 
 
+def bessel_curve_fit_quality(freqs: np.ndarray, coh: np.ndarray, dist_km: float,
+                               c_of_f, freqmin: float = 0.0, freqmax: float = 1.0):
+    """A real-dispersion-curve, amplitude-normalized alternative to bessel_fit_quality (see that
+    function's own docstring for why an amplitude-normalized version was flagged as the concrete
+    next step, not yet built, in Notebook 3 Section 2b/envelope-conditioning). Two changes:
+
+    1. **A real per-frequency phase velocity `c(f)`, not one grid-searched constant.** Predicts
+       `Re{coherence(f)} ~ J0(2*pi*f*r/c(f))` using an actual dispersion curve (e.g. from
+       `hybrid_reference_curve.build_reference_curve` -- the same per-pair ADAMA+GDM52 map lookup
+       Stage 4.5/Notebook 4 use, reused here as a visual/qualitative reference prior, NOT the
+       independently-measured ADAMA ground truth Notebook 5 benchmarks against -- see that
+       notebook's own scope note). A single constant c can never be more than a rough local
+       approximation to a real dispersion curve; this removes that approximation.
+    2. **Correlation, not raw RMS, as the fit metric.** Pearson correlation between observed and
+       predicted Re{coherence} over the band is scale-invariant by construction -- a strong but
+       overall-weak coherence spectrum that still *shapes* like the Bessel prediction scores well,
+       fixing bessel_fit_quality's own named weakness (unnormalized RMS dominated by overall
+       coherence strength, not Bessel-shape quality). Bounded in [-1, 1]; near 1 means the
+       candidate's zero-crossings/oscillation pattern tracks the physically-expected curve closely.
+
+    Returns (correlation, predicted_curve) -- predicted_curve is Re{J0(...)} over `freqs[band]`,
+    for plotting directly alongside the observed coherence.
+    """
+    band = (freqs >= freqmin) & (freqs <= freqmax) & (freqs > 0)
+    f_band = freqs[band]
+    obs = np.real(coh[band])
+    pred = j0(2 * np.pi * f_band * dist_km / c_of_f(f_band))
+    correlation = float(np.corrcoef(obs, pred)[0, 1])
+    return correlation, pred
+
+
 def bessel_fit_quality(freqs: np.ndarray, coh: np.ndarray, dist_km: float,
                         c_grid: np.ndarray, freqmin: float = 0.0, freqmax: float = 1.0):
     """A frequency-domain, model-based alternative to calc_snr_onesided (see
@@ -266,7 +297,15 @@ def nlnm_synthetic(n: int, dt: float, seed: int = 0, oversample: int = 16):
     rng = np.random.default_rng(seed)
     white = rng.standard_normal(m)
     fwhite = np.fft.rfft(white)
-    shaped = fwhite * np.sqrt(target_psd_m * m / (2 * dt))
+    # Real bug, found and fixed 2026-09-08 (verified numerically, not just by inspection --
+    # var(x) matched the target one-sided PSD's own integral to within ~4% after this fix,
+    # vs. off by a factor of ~m=262144 before it): numpy's rfft is UNNORMALIZED, so
+    # np.fft.rfft(white) of unit-variance white noise already has per-bin variance ~m, not 1.
+    # The old `* m` factor here double-counted that scaling on top of it, inflating x's PSD by
+    # ~m -- this is exactly why the NLNM comparison plot (both periodogram and multitaper panels,
+    # equally, since both inherit the same too-loud x) showed a large, roughly constant vertical
+    # offset from the target NLNM curve rather than tracking it.
+    shaped = fwhite * np.sqrt(target_psd_m / (2 * dt))
     x_long = np.fft.irfft(shaped, n=m)
     x = x_long[:n]
 

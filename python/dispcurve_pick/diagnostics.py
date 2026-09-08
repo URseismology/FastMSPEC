@@ -10,7 +10,9 @@ called with `return_diagnostics=True`.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+import numpy as np
 
 from ._vendored_seislib_exceptions import DispersionCurveException
 
@@ -33,6 +35,12 @@ class PickDiagnostics:
         maximum-to-flanking-minimum amplitude ratio (`maxamp/minamp`) that gated each pick's
         acceptance (`pick_threshold` in the original function). Higher means each pick sat on a
         more sharply-defined, less ambiguous kernel-density peak. NaN if no picks were accepted.
+    candidate_crossing_freqs / candidate_crossing_bad_quality: the full per-crossing arrays
+        `bad_quality_fraction` is the mean of -- every candidate zero-crossing frequency
+        (`w_axis` internally) and its own boolean bad-quality flag, same length and order. Added
+        (2026-09-08, Notebook 4's own build) specifically to make a 2-way good/bad-quality-
+        crossing barcode plottable directly, without recomputing anything the picker already
+        computed internally. Empty arrays if `n_candidate_crossings == 0`.
     """
 
     converged: bool
@@ -41,6 +49,8 @@ class PickDiagnostics:
     n_accepted_picks: int
     freq_coverage_fraction: float
     mean_amp_ratio: float
+    candidate_crossing_freqs: np.ndarray = field(default_factory=lambda: np.array([]))
+    candidate_crossing_bad_quality: np.ndarray = field(default_factory=lambda: np.array([], dtype=bool))
 
 
 class DispersionCurveExceptionWithDiagnostics(DispersionCurveException):

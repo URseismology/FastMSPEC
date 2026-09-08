@@ -1122,11 +1122,15 @@ def extract_dispcurve(frequencies,
 
     # --- FastMSPEC instrumentation: begin ---
     # bad_quality is fully finalized above (all 3 criteria + propagation smoothing applied);
-    # capture it now, before it's consulted throughout the rest of picking below.
+    # capture it now, before it's consulted throughout the rest of picking below. Copied (not
+    # aliased) since bad_quality is a local ndarray that isn't mutated again after this point in
+    # the unmodified code, but copying keeps this instrumentation robust to that changing.
     _diag_n_candidate_crossings = len(w_axis)
     _diag_bad_quality_fraction = (
         float(np.mean(bad_quality)) if _diag_n_candidate_crossings > 0 else float('nan')
     )
+    _diag_candidate_crossing_freqs = w_axis.copy()
+    _diag_candidate_crossing_bad_quality = bad_quality.copy()
     _diag_amp_ratios = []  # appended to inside pick_velocity(), below, via closure
     # --- FastMSPEC instrumentation: end ---
 
@@ -1585,6 +1589,8 @@ def extract_dispcurve(frequencies,
             n_accepted_picks=_diag_n_accepted_picks,
             freq_coverage_fraction=_diag_freq_coverage_fraction,
             mean_amp_ratio=_diag_mean_amp_ratio,
+            candidate_crossing_freqs=_diag_candidate_crossing_freqs,
+            candidate_crossing_bad_quality=_diag_candidate_crossing_bad_quality,
         )
     # --- FastMSPEC instrumentation: end ---
 
