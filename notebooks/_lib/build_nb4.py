@@ -707,6 +707,7 @@ code("""if diag_h is not None:
     _ = extract_dispcurve(
         faxis_pos_skrh, coh_pos_skrh, dist_km_skrh, ref_curve_h,
         freqmin=hybrid_skrh.f_lo, freqmax=hybrid_skrh.f_hi, cmin=PICK_CMIN, cmax=PICK_CMAX,
+        filt_width=10, filt_height=1.0, x_step=0.05, pick_threshold=0,
         horizontal_polarization=True, plotting=True,
     )
 else:
@@ -720,6 +721,7 @@ code("""if diag_o is not None:
     _ = extract_dispcurve(
         faxis_pos_skrh, coh_pos_skrh, dist_km_skrh, ref_curve_o,
         freqmin=f_lo_old, freqmax=f_hi_old, cmin=PICK_CMIN, cmax=PICK_CMAX,
+        filt_width=10, filt_height=1.0, x_step=0.05, pick_threshold=0,
         horizontal_polarization=True, plotting=True,
     )
 else:
