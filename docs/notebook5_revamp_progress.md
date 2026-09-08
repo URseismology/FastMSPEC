@@ -66,6 +66,44 @@ confuse a fresh session): the pre-renumbering state of every notebook is preserv
   concise, matches the `NN_topic_words.ipynb` convention of 01/02, names the question being tested
   (bandwidth selection) rather than the data source.
 
+**UPDATE 2026-09-08 (later same day), URGENT -- read this before anything below in this block.**
+Session limit hit mid-work. Exact state, precisely:
+- `03_fastmspec_application.ipynb` -- **committed, executed, real outputs, current.** Reflects
+  everything in the block below.
+- `04_dispersion_curve_picking.ipynb` (the committed `.ipynb`) -- **reflects the ORIGINAL Stage 5
+  build described below (custom plots), NOT the user-feedback revision.** After first review, the
+  user gave figure-by-figure feedback (8 points) and approved a revision:
+  1. Figure 3 (reliable-vs-unreliable crossings, SA53/58): added a third panel showing
+     true/expected zero-crossings from a real hybrid reference curve for SA53/58's own path, so
+     true/false positives are visible, not just relative density.
+  2. Figures 6/8/9 (the synthetic demo and SKRH-BAND worked-example plots): **replaced the custom
+     twin-axis+barcode plots with `extract_dispcurve(..., plotting=True)`'s own native
+     visualization** (density-field heatmap, tracked branch, reference curve, low-quality
+     crossings) -- confirmed by reading the vendored picker's own plotting code before switching,
+     genuinely better, not a style call. `plot_quality_barcode` removed from `nb4_helpers.py`
+     (dead code, recoverable via git history).
+  3. Section 6 gained a one-paragraph metrics recap (`converged`/`freq_coverage_fraction`/
+     `bad_quality_fraction` in plain language) right before its own figures, since Section 4
+     introduces them several sections earlier.
+  4. All 13 figures in the notebook numbered sequentially ("Figure N -- ...") in true reading
+     order, per the user's own request to make figures individually referenceable.
+  - **`_lib/build_nb4.py` and `_lib/nb4_helpers.py` already have all of this -- committed, source
+    is correct and complete.** The committed `.ipynb` does **not** yet reflect it -- regenerating
+    (`python3 _lib/build_nb4.py` from `notebooks/`) was done, but re-executing via `nbclient`
+    (~10-20 min expected, real data) was not completed before the session ended, so the
+    **half-executed (zero-output) version was deliberately reverted** (`git checkout --`) rather
+    than committed, to avoid leaving a broken notebook as the "current" one.
+  - **Concrete next step for a fresh session**: from `notebooks/`, run `python3
+    _lib/build_nb4.py`, then execute via `nbclient` (pattern: `NotebookClient(nb, timeout=1800,
+    kernel_name='python3').execute()` -- needs `nbformat`/`nbclient`/`ipykernel` installed and a
+    `python3` kernel registered, `python3 -m ipykernel install --user --name python3`; needs the
+    real local data already pulled once this session -- SKRH-BAND's matched-data `.mat`, the
+    ADAMA_Maps+GDM52 hybrid-curve source, both gitignored/not committed, re-pull from bluehive
+    per `data/reference/hybrid_curve_README.md`'s fetch commands and
+    `docs/notebook5_revamp_progress.md`'s own earlier 2026-09-08 log entry for exact bluehive
+    paths if they're not already present locally). Spot-check outputs against the numbers already
+    recorded below (this block) before committing, then commit+push.
+
 **Stage 5 -- DONE, both notebooks rebuilt and executed against real data, 2026-09-08:**
 - **`04_dispersion_curve_picking.ipynb`**: fully rebuilt (`_lib/build_nb4.py`, `_lib/nb4_helpers.py`
   written fresh), **executed end-to-end successfully, real data, zero errors** -- confirmed via

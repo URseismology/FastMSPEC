@@ -74,7 +74,7 @@ from ccf_pipeline import preprocessing as pp
 from ccf_pipeline.crosscorr_mtc import compute_crosscorr_mtc_fastmspec
 from ccf_pipeline.dispatch import compute_crosscorr, FilterConfig
 from _lib.nb3_helpers import prepare_transverse_pair
-from _lib.nb4_helpers import scan_templates_with_picker, best_of, score, plot_quality_barcode
+from _lib.nb4_helpers import scan_templates_with_picker, best_of, score
 from dispcurve_pick import extract_dispcurve, load_reference_curve, build_template_family, build_template_family_widened
 from dispcurve_pick.hybrid_reference_curve import AdamaMap, Gdm52Map, build_reference_curve
 
@@ -211,7 +211,7 @@ ax3 = ax2.twinx()
 ax3.plot(windows, counts, 's--', color='C0', alpha=0.6)
 ax3.set_ylabel('Number of zero crossings', color='C0')
 ax2.set_title('Drift grows with smoothing window')
-plt.suptitle(f'SA58-SA53 transverse (Love), real data -- zero-crossing stability, 0.02-0.3 Hz')
+plt.suptitle(f'Figure 1 -- SA58-SA53 transverse (Love), real data -- zero-crossing stability, 0.02-0.3 Hz')
 plt.tight_layout()
 plt.show()
 """)
@@ -291,7 +291,7 @@ ax.plot(f_love[zoom], cs_w5[zoom], color='C0', linewidth=1, alpha=0.8, label='Si
 ax.plot(f_love[zoom], cs_w100[zoom], color='C3', linewidth=1.5, label='Single-taper, window=100')
 ax.axhline(0, color='gray', linewidth=0.5)
 ax.set_xlabel('Frequency (Hz)'); ax.set_ylabel('Re[coherency]')
-ax.set_title('Zoomed: 0.05-0.15 Hz')
+ax.set_title('Figure 2 -- Zoomed: 0.05-0.15 Hz')
 ax.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
@@ -346,20 +346,52 @@ print(f"\\nUsing each method's own median instead: FastMspec {reliable_f.sum()}/
       f"single-taper {reliable_s.sum()}/{len(zc_s)} reliable (by construction, ~50% each).")
 """)
 
-code("""fig, axes = plt.subplots(2, 1, figsize=(12, 4), sharex=True)
+md(r""""Reliable" above is entirely self-referential -- each method's own top-50%-by-swing, not
+checked against anything physical. Adding that check directly: SA53/SA58's own real per-frequency
+hybrid ADAMA+GDM52 curve (same construction as Section 5 uses for SKRH-BAND -- SA53/58 sit inside
+ADAMA's Africa coverage even though they're not part of the `XV` Madagascar dataset) predicts
+where the *true* Bessel zero-crossings should fall, independent of either method's own noise.""")
+
+code("""from dispcurve_pick.hybrid_reference_curve import AdamaMap, Gdm52Map, build_reference_curve
+
+africa_stalist = pd.read_csv('../data/metadata/africa_adama_stalist.csv')
+lat1_p2, lon1_p2 = africa_stalist.loc[africa_stalist.Station == 'SA58', ['Latitude', 'Longitude']].iloc[0]
+lat2_p2, lon2_p2 = africa_stalist.loc[africa_stalist.Station == 'SA53', ['Latitude', 'Longitude']].iloc[0]
+adama_p2 = AdamaMap('../data/reference/adama_maps')
+gdm52_p2 = Gdm52Map('../data/reference/gdm52')
+hybrid_p2 = build_reference_curve(lat1_p2, lon1_p2, lat2_p2, lon2_p2, sources=[adama_p2, gdm52_p2], wave='love')
+
+from scipy.special import j0 as _j0
+
+f_true_lo, f_true_hi = max(hybrid_p2.f_lo, fb_love.min()), min(hybrid_p2.f_hi, fb_love.max())
+f_true_grid = np.linspace(f_true_lo, f_true_hi, 5000)
+pred_true = _j0(2 * np.pi * f_true_grid * dist_km_t / hybrid_p2.func(f_true_grid))  # exact J0, Aki 1957
+zc_true, _ = zero_crossings_idx(pred_true, f_true_grid)
+print(f"{len(zc_true)} true/expected zero-crossings in [{f_true_lo:.3f}, {f_true_hi:.3f}] Hz, "
+      f"from SA53/58's own real hybrid curve")
+""")
+
+code("""fig, axes = plt.subplots(3, 1, figsize=(12, 5), sharex=True, gridspec_kw={'height_ratios': [1, 1, 0.6]})
 axes[0].vlines(zc_f[reliable_f], 0, 1, color='C1', linewidth=1.2)
 axes[0].vlines(zc_f[~reliable_f], 0, 1, color='lightgray', linewidth=0.6)
 axes[0].set_yticks([]); axes[0].set_ylabel('FastMspec', rotation=0, ha='right', va='center')
 axes[1].vlines(zc_s[reliable_s], 0, 1, color='C0', linewidth=1.2)
 axes[1].vlines(zc_s[~reliable_s], 0, 1, color='lightgray', linewidth=0.6)
 axes[1].set_yticks([]); axes[1].set_ylabel('Single-taper\\n(raw)', rotation=0, ha='right', va='center')
-axes[1].set_xlabel('Frequency (Hz)')
-plt.suptitle('Reliable crossings (colored, top 50% by own swing) vs. unreliable (gray)')
+axes[2].vlines(zc_true, 0, 1, color='black', linewidth=1.2)
+axes[2].set_yticks([]); axes[2].set_ylabel('True/expected\\n(hybrid curve)', rotation=0, ha='right', va='center')
+axes[2].set_xlabel('Frequency (Hz)')
+axes[2].set_xlim(f_true_lo, f_true_hi)
+fig.suptitle('Figure 3 -- Reliable crossings vs. true/expected crossings (from a real reference curve)')
 plt.tight_layout()
 plt.show()
 """)
 
-md(r"""Visually the difference is stark: `FastMspec`'s reliable crossings are spread fairly evenly
+md(r"""Now a true-positive/false-positive read is possible, not just relative density: `FastMspec`'s
+reliable (orange) crossings land close to the true/expected ticks (bottom row) far more often than
+single-taper's reliable (blue) crossings do -- the true positives, not just "fewer events."
+
+Visually the difference is stark even without the overlay: `FastMspec`'s reliable crossings are spread fairly evenly
 across the band; single-taper's are packed into dense clusters -- a signature of noise-driven
 zero-crossings clustering tightly around wherever the (unaveraged) curve happens to wander near
 zero, not of genuine, evenly-spaced dispersion structure.""")
@@ -391,7 +423,7 @@ ax.hist(spacing_s_reliable, bins=bins, color='C0', alpha=0.6, label='Single-tape
 ax.set_xscale('log')
 ax.set_xlabel(r'Local zero-crossing spacing (Hz, log scale)')
 ax.set_ylabel('Fraction of that method\\'s own crossings')
-ax.set_title(r'$\\Delta f_{zero}$ distribution: stable for FastMspec, not for single-taper')
+ax.set_title(r'Figure 4 -- $\\Delta f_{zero}$ distribution: stable for FastMspec, not for single-taper')
 ax.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
@@ -443,7 +475,7 @@ ax.boxplot([np.clip(drift_stats[w], 0, 200) for w in [5, 50, 100]], tick_labels=
            showfliers=False)
 ax.axhline(50, color='r', linestyle='--', linewidth=1, label='50% of local spacing')
 ax.set_ylabel('Drift as % of local $\\\\Delta f_{zero}$ (clipped at 200% for display)')
-ax.set_title('Drift distribution grows with smoothing window')
+ax.set_title('Figure 5 -- Drift distribution grows with smoothing window')
 ax.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
@@ -533,28 +565,26 @@ print(f"converged={diag_demo.converged}, bad_quality_fraction={diag_demo.bad_qua
       f"n_candidate_crossings={diag_demo.n_candidate_crossings}, "
       f"freq_coverage_fraction={diag_demo.freq_coverage_fraction:.3f}, "
       f"mean_amp_ratio={diag_demo.mean_amp_ratio:.2f}")
-
-fig, axes = plt.subplots(2, 1, figsize=(10, 4.5), gridspec_kw={'height_ratios': [3, 1]})
-axes[0].plot(freqs_demo, coherence_demo, color='gray', linewidth=0.7, label='Synthetic coherence')
-axes[0].set_ylabel('Re[coherence]')
-ax0b_demo = axes[0].twinx()
-ax0b_demo.plot(curve_demo[:, 0], curve_demo[:, 1], color='C1', label='Picked curve')
-ax0b_demo.plot(ref_curve_demo[:, 0], ref_curve_demo[:, 1], 'k--', linewidth=1, alpha=0.5, label='Reference curve')
-ax0b_demo.set_ylabel('Phase velocity (km/s)', color='C1')
-axes[0].set_title('Clean synthetic Bessel coherence + picked curve')
-h1, l1 = axes[0].get_legend_handles_labels()
-h2, l2 = ax0b_demo.get_legend_handles_labels()
-axes[0].legend(h1 + h2, l1 + l2, fontsize=8, loc='upper right')
-plot_quality_barcode(axes[1], diag_demo, 0.02, 0.35, label='candidate\\ncrossings')
-axes[1].legend(fontsize=7, loc='upper right')
-axes[1].set_xlabel('Frequency (Hz)')
-plt.tight_layout()
-plt.show()
 """)
 
-md(r"""Clean data, clean result: essentially every candidate crossing passes quality (the barcode
-below is almost entirely black), the picker converges, and full-band coverage is achieved. This is
-the ceiling case -- Section 5 immediately below shows what real, noisy data looks like by
+md(r"""**Figure 6 -- the picker's own native diagnostic plot** (`plotting=True`, re-run once on the
+same input purely to render it -- the call above already has the data/diagnostics). Top: the raw
+coherence with low-quality crossings marked in red. Bottom: the actual kernel-density field the
+picker searches (not an invented barcode) -- reference curve as the light-blue line, the tracked
+zero-crossing branch in blue, accepted picks in red, the final smoothed curve dashed red. This is
+the picker authors' own purpose-built visualization, used throughout the rest of this notebook
+instead of a custom-built alternative.""")
+
+code("""_ = extract_dispcurve(
+    freqs_demo, coherence_demo, dist_km_demo, ref_curve_demo,
+    freqmin=0.02, freqmax=0.35, cmin=1.0, cmax=5.0, pick_threshold=0,
+    plotting=True,
+)
+""")
+
+md(r"""Clean data, clean result: essentially every candidate crossing is good quality, the branch
+tracks the reference curve tightly, the picker converges, and full-band coverage is achieved. This
+is the ceiling case -- Section 5 immediately below shows what real, noisy data looks like by
 comparison.""")
 
 # ============================================================================
@@ -614,7 +644,7 @@ ax.plot(1/freqs_plot, hybrid_skrh.func(freqs_plot), color='C1', linewidth=1.5, l
 colors = ['C3' if lc else 'C0' for lc in [s.low_confidence for s in hybrid_skrh.samples]]
 ax.scatter(hybrid_skrh.periods, hybrid_skrh.velocities, c=colors, zorder=5, label='Raw path-averaged samples')
 ax.set_xlabel('Period (s)'); ax.set_ylabel('Phase velocity (km/s)')
-ax.set_title('SKRH-BAND hybrid reference curve (red=low-confidence, T<12s)')
+ax.set_title('Figure 7 -- SKRH-BAND hybrid reference curve (red=low-confidence, T<12s)')
 ax.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
@@ -664,31 +694,44 @@ for label, delta, diag in [('Hybrid curve', delta_h, diag_h), ('Old SDISPL.ASC c
               f"n_picks={diag.n_accepted_picks}")
 """)
 
-code("""fig, axes = plt.subplots(3, 1, figsize=(11, 6), sharex=False, gridspec_kw={'height_ratios': [3, 1, 1]})
+md(r"""**Figures 8 (hybrid curve) and 9 (old curve) -- the picker's own native diagnostic plot, for
+the winning template from each curve** (re-run once each with `plotting=True`, purely to render --
+the scan above already has the data). Same reading as Figure 6: reference curve as the light-blue
+line, tracked branch in blue, accepted picks in red, low-quality candidates marked red on the
+coherence panel above. Hybrid curve first, old curve second -- compare the two directly.""")
 
-axes[0].plot(faxis_pos_skrh, coh_pos_skrh, color='gray', linewidth=0.5, label='Coherence (real part)')
-if curve_h is not None:
-    ax0b = axes[0].twinx()
-    ax0b.plot(curve_h[:, 0], curve_h[:, 1], 'C1.-', markersize=3, label='Picked curve (hybrid)')
-    ax0b.set_ylabel('Phase velocity (km/s)', color='C1')
-axes[0].set_ylabel('Re[coherence]')
-axes[0].set_title(f'SKRH-BAND: coherence + best picked curve (hybrid curve, delta={delta_h:+.2f} km/s)'
-                   if diag_h is not None else 'SKRH-BAND: coherence (hybrid curve did not converge)')
-axes[0].set_xlim(hybrid_skrh.f_lo, hybrid_skrh.f_hi)
+code("""if diag_h is not None:
+    freqs200_h = np.linspace(hybrid_skrh.f_lo, hybrid_skrh.f_hi, 200)
+    ref_curve_h = np.column_stack([freqs200_h, templates_hybrid[delta_h](freqs200_h)])
+    print(f"Hybrid curve, delta={delta_h:+.2f} km/s:")
+    _ = extract_dispcurve(
+        faxis_pos_skrh, coh_pos_skrh, dist_km_skrh, ref_curve_h,
+        freqmin=hybrid_skrh.f_lo, freqmax=hybrid_skrh.f_hi, cmin=PICK_CMIN, cmax=PICK_CMAX,
+        horizontal_polarization=True, plotting=True,
+    )
+else:
+    print('Hybrid curve: no template converged, nothing to plot')
+""")
 
-plot_quality_barcode(axes[1], diag_h, hybrid_skrh.f_lo, hybrid_skrh.f_hi, label='Hybrid\\ncurve')
-plot_quality_barcode(axes[2], diag_o, f_lo_old, f_hi_old, label='Old\\ncurve')
-axes[2].set_xlabel('Frequency (Hz)')
-axes[1].legend(fontsize=7, loc='upper right')
-plt.tight_layout()
-plt.show()
+code("""if diag_o is not None:
+    freqs200_o = np.linspace(f_lo_old, f_hi_old, 200)
+    ref_curve_o = np.column_stack([freqs200_o, templates_old[delta_o](freqs200_o)])
+    print(f"Old SDISPL.ASC curve, delta={delta_o:+.2f} km/s:")
+    _ = extract_dispcurve(
+        faxis_pos_skrh, coh_pos_skrh, dist_km_skrh, ref_curve_o,
+        freqmin=f_lo_old, freqmax=f_hi_old, cmin=PICK_CMIN, cmax=PICK_CMAX,
+        horizontal_polarization=True, plotting=True,
+    )
+else:
+    print('Old curve: no template converged, nothing to plot')
 """)
 
 md(r"""This single-pair result previews Section 7's full 4-pair Stage 4.5 finding: more templates
-converge with the hybrid curve than the old shared curve, and the barcode makes the *mechanism*
-visible directly, not just the summary statistic -- more black (good-quality), less light-gray
-(bad-quality) along the frequency axis when the reference curve the picker is anchored to is a
-better physical match for this specific path.""")
+converge with the hybrid curve than the old shared curve. Comparing the two figures above directly:
+more of the hybrid curve's candidate crossings are good-quality (fewer red dots on the top panel of
+its own figure), and the tracked branch follows the reference curve more tightly -- the *mechanism*
+behind the summary statistic is visible directly, not just the number, when the reference curve the
+picker is anchored to is a better physical match for this specific path.""")
 
 # ============================================================================
 # Section 6 -- At scale: Round 1 + Round 2
@@ -702,6 +745,14 @@ of running it -- via `python/dispcurve_pick_batch/work_unit.py`, on bluehive -- 
 Both predate Stage 4.5's fixes (Section 7): single generic `SDISPL.ASC` curve, uniform corridor,
 the un-fixed `horizontal_polarization` default -- the picker configuration Section 5's "old curve"
 column used, not the "hybrid curve" one. Full provenance: `data/results/dispcurve_quality/README.md`.
+
+**A quick recap of the metrics the figures below use** (all from `PickDiagnostics`, Section 4):
+`converged` -- did picking succeed at all (a yes/no gate). `freq_coverage_fraction` -- of the
+requested frequency band, what fraction does the final picked curve actually span (higher is
+better, 1.0 = full coverage). `bad_quality_fraction` -- of all candidate zero-crossings the picker
+considered, what fraction failed its own quality gate before picking even started (lower is
+better). These three numbers are what every bar/line below actually plots -- worth having them
+in view rather than relying on Section 4's own introduction from several sections back.
 
 ### Round 1: single-taper vs. three multitaper techniques, all 380 pairs
 
@@ -751,6 +802,7 @@ axes[2].set_title('Quality among CONVERGED pairs only')
 axes[2].legend(fontsize=8)
 axes[2].set_ylim(0, 1)
 
+plt.suptitle('Figure 10 -- Round 1: convergence and quality by technique, all 380 pairs')
 plt.tight_layout()
 plt.show()
 """)
@@ -821,6 +873,7 @@ k0_by_q = sweep_r2.groupby('quartile').k0_floor.mean()
 axes[1].bar(k0_by_q.index.astype(str), k0_by_q.values, color='C3')
 axes[1].set_xlabel('Distance quartile'); axes[1].set_ylabel('K=0 floor rate (of 75 sweep points)')
 axes[1].set_title('H4: numerical floor rate rises with distance')
+plt.suptitle('Figure 11 -- Round 2: bandwidth-sweep convergence (H1-H3) and the K=0 numerical floor (H4)')
 plt.tight_layout()
 plt.show()
 """)
@@ -888,6 +941,7 @@ axes[0].set_title('Coverage by corridor strategy')
 axes[1].set_xticks(x); axes[1].set_xlabel('Quartile'); axes[1].set_ylabel('bad_quality_fraction (lower better)')
 axes[1].set_title('Bad-quality fraction by corridor strategy')
 axes[0].legend(fontsize=7)
+plt.suptitle('Figure 12 -- Stage 4.5: corridor-strategy comparison, 4 report pairs')
 plt.tight_layout()
 plt.show()
 """)
@@ -945,7 +999,7 @@ axes[2].set_xticks(x); axes[2].set_xticklabels([f'Q{i}' for i in q])
 axes[2].set_ylabel('bad_quality_fraction (lower better)')
 axes[2].set_title('Quality of the best-scoring template')
 
-plt.suptitle('Isolated effect of the hybrid reference curve alone (same bandwidth, corridor, polarization fix)')
+plt.suptitle('Figure 13 -- Isolated effect of the hybrid reference curve alone (same bandwidth, corridor, polarization fix)')
 plt.tight_layout()
 plt.show()
 """)

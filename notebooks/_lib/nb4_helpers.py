@@ -9,13 +9,19 @@ own documented insufficiency, docs/coherence_barcode_design.tex Section 8).
 `load_reference_curve`/`build_template_family` also moved out of this file during Stage 4 --
 they're canonical now in `python/dispcurve_pick/template_family.py`, imported from there directly
 by anything that needs them (this notebook included), not duplicated here.
+
+A custom 2-way good/bad-quality-crossing barcode (`plot_quality_barcode`) was built, used, then
+removed the same day (2026-09-08), per direct user feedback on the built notebook: `extract_dispcurve`'s
+own `plotting=True` native visualization (reference curve, tracked branch, kernel-density field,
+low-quality crossings all in one purpose-built figure) is a real improvement over that invention,
+not a style preference -- see the notebook's own Figures 4/5 for the replacement. Recoverable via
+git history if ever needed again, not worth keeping dead alongside its own superseded rationale.
 """
 from __future__ import annotations
 
 import signal
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from dispcurve_pick import extract_dispcurve, DispersionCurveExceptionWithDiagnostics
 
@@ -97,27 +103,3 @@ def best_of(scanned):
     output; returns (None, None, None, None) if nothing converged."""
     best = max(scanned, key=lambda t: score(t[3]))
     return best if score(best[3]) > 0 else (None, None, None, None)
-
-
-def plot_quality_barcode(ax, diag, f_lo, f_hi, label=''):
-    """The 2-way good/bad-quality-crossing barcode: every candidate zero-crossing the picker's
-    own 3-criterion gate considered, colored by whether it passed (black) or was flagged
-    bad_quality (light gray) -- straight from PickDiagnostics.candidate_crossing_freqs/
-    candidate_crossing_bad_quality (added 2026-09-08 specifically to make this plottable; see
-    diagnostics.py's own docstring). Replaces the old design's 3-way Z/M/N barcode -- this
-    project's own M/N (maxima/minima) detection was found to be far noisier than zero-crossing
-    detection (docs/coherence_barcode_design.tex Section 8), so v2 drops M/N rather than keep
-    displaying a signal already flagged as unreliable; see that section's own deferred-item note
-    on a possible future M/N quality gate.
-    """
-    freqs = diag.candidate_crossing_freqs
-    bad = diag.candidate_crossing_bad_quality
-    if len(freqs) == 0:
-        ax.text(0.5, 0.5, 'No candidate crossings', ha='center', va='center', transform=ax.transAxes)
-    else:
-        ax.vlines(freqs[~bad], 0, 1, color='black', linewidth=1.2, label='good quality')
-        ax.vlines(freqs[bad], 0, 1, color='lightgray', linewidth=1.2, label='bad quality')
-    ax.set_yticks([])
-    ax.set_xlim(f_lo, f_hi)
-    ax.set_ylabel(label, rotation=0, ha='right', va='center', fontsize=9)
-    return ax
