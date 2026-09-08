@@ -2,18 +2,22 @@
 
 [← Back to repo README](../README.md)
 
-Five pre-run Jupyter notebooks connecting the theory behind this repo's `thomson_multitaper` and
+Six planned Jupyter notebooks connecting the theory behind this repo's `thomson_multitaper` and
 `ccf_pipeline` packages to why they matter for Sayan's ambient-noise cross-correlation problem, and
 to real data. Each is committed with its outputs already saved, so it renders fully on GitHub
-without needing to be re-executed.
+without needing to be re-executed. **Renumbered 2026-09-08** — see
+[`../docs/notebook5_revamp_progress.md`](../docs/notebook5_revamp_progress.md)'s "Status summary"
+for the full rationale; the pre-renumbering state is preserved at the `notebook5-v1-event-scanning`
+git tag for anyone who wants the exact original files.
 
 | Notebook | What it covers | Status |
 |---|---|---|
 | [`01_multitaper_theory.ipynb`](01_multitaper_theory.ipynb) | Why multitaper spectral estimation, why "Fast" — reproduces Figs 1-8 and Tables I-II of Karnik, Romberg & Davenport (2022) | Figs 1-3/Table I are fresh implementations (no MATLAB driver exists for them anywhere in this codebase); Figs 4-8/rest of Table II are ported from `Comparison_ARMA_largescale_*.m`/`FastMultitaper_SpeedTest.m`, **at reduced scale** — see the notebook's own scale-note callouts for why (the paper's exact N=2^18/1000-trial parameters were benchmarked and found computationally infeasible here) |
 | [`02_why_cross_spectra.ipynb`](02_why_cross_spectra.ipynb) | Why this matters for ambient-noise cross-correlation specifically: the Bessel-coherence link to phase velocity, the Love-wave problem, the scale problem, and the bridge from Notebook 1's auto-spectra to the pipeline's cross-spectra | New synthesis, grounded in Sayan's report/presentation and this repo's own `fast_cross_spectrum.py` |
-| [`03_fastmspec_application.ipynb`](03_fastmspec_application.ipynb) | The pipeline run on real data: SA53/SA58 (all three `IsMspec` techniques compared), MTAN/RUNG (Love-wave SNR), a synthetic NLNM stability demo, and real dispersion-curve picking via `seislib` | New real-data results — **includes two honest negative/anomalous findings** (see below), not smoothed over |
-| [`04_coda_correlation_future_work.ipynb`](04_coda_correlation_future_work.ipynb) | Roadmap for coda-correlation, explicitly out of scope for Sayan's course project | Scaffold only, no MATLAB or Python implementation exists to port |
-| [`05_coherence_barcode.ipynb`](05_coherence_barcode.ipynb) | Zero-crossing stability under smoothing (moved from Notebook 3) and a new diagnostic: the **coherence barcode**, a template-matching method that scores a candidate coherence spectrum's zero-crossings/maxima/minima against a library of physically-motivated phase-velocity templates | New method, original to this project — full design rationale in [`../docs/coherence_barcode_design.tex`](../docs/coherence_barcode_design.tex)/`.pdf` |
+| [`03_fastmspec_application.ipynb`](03_fastmspec_application.ipynb) | The pipeline run on real data: SA53/SA58 (all three `IsMspec` techniques compared), MTAN/RUNG (Love-wave SNR), a synthetic NLNM stability demo | New real-data results — **includes two honest negative/anomalous findings** (see below), not smoothed over. **Trimmed 2026-09-08**: this notebook originally had a fourth section, a first exploratory dispersion-curve-picking attempt with a placeholder reference curve — retired here, its complete successor is Notebook 4 (see the notebook's own Summary for the pointer) |
+| [`04_dispersion_curve_picking.ipynb`](04_dispersion_curve_picking.ipynb) | Phase-velocity dispersion-curve picking at full dataset scale: a vendored/instrumented `seislib` picker, the resolution-bandwidth-vs-Bessel-spacing principle, a per-pair hybrid ADAMA+GDM52 reference curve, and the full 380-pair Round 1/Round 2/Stage 4.5 results | **Being rebuilt** (was `05_coherence_barcode.ipynb`'s naive zero-crossing/max-min template-matching approach, superseded — see `notebook5-v1-event-scanning` tag) — see [`../docs/notebook5_revamp_progress.md`](../docs/notebook5_revamp_progress.md) |
+| `05_bandwidth_selection.ipynb` | Confirms/revises the bandwidth-selection theory (`NW_low`, the bias-variance MSE framework, [`../docs/stage5_bandwidth_theory.tex`](../docs/stage5_bandwidth_theory.tex)) against a *true* ADAMA benchmark — ADAMA's own real station pairs and ground-truth dispersion curves | **Not yet started** — scoped and partially investigated, see [`../docs/findLowBand_ADAMAbenchmark_progress.md`](../docs/findLowBand_ADAMAbenchmark_progress.md)'s "Start here" section |
+| [`06_coda_correlation_future_work.ipynb`](06_coda_correlation_future_work.ipynb) | Roadmap for coda-correlation, explicitly out of scope for Sayan's course project and unrelated to the direct-correlation dispersion work in 01-05 | Scaffold only, no MATLAB or Python implementation exists to port |
 
 ## Worth knowing before reading Notebook 3
 
@@ -38,9 +42,12 @@ report's numbers. Summary, fullest detail in the notebook itself (Sections 2, 2b
   NCF envelope peaks at 34 s lag, implying a physically plausible ≈3.2 km/s arrival, not a
   near-zero-lag artifact as first hypothesized — a real improvement over `calc_snr_onesided`'s fixed
   window — but it still didn't resolve the anomaly or favor FastMspec in the Bessel-fit metric.
-- **Dispersion-curve picking** (Section 4) did not converge for *either* method on MTAN/RUNG
+- **Dispersion-curve picking** — an early, exploratory attempt (originally this notebook's own
+  Section 4, retired 2026-09-08) did not converge for *either* method on MTAN/RUNG
   (max |coherence| ≈ 0.21), a different outcome than the report's Fig. 6-7 — plausibly the same
-  underlying low-coherence issue as the SNR anomaly, on this same pair.
+  underlying low-coherence issue as the SNR anomaly, on this same pair. **Notebook 4** is the
+  complete, current treatment of dispersion-curve picking (vendored/instrumented picker, real
+  reference curve, full-dataset validation) that grew out of this early finding.
 
 Section 1 (SA53/SA58, `IsMspec` techniques on the already end-to-end-verified pipeline path) is not
 affected by any of this. The open item worth raising with Sayan: what's different about the
@@ -56,17 +63,20 @@ cd ../notebooks
 jupyter nbconvert --to notebook --execute --inplace 01_multitaper_theory.ipynb  # ~15-20 min
 jupyter nbconvert --to notebook --execute --inplace 02_why_cross_spectra.ipynb  # ~1 min
 jupyter nbconvert --to notebook --execute --inplace 03_fastmspec_application.ipynb  # ~5-10 min, needs data/ (see repo root README)
-jupyter nbconvert --to notebook --execute --inplace 05_coherence_barcode.ipynb  # ~5-10 min, needs data/ (see repo root README)
+jupyter nbconvert --to notebook --execute --inplace 04_dispersion_curve_picking.ipynb  # ~5-10 min, needs data/ (see repo root README)
+jupyter nbconvert --to notebook --execute --inplace 06_coda_correlation_future_work.ipynb  # scaffold only, no real execution
 ```
 
-`seislib` (Notebook 3, Section 4) needs `python3-dev` (or your platform's equivalent Python
+(`05_bandwidth_selection.ipynb` isn't built yet — see the table above.)
+
+`seislib` (Notebook 4) needs `python3-dev` (or your platform's equivalent Python
 development headers) installed system-wide to compile a Cython extension during `pip install` —
 if that install fails with a `Python.h: No such file or directory` error, that's the fix.
 
-`_lib/` holds the build scripts (`build_nb1.py`..`build_nb5.py`) that generate these notebooks from
-scratch via `nbformat`, plus shared helper code (`karnik_figures.py`, `nb3_helpers.py`,
-`nb5_helpers.py`) — useful if you want to see exactly how a figure was produced, or to regenerate a
-notebook after editing its build script.
+`_lib/` holds the build scripts (`build_nb1.py`..`build_nb4.py`, `build_nb6.py`; `build_nb5.py`
+doesn't exist yet) that generate these notebooks from scratch via `nbformat`, plus shared helper
+code (`karnik_figures.py`, `nb3_helpers.py`, `nb4_helpers.py`) — useful if you want to see exactly
+how a figure was produced, or to regenerate a notebook after editing its build script.
 
 ## References
 
@@ -114,20 +124,19 @@ primary source, with the local copy as a convenience mirror).
   States. *Physics of the Earth and Planetary Interiors*, 270, 168-175.
   [doi:10.1016/j.pepi.2017.07.010](https://doi.org/10.1016/j.pepi.2017.07.010) --
   [local copy](../docs/references/Ekstrom_2017_PEPI.pdf). These three, together with Aki (1957)
-  above, are the literature precedent Notebook 5's bandwidth/zero-crossing-spacing argument is
+  above, are the literature precedent Notebook 4's bandwidth/zero-crossing-spacing argument is
   grounded in -- large-scale, noise-derived phase-velocity work built on the same Aki spectral
   formulation.
 - Tkalčić, H., Phạm, T. S., & Wang, S. (2020). The Earth's coda correlation wavefield: Rise of the
   new paradigm and recent advances. *Earth-Science Reviews*, 208, 103285.
   [doi:10.1016/j.earscirev.2020.103285](https://doi.org/10.1016/j.earscirev.2020.103285). Notebook
-  4's entire theoretical grounding.
+  6's entire theoretical grounding.
 - Magrini, F., Lauro, S., Kästle, E., & Boschi, L. (2022). Surface-wave tomography using SeisLib:
   a Python package for multiscale seismic imaging. *Geophysical Journal International*, 231(2),
   1011-1030. [doi:10.1093/gji/ggac236](https://doi.org/10.1093/gji/ggac236) --
-  [local copy](../docs/references/Magrini_2022_SeisLib_GJI.pdf). The `seislib` package Notebook 3
-  Section 4 uses directly, and that Notebook 5's `python/dispcurve_pick/` vendors and instruments
-  (referred to as "SeisLab" in Sayan's report — the same package, confirmed by cross-checking
-  author/citation).
+  [local copy](../docs/references/Magrini_2022_SeisLib_GJI.pdf). The `seislib` package Notebook 4's
+  `python/dispcurve_pick/` vendors and instruments (referred to as "SeisLab" in Sayan's report — the
+  same package, confirmed by cross-checking author/citation).
 - Peterson, J. R. (1993). *Observations and modeling of seismic background noise* (Open-File
   Report 93-322). U.S. Geological Survey. Source of the New Low Noise Model Notebook 3 Section 3's
   synthetic test is built on (via `obspy`'s built-in implementation, not hand-transcribed).
@@ -138,17 +147,17 @@ primary source, with the local copy as a convenience mirror).
   [local copy](../docs/references/Hawkins_Sambridge_2019_BSSA.pdf). Motivates Notebook 3's
   envelope conditioning for the Bessel-fit dispersion diagnostic; their analytical extension of the
   zero-crossing formula to maxima/minima (via zeros of $J_1$) grounds the template-family
-  construction `nb5_helpers.py` reuses in Notebook 5 (see
+  construction `nb4_helpers.py` reuses in Notebook 4 (see
   [`../docs/coherence_barcode_design.tex`](../docs/coherence_barcode_design.tex)).
 - Xue, S., & Olugboji, T. (2025). AkiNet: A physics-informed AI for wave extraction from noise.
   *Journal of Geophysical Research: Machine Learning and Computation*, 2(4), e2025JH000932.
   [doi:10.1029/2025JH000932](https://doi.org/10.1029/2025JH000932) --
   [local copy](../docs/references/Xue_Olugboji_2025_AkiNet_JGRMLC.pdf). Motivates Notebook 3's
   envelope conditioning (same role as Hawkins & Sambridge above); its bounded additive
-  phase-velocity corridor (Section 3.3.1) is the direct model for Notebook 5's template-family
+  phase-velocity corridor (Section 3.3.1) is the direct model for Notebook 4's template-family
   construction and hard corridor rejection.
 - Herrmann, R. B. Computer Programs in Seismology (CPS). Saint Louis University.
   [https://www.eas.slu.edu/eqc/eqccps.html](https://www.eas.slu.edu/eqc/eqccps.html). Source
   format of `data/reference/SDISPL.ASC` (`SDISPL.ASC`'s multi-mode dispersion ASCII layout),
-  Notebook 5's real reference Love-wave dispersion curve — see
+  Notebook 4's real reference Love-wave dispersion curve — see
   [`../data/reference/README.md`](../data/reference/README.md) for its provenance.

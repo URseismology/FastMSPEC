@@ -15,6 +15,7 @@ Figure 6 — filtered there, and here, to `LMODE==0` (fundamental mode) via
 **Contents**: fundamental mode (`LMODE=0`) spans periods 2-2048 s (velocities 1.22-4.83 km/s,
 1024 points); higher modes (`LMODE=1..8`) each start at progressively shorter periods.
 
-**Used by**: `notebooks/05_coherence_barcode.ipynb` (`notebooks/_lib/nb5_helpers.py`), as the base
-reference curve for the coherence-barcode template-matching method. Full design rationale:
-`docs/coherence_barcode_design.tex` / `.pdf`.
+**Used by**: `notebooks/04_dispersion_curve_picking.ipynb` (`notebooks/_lib/nb4_helpers.py` --
+renamed from `05_coherence_barcode.ipynb`/`nb5_helpers.py` in the 2026-09-08 notebook
+renumbering), as the base reference curve for the template family the picker scans. Full design
+rationale: `docs/coherence_barcode_design.tex` / `.pdf`.

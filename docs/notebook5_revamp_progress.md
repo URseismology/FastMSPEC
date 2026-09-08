@@ -43,25 +43,62 @@ full dated log below, especially if picking this up cold (new session, no conver
 - `docs/` reorganized: 18 loose figures moved into `docs/figures/{round2_report,investigation}/`,
   all `.tex`/`.md` references fixed.
 
+**Notebook renumbering, executed 2026-09-08** (per direct user request, so the numbering doesn't
+confuse a fresh session): the pre-renumbering state of every notebook is preserved at the
+`notebook5-v1-event-scanning` git tag (pushed to origin). Changes made:
+- `03_fastmspec_application.ipynb` **trimmed**: its old Section 4 (a first, non-converged,
+  placeholder-reference-curve dispersion-picking attempt) removed -- superseded by the notebook
+  below -- via surgical JSON edit (not a full script regeneration, which would have wiped the other
+  sections' cached outputs). `_lib/build_nb3.py` updated to match, verified cell-source-identical
+  to the hand-edited `.ipynb` (outputs aside). Two forward-references elsewhere in the notebook
+  ("Section 4"/"Notebook 5") updated to point at Notebook 4 instead.
+- `04_coda_correlation_future_work.ipynb` -> **`06_coda_correlation_future_work.ipynb`** (moved
+  down -- future work unrelated to the direct-correlation dispersion-picking arc 01-05 build
+  toward, not a rung in that ladder). `_lib/build_nb4.py` -> `_lib/build_nb6.py`, regenerated,
+  verified.
+- `05_coherence_barcode.ipynb` -> **`04_dispersion_curve_picking.ipynb`** (renamed, content not
+  yet rebuilt -- still holds the old barcode content pending Stage 5 below).
+  `_lib/build_nb5.py` -> `_lib/build_nb4.py`, `_lib/nb5_helpers.py` -> `_lib/nb4_helpers.py`
+  (renamed; internal content/references not yet updated -- that's part of the Stage 5 rebuild).
+- `notebooks/README.md`, the root `README.md`, and this file all updated to the new numbering.
+- **`05_bandwidth_selection.ipynb`** is the confirmed name for the not-yet-built post-Stage-5
+  notebook (previously referred to only by its tracker's name, `findLowBand_ADAMAbenchmark`) --
+  concise, matches the `NN_topic_words.ipynb` convention of 01/02, names the question being tested
+  (bandwidth selection) rather than the data source.
+
 **Not yet done:**
-- **Stage 5 (next immediate task)** -- Notebook 5 rebuilt fresh around the phase-velocity/
-  instrumented-picker framework (not a patch on the old zero-crossing/max-min barcode version).
-  Old version to be tagged (`notebook5-v1-event-scanning`), not deleted. Sub-steps per the original
-  plan: (5a) tag old version, (5b) write `build_nb5.py` fresh -- SKRH-BAND worked example +
-  full-380-pair aggregate result (using Stage 4.5's now-fixed pipeline, which means **the notebook
-  needs its own fresh run of the batch pipeline with today's `work_unit.py`, not Round 1/2's
-  committed manifest.csv**, since those predate all three Stage 4.5 fixes) + 2-way
+- **Stage 5 (next immediate task, in progress this session)** -- `04_dispersion_curve_picking.ipynb`
+  rebuilt fresh around the phase-velocity/instrumented-picker framework (not a patch on the old
+  zero-crossing/max-min barcode content it currently still holds). Sub-steps: (5a) tag old version
+  -- done, `notebook5-v1-event-scanning` -- (5b) write `_lib/build_nb4.py` fresh -- SKRH-BAND
+  worked example + full-380-pair aggregate result (using Stage 4.5's now-fixed pipeline, which
+  means **the notebook needs its own fresh run of the batch pipeline with today's `work_unit.py`,
+  not Round 1/2's committed manifest.csv**, since those predate all three Stage 4.5 fixes) + 2-way
   good/bad-quality-crossing barcode + honest discussion, (5c) explicitly defer any further
-  enrichment decision until after this fresh version is reviewed. `nb5_helpers.py` gets the same
-  fresh treatment (keep `load_reference_curve`/`build_template_family`, drop the old scorer, add a
-  thin wrapper + the new barcode helpers).
-- **Stage 6** -- packaging + docs cleanup, and swap Notebook 3 Section 4's placeholder `ref_curve`
-  for the real `SDISPL.ASC` curve (small, safe, already-scoped fix, not yet done).
-- **The new post-Stage-5 notebook, `findLowBand_ADAMAbenchmark`** -- scoped and partially
-  investigated (data-location/access-strategy work done), execution not started. This is where the
-  *next* conversation picks up after Stage 5/6 close out and this conversation is cleared -- its own
-  tracker, `docs/findLowBand_ADAMAbenchmark_progress.md`, is the read-first entry point for that,
-  written to stand on its own without needing this conversation's history.
+  enrichment decision until after this fresh version is reviewed. `_lib/nb4_helpers.py` gets the
+  same fresh treatment (keep `load_reference_curve`/`build_template_family`, drop the old scorer,
+  add a thin wrapper + the new barcode helpers). **Two content directives from direct user
+  feedback, 2026-09-08, to hold throughout the build**: (i) the Motivation section must keep the
+  FastMspec-vs-single-taper thread alive -- FastMspec producing better cross-spectra than
+  single-taper (N1-N3's own established result) is the principled, if not fully proven-optimal,
+  grounding for why this whole pipeline is worth the complexity, not a fact to let drop once the
+  notebook moves on to dispersion-picking specifically; (ii) every comparison figure (technique vs.
+  technique, old-curve vs. hybrid-curve, etc.) should report quality metrics
+  (`bad_quality_fraction`, `freq_coverage_fraction`, template-convergence-count) alongside
+  convergence, not convergence alone -- lean on "better zero-crossings once reference-curve/corridor
+  issues are resolved," not just "did it converge."
+- **Stage 6** -- packaging + docs cleanup. The original scope item ("swap Notebook 3 Section 4's
+  placeholder `ref_curve` for the real `SDISPL.ASC` curve") is now **moot** -- Section 4 was removed
+  entirely in the renumbering above, not patched. Remaining Stage 6 scope: whatever final
+  packaging/doc polish the Stage 5 build surfaces as needed (e.g. `notebooks/README.md`
+  cross-check once Notebook 4's real content exists, not just its renamed placeholder).
+- **The new notebook, `05_bandwidth_selection.ipynb`** -- scoped and partially investigated
+  (data-location/access-strategy work done, tracker at
+  `docs/findLowBand_ADAMAbenchmark_progress.md`), execution not started. Per direct user
+  confirmation (2026-09-08): **this conversation finishes Stage 5 and Stage 6 before retiring** --
+  Notebook 05's actual build happens in a *new* conversation, picking up from
+  `docs/findLowBand_ADAMAbenchmark_progress.md`'s "Start here" section, which is written to stand
+  on its own without needing this conversation's history.
 
 **Deferred, recorded so it isn't silently lost (not blocking, not currently scheduled):**
 - M/N (maxima/minima) event quality gate for a 3-way barcode -- v2 deliberately ships Z-events

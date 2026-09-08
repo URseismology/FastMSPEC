@@ -102,14 +102,15 @@ non-deprecated numpy 2.x spelling -- so this is not a translation deviation from
 behavior, only from the specific (older-numpy-era) snapshot Sayan's own copy happened to be pulled
 from. Fixed by swapping to `np.isin`, matching what upstream itself already does.
 
-## Relationship to Notebook 3 Section 4's existing `seislib` usage
+## Relationship to Notebook 3's original `seislib` usage (historical)
 
-Notebook 3 Section 4 (`notebooks/_lib/build_nb3.py`) imports and calls
-`seislib.an.extract_dispcurve` directly from the installed pip package -- unmodified upstream, no
-instrumentation, no access to any of the diagnostics this package adds. That call site is
-unaffected by anything here and is not in scope for this revamp (per the design doc's own stated
-boundary). Notebook 5 uses this package (`dispcurve_pick`) instead, specifically for the
-diagnostics `seislib.an.extract_dispcurve` alone cannot provide.
+Notebook 3 originally had a Section 4 that imported and called `seislib.an.extract_dispcurve`
+directly from the installed pip package -- unmodified upstream, no instrumentation, no access to
+any of the diagnostics this package adds. That first, non-converged, placeholder-reference-curve
+attempt is what motivated this whole package; it was retired from Notebook 3 in the 2026-09-08
+notebook renumbering once superseded (preserved at the `notebook5-v1-event-scanning` git tag).
+**Notebook 4** uses this package (`dispcurve_pick`) now, specifically for the diagnostics
+`seislib.an.extract_dispcurve` alone cannot provide.
 
 ## Verification
 

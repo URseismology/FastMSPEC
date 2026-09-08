@@ -422,7 +422,7 @@ The companion notebook implementation should verify, before any results are trus
 The scoring mechanism described in Sections~\ref{sec:scoring}--\ref{sec:template-family}
 above --- extracting a candidate's raw zero-crossing/maximum/minimum events by simple sign-change
 and neighbor-comparison detection, then scoring them via precision/recall against a scanned
-template library --- was implemented and validated (Notebook 5, first version): it correctly
+template library --- was implemented and validated (Notebook 4, first version -- then numbered 5, renamed 2026-09-08): it correctly
 ranked FastMspec above single-taper, and its own closing discussion honestly flagged a problem
 that turned out to be more than a minor caveat: \emph{maximum/minimum detection produced roughly
 5$\times$ as many ``reliable'' events as zero-crossing detection, dominated by per-frequency-bin
@@ -434,7 +434,7 @@ coherence data into an actual phase-velocity curve \emph{first}, using a picking
 internal quality control, and to judge correlation quality from information available in that
 process --- not to score raw spectral events directly.
 
-This motivates the revision implemented from Notebook 5 v2 onward:
+This motivates the revision implemented from Notebook 4 v2 onward:
 
 \begin{itemize}[nosep]
   \item \textbf{What is discarded.} The event-scanning scorer in its entirety ---

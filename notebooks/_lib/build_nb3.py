@@ -182,7 +182,7 @@ md(r"""Three things worth pulling out:
    0.05 Hz cutoff.** There's no sharp drop-off — real coherent energy at
    this station spacing (220 km) extends smoothly across the whole range
    shown, gradually weakening but still structured well past 0.3 Hz, which
-   matters directly for Section 4's dispersion-curve picking below (that
+   matters directly for Notebook 4's dispersion-curve picking (that
    typically extracts velocities out to ~0.3 Hz).
 2. **The real comparison is Mspec vs. the two fast techniques, and it
    confirms the fix.** `FastMspec` (K=13) and `Mspec` (K=21) land at
@@ -452,12 +452,12 @@ dynamic range that makes it so visually dramatic is not representative of
 real cross-spectra — no real station pair's coherence varies by nine orders
 of magnitude between bands. This test is useful for isolating *why* leakage
 survives smoothing when it's present, not as a claim about how large the
-effect is in practice. Notebook 5 tests the same underlying question — what
+effect is in practice. Notebook 4 tests the same underlying question — what
 does smoothing single-taper cost, that real tapering doesn't — with real
 data and the metric that actually matters for this pipeline's downstream
 use: not amplitude recovery, but zero-crossing location stability, since
-that's what dispersion-curve picking (Section 4, and Notebook 5's own
-coherence-barcode template matching) depends on.
+that's what dispersion-curve picking (Notebook 4's own reference-curve-guided
+picker) depends on.
 """)
 
 md(r"""## 2. MTAN/RUNG: single-taper vs. FastMspec SNR on real Love-wave data
@@ -746,93 +746,6 @@ well-chosen tapers = low variance), now grounded in the specific noise
 model (NLNM) actually used for this validation in the report.
 """)
 
-md(r"""## 4. Dispersion-curve validation via `seislib`
-
-Sayan's report calls this package "SeisLab"; the actual package (confirmed
-by checking its PyPI listing, GitHub repo, and matching author/paper
-against the report's own citation list) is
-[**`seislib`**](https://pypi.org/project/seislib/) (Magrini et al. 2022,
-*GJI*), `pip install seislib`. Its `extract_dispcurve` picks a phase-velocity
-dispersion curve from the zero crossings of a cross-spectrum — exactly the
-report's Fig. 6-7 workflow.
-
-> **Dependency note.** Installing `seislib` here initially failed: it tries
-> to Cython-compile a tomography submodule during install, which needs
-> `python3-dev` (system Python headers) — not present initially. Installed
-> with `sudo apt install python3.13-dev`, after which `pip install seislib`
-> succeeded cleanly (v1.2.1). This resolves the open dependency question
-> flagged when this notebook was planned.
->
-> **Reference curve caveat.** `extract_dispcurve` needs a `ref_curve`
-> (frequency, velocity) array to resolve the $2\pi$ phase ambiguity between
-> parallel dispersion branches. Sayan's own exact reference curve for this
-> region is not available here, so the curve below is a **rough,
-> literature-plausible approximation** for short-period Love waves in this
-> velocity range (not validated against regional models) — flagged clearly
-> rather than presented as authoritative; using it as a *guide* for
-> zero-crossing branch selection is still meaningful even if imprecise.""")
-
-code("""from seislib.an import extract_dispcurve
-
-freqs = np.fft.fftfreq(n_samples, d=1.0)
-pos = freqs > 0
-ref_curve = np.array([[0.02, 2.6], [0.05, 2.9], [0.1, 3.2], [0.2, 3.5], [0.4, 3.7]])  # rough, literature-plausible approximation, NOT Sayan's exact curve
-
-print(f"max |Re(coherency)| (FastMspec): {np.max(np.abs(ccf_fast[pos].real)):.3f} "
-      f"at f={freqs[pos][np.argmax(np.abs(ccf_fast[pos].real))]:.3f} Hz")
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-picks = {}
-for ax, (name, ccf) in zip(axes, [('Single-taper', ccf_single), ('FastMspec', ccf_fast)]):
-    try:
-        crossings, curve = extract_dispcurve(
-            freqs[pos], ccf[pos], dist_km, ref_curve,
-            freqmin=0.01, freqmax=0.4, cmin=1.5, cmax=5.0,
-            horizontal_polarization=True,  # Love wave
-        )
-        picks[name] = curve
-        ax.plot(curve[:, 0], curve[:, 1], 'r.-', markersize=3, label='Picked dispersion curve')
-    except Exception as e:
-        picks[name] = None
-        ax.text(0.5, 0.5, f'No stable curve picked:\\n{e}', ha='center', va='center', transform=ax.transAxes, fontsize=8)
-    ax.plot(ref_curve[:, 0], ref_curve[:, 1], 'k--', linewidth=1, label='Reference curve (approx.)')
-    ax.set_xlabel('Frequency (Hz)')
-    ax.set_ylabel('Phase velocity (km/s)')
-    ax.set_title(f'{name}, MTAN-RUNG')
-    ax.legend(fontsize=8)
-plt.tight_layout()
-plt.show()
-""")
-
-md(r"""**Neither method converged here.** `extract_dispcurve` raised
-`DispersionCurveException('It was not possible to retrieve a dispersion
-curve')` for single-taper and `ValueError('need at least one array to
-concatenate')` for FastMspec — reproducibly, across several `cmin`/`cmax`/
-`freqmin`/`freqmax` combinations tried beyond the ones shown above, not just
-the first attempt. This is an honest negative result, not a bug being
-papered over: the maximum |coherence| in FastMspec's spectrum over this
-whole pair is only **~0.21** (at f≈0.24 Hz), which is weak — plausibly too
-weak, on this specific pair/rotation path/window count, for `seislib`'s
-zero-crossing picker to lock onto a consistent branch regardless of which
-reference curve or velocity range it's given.
-
-This is a **different, and arguably more informative, negative result**
-than the report's Fig. 6-7 (which showed single-taper failing to converge
-while FastMspec succeeded): here, on this particular station pair, *neither*
-processing choice produces a real-valued absolute dispersion measurement,
-which points at the overall coherence level for this pair/geometry/window
-count being the limiting factor rather than single-taper vs. FastMspec
-specifically. Section 2's own SNR finding (also anomalous — see above)
-adds to the picture that this MTAN/RUNG rotation path, as built here, may
-not be directly comparable to whatever exact processing (window count,
-rotation convention, reference curve) produced the report's actual numbers.
-Rather than force a demonstration to "work," the honest conclusion is:
-**Section 1's SA53/SA58 comparison is the section of this notebook backed
-by an already-verified pipeline path; Sections 2 and 4's MTAN/RUNG results
-are new, exploratory, and should be treated as leads to investigate with
-Sayan rather than confirmed findings.**
-""")
-
 md(r"""## Summary
 
 - **Section 1** ran the `IsMspec` path (`FastMspec`/`Mspec`/`MspecBestK`) end-to-end
@@ -845,13 +758,23 @@ md(r"""## Summary
 - **Section 3** grounded Notebook 1's synthetic ARMA-process figures in the
   specific noise model (Peterson's NLNM) the report itself used for its own
   validation.
-- **Section 4** closed the loop with a real dispersion-curve extraction using
-  the actual `seislib` package, after resolving a system dependency blocker
-  encountered during planning.
 
-**Notebook 4** looks forward: Sayan's report explicitly scoped out
-coda-correlation analysis due to time constraints — this repo's next
-documented step.
+This notebook originally had a fourth section here: a first, exploratory
+attempt at real dispersion-curve extraction via the installed `seislib`
+package on MTAN/RUNG, using a rough placeholder reference curve, which did
+not converge for either method (max |coherence| ≈ 0.21) — an honest early
+negative result, not a bug. That attempt is what grew into this project's
+entire dispersion-curve-picking effort: a vendored and instrumented copy of
+`seislib`'s picker, a real per-pair reference curve (not a placeholder), and
+validation/quality metrics across the full 380-pair dataset. **The complete,
+current treatment lives in Notebook 4** — this section is retired here
+rather than kept as a stale, superseded duplicate (the original is preserved
+at the `notebook5-v1-event-scanning` git tag for anyone who wants the exact
+historical attempt).
+
+**Notebook 6** looks forward: Sayan's report explicitly scoped out
+coda-correlation analysis due to time constraints — this repo's own
+scaffolded-but-not-implemented roadmap for it.
 """)
 
 nb['cells'] = cells

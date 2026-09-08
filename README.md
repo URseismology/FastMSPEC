@@ -22,7 +22,7 @@ MATLAB codebase in this project's lineage — see [`legacy/`](legacy/) for how t
 | [`python/dispcurve_pick/`](python/dispcurve_pick/) | A vendored, instrumented copy of `seislib`'s dispersion-curve picker, plus the hybrid ADAMA+GDM52 per-pair reference-curve library and the gvib.h5 pair-matched data loader. |
 | [`python/dispcurve_pick_batch/`](python/dispcurve_pick_batch/) | The bluehive batch pipeline that runs the picker across the full 380-pair dataset (multiple techniques, an NW-bandwidth sweep). |
 | [`docs/`](docs/) | The technical plan for the CCF pipeline translation ([`plan_ccf_mtc_translation.md`](docs/plan_ccf_mtc_translation.md)), and — the current active work stream — the Notebook 5 revamp ([`notebook5_revamp_progress.md`](docs/notebook5_revamp_progress.md), **read its "Status summary" section first**) and its planned follow-on ([`findLowBand_ADAMAbenchmark_progress.md`](docs/findLowBand_ADAMAbenchmark_progress.md)). |
-| [`notebooks/`](notebooks/) | Theory-to-application documentation, in four pre-run Jupyter notebooks: why multitaper spectral estimation and why "Fast" (reproducing Karnik et al.'s own paper figures), why this matters for ambient-noise cross-correlation, the pipeline applied to real data, and a scoped future-work roadmap for coda-correlation. See [`notebooks/README.md`](notebooks/README.md). A fifth notebook (phase-velocity-based pick quality) is mid-revamp — see `docs/notebook5_revamp_progress.md`. |
+| [`notebooks/`](notebooks/) | Theory-to-application documentation, six planned Jupyter notebooks: why multitaper spectral estimation and why "Fast" (reproducing Karnik et al.'s own paper figures), why this matters for ambient-noise cross-correlation, the pipeline applied to real data, phase-velocity dispersion-curve picking at scale (mid-rebuild), bandwidth-selection theory vs. a real ADAMA benchmark (not yet started), and a scoped future-work roadmap for coda-correlation. See [`notebooks/README.md`](notebooks/README.md). |
 
 ## Status, in one paragraph
 
@@ -46,8 +46,10 @@ section** (read that, not this paragraph, for anything beyond the one-line summa
 2026-09-08: the picker is vendored and validated, the full 380-pair dataset has been run and
 analyzed on bluehive (Round 1 + a 300-point bandwidth sweep, `docs/round2_hypothesis_evaluation.pdf`),
 and a per-pair hybrid reference curve + corridor-search fix (Stage 4.5) is built, validated, and
-merged into the production pipeline. Next: rebuilding Notebook 5 itself (Stage 5), then a follow-on
-notebook benchmarking against ADAMA's own real station pairs
+merged into the production pipeline. Next: rebuilding the dispersion-curve notebook itself (Stage 5,
+`notebooks/04_dispersion_curve_picking.ipynb` — notebooks were renumbered 2026-09-08, see
+`notebooks/README.md`), then a follow-on notebook (`05_bandwidth_selection.ipynb`) benchmarking
+against ADAMA's own real station pairs
 ([`docs/findLowBand_ADAMAbenchmark_progress.md`](docs/findLowBand_ADAMAbenchmark_progress.md)).
 
 ## Where to start reading

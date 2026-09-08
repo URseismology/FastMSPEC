@@ -34,9 +34,12 @@ validation (one pair, `AF.SKRH`-`XV.BAND`).
    `co`/`cf` ground-truth dispersion curves for the same pairs -- the actual benchmark this notebook
    exists to run.
 5. Test Goal 1's windowing-strategy scaling (`N` vs. distance) on this real ADAMA-pair dataset.
-6. Only then: write the notebook itself, following this project's established `build_nb*.py`
-   pattern (see `notebooks/_lib/build_nb5.py` once Stage 5 exists, or the earlier notebooks for the
-   pattern in the meantime).
+6. Only then: write the notebook itself -- **confirmed name and slot (2026-09-08 notebook
+   renumbering): `notebooks/05_bandwidth_selection.ipynb`**, built via a new `notebooks/_lib/
+   build_nb5.py` (doesn't exist yet -- this is the first thing to create it). Follow this
+   project's established `build_nb*.py` pattern; `notebooks/_lib/build_nb4.py` (the
+   dispersion-curve-picking notebook, built the session before this one starts) is the closest and
+   most recent model to follow, not an older notebook.
 
 **What's already solid and doesn't need re-litigating**: `ADAMA_gvib.h5` is the right data source
 (single file, parallel-safe, already local on bluehive -- see Findings), `python/dispcurve_pick/
