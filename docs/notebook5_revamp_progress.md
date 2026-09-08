@@ -66,6 +66,19 @@ confuse a fresh session): the pre-renumbering state of every notebook is preserv
   concise, matches the `NN_topic_words.ipynb` convention of 01/02, names the question being tested
   (bandwidth selection) rather than the data source.
 
+**RESOLVED 2026-09-08 (next session), commit `cff0115` (pushed).** The figure-feedback revision of
+`04_dispersion_curve_picking.ipynb` below is now regenerated, executed end-to-end via `nbclient`
+against real data (607s, zero errors, all 13 figures render), spot-checked, committed and pushed.
+All local data (SKRH-BAND `.mat`, ADAMA_Maps+GDM52 source, manifest) was still present -- no
+bluehive re-pull needed. One real bug fixed in `_lib/build_nb4.py` during this: the Figure 8/9
+`plotting=True` re-render calls didn't pass the same picker params as the corridor scan that
+selected the winning template (`filt_width=10, filt_height=1.0, x_step=0.05, pick_threshold=0`),
+so the re-render diverged from the scan result and raised `DispersionCurveException` on the
+old-curve render, aborting execution -- now passes the matching params. Spot-checks vs. the
+numbers recorded in this block: SKRH-BAND coherence range `[-0.1033, 0.0834]` exact match,
+`coh_num=1605`, Round 2 K=0 floor rate 21.7% (quartile gradient 1/12/23/51%), synthetic demo
+converges clean. The rest of this block is kept as the historical record of the revision.
+
 **UPDATE 2026-09-08 (later same day), URGENT -- read this before anything below in this block.**
 Session limit hit mid-work. Exact state, precisely:
 - `03_fastmspec_application.ipynb` -- **committed, executed, real outputs, current.** Reflects
