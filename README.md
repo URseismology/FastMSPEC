@@ -19,8 +19,10 @@ MATLAB codebase in this project's lineage — see [`legacy/`](legacy/) for how t
 | [`verification/`](verification/) | The GNU Octave environments used to verify the Python translation against the real, unmodified MATLAB source — not synthetic reimplementation, the *actual* `.m` files, run and diffed against Python output. See [`octave_verify_multitaper/README.md`](verification/octave_verify_multitaper/README.md) and [`octave_verify_ccf_pipeline/README.md`](verification/octave_verify_ccf_pipeline/README.md). |
 | [`legacy/matlab_source/`](legacy/matlab_source/) | The original MATLAB source this project translates from and verifies against, for side-by-side reading. See its [`README.md`](legacy/matlab_source/README.md). |
 | [`legacy/para_ccf_original/`](legacy/para_ccf_original/) | This repo's original contents before the rename — the 2021-era predecessor scripts. See [`NOTE.md`](legacy/para_ccf_original/NOTE.md) and the original [`README.md`](legacy/para_ccf_original/README.md). |
-| [`docs/`](docs/) | The technical plan for the CCF pipeline translation, written before implementation and updated as work progressed: [`plan_ccf_mtc_translation.md`](docs/plan_ccf_mtc_translation.md). |
-| [`notebooks/`](notebooks/) | Theory-to-application documentation, in four pre-run Jupyter notebooks: why multitaper spectral estimation and why "Fast" (reproducing Karnik et al.'s own paper figures), why this matters for ambient-noise cross-correlation, the pipeline applied to real data, and a scoped future-work roadmap for coda-correlation. See [`notebooks/README.md`](notebooks/README.md). |
+| [`python/dispcurve_pick/`](python/dispcurve_pick/) | A vendored, instrumented copy of `seislib`'s dispersion-curve picker, plus the hybrid ADAMA+GDM52 per-pair reference-curve library and the gvib.h5 pair-matched data loader. |
+| [`python/dispcurve_pick_batch/`](python/dispcurve_pick_batch/) | The bluehive batch pipeline that runs the picker across the full 380-pair dataset (multiple techniques, an NW-bandwidth sweep). |
+| [`docs/`](docs/) | The technical plan for the CCF pipeline translation ([`plan_ccf_mtc_translation.md`](docs/plan_ccf_mtc_translation.md)), and — the current active work stream — the Notebook 5 revamp ([`notebook5_revamp_progress.md`](docs/notebook5_revamp_progress.md), **read its "Status summary" section first**) and its planned follow-on ([`findLowBand_ADAMAbenchmark_progress.md`](docs/findLowBand_ADAMAbenchmark_progress.md)). |
+| [`notebooks/`](notebooks/) | Theory-to-application documentation, in four pre-run Jupyter notebooks: why multitaper spectral estimation and why "Fast" (reproducing Karnik et al.'s own paper figures), why this matters for ambient-noise cross-correlation, the pipeline applied to real data, and a scoped future-work roadmap for coda-correlation. See [`notebooks/README.md`](notebooks/README.md). A fifth notebook (phase-velocity-based pick quality) is mid-revamp — see `docs/notebook5_revamp_progress.md`. |
 
 ## Status, in one paragraph
 
@@ -33,6 +35,20 @@ real SAC file loading through to a computed cross-correlation — has been run e
 seismic data (station pair SA53/SA58) and matches an independent Octave run of the same real
 files to a relative error of 3.9e-6. Open items and exact scope boundaries are listed in each
 package's `NOTES.md` — nothing here is claimed more thoroughly verified than it actually is.
+
+## Current work: Notebook 5 revamp (phase-velocity picking)
+
+This CCF pipeline now feeds a second, actively-developed work stream: judging pick quality by
+tracking a full phase-velocity dispersion curve (an instrumented, vendored copy of `seislib`'s
+picker), not just scanning raw zero-crossings. **Source of truth for current status is
+[`docs/notebook5_revamp_progress.md`](docs/notebook5_revamp_progress.md)'s own "Status summary"
+section** (read that, not this paragraph, for anything beyond the one-line summary here) — as of
+2026-09-08: the picker is vendored and validated, the full 380-pair dataset has been run and
+analyzed on bluehive (Round 1 + a 300-point bandwidth sweep, `docs/round2_hypothesis_evaluation.pdf`),
+and a per-pair hybrid reference curve + corridor-search fix (Stage 4.5) is built, validated, and
+merged into the production pipeline. Next: rebuilding Notebook 5 itself (Stage 5), then a follow-on
+notebook benchmarking against ADAMA's own real station pairs
+([`docs/findLowBand_ADAMAbenchmark_progress.md`](docs/findLowBand_ADAMAbenchmark_progress.md)).
 
 ## Where to start reading
 

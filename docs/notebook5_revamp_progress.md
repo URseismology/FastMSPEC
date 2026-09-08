@@ -10,6 +10,73 @@ this file's own log below, which is the durable record.
 Updated at the end of every stage. Check in with the user after each update before starting the
 next stage.
 
+## Status summary (read this first)
+
+**As of 2026-09-08**, branch `notebook5-phase-velocity-revamp`, pushed to `origin` through commit
+`0e1375f`. This section is the fast-orientation entry point -- read it before the checklist or the
+full dated log below, especially if picking this up cold (new session, no conversation history).
+
+**Done -- Stages 0 through 4.5, all complete and pushed:**
+- Vendored + instrumented `seislib`'s picker (`python/dispcurve_pick/`), byte-identical to
+  upstream by default, `return_diagnostics=True` surfacing internal quality signals.
+- Validated against Sayan's own known-good SKRH-BAND result before scaling up.
+- **Round 1**: full 380 pairs x 4 techniques (single-taper, FastMspec, Mspec, MspecBestK) run on
+  bluehive. Results committed: `data/results/dispcurve_quality/manifest.csv` + `results/*.json`
+  (1520/1520, zero errors). **Computed with the pre-Stage-4.5 picker** (single generic `SDISPL.ASC`
+  curve, uniform corridor, `horizontal_polarization=False`) -- superseded logic, kept as the
+  historical Round-1 record, not something to treat as "current pipeline output."
+- **Round 2**: 300-point NW-bandwidth sweep (15 pairs/quartile x 5 fractions of `NW_high(r)`),
+  testing 4 hypotheses against real data in `docs/round2_hypothesis_evaluation.tex`/`.pdf`: H1
+  (normalized bandwidth) and H3 (quartile-4 existence-threshold cliff, 0/75 converged at every
+  bandwidth tested) strongly confirmed; H4 (K=0 numerical floor) confirmed with a clean quartile
+  gradient; H2 (interior MSE optimum) **not supported** in the tested range -- convergence/quality
+  both monotonically favor the widest bandwidth tried. Also computed with the pre-Stage-4.5 picker.
+- **Stage 4.5** (inserted ahead of Stage 5): found and fixed a real `horizontal_polarization` bug
+  (Love-wave data needs the J0-J2 Bessel model, not pure J0 -- picker had used the wrong default
+  throughout Round 1/2); built and validated a per-pair hybrid ADAMA (6-40s) + GDM52 (45-150s)
+  reference curve replacing the single shared `SDISPL.ASC`; chose a corridor-widening strategy from
+  a real 3-way A/B test; combined all three in `work_unit.py`'s actual production path and
+  validated end-to-end on bluehive -- a same-bandwidth isolated-effect comparison showed the
+  number of corridor templates that converge at all rising in every one of the 4 report pairs
+  (0->8, 2->15, 15->25, 2->9), with the winning template's own quality also improving on 3/4 pairs.
+  Full tables: 2026-09-07 log entry below.
+- `docs/` reorganized: 18 loose figures moved into `docs/figures/{round2_report,investigation}/`,
+  all `.tex`/`.md` references fixed.
+
+**Not yet done:**
+- **Stage 5 (next immediate task)** -- Notebook 5 rebuilt fresh around the phase-velocity/
+  instrumented-picker framework (not a patch on the old zero-crossing/max-min barcode version).
+  Old version to be tagged (`notebook5-v1-event-scanning`), not deleted. Sub-steps per the original
+  plan: (5a) tag old version, (5b) write `build_nb5.py` fresh -- SKRH-BAND worked example +
+  full-380-pair aggregate result (using Stage 4.5's now-fixed pipeline, which means **the notebook
+  needs its own fresh run of the batch pipeline with today's `work_unit.py`, not Round 1/2's
+  committed manifest.csv**, since those predate all three Stage 4.5 fixes) + 2-way
+  good/bad-quality-crossing barcode + honest discussion, (5c) explicitly defer any further
+  enrichment decision until after this fresh version is reviewed. `nb5_helpers.py` gets the same
+  fresh treatment (keep `load_reference_curve`/`build_template_family`, drop the old scorer, add a
+  thin wrapper + the new barcode helpers).
+- **Stage 6** -- packaging + docs cleanup, and swap Notebook 3 Section 4's placeholder `ref_curve`
+  for the real `SDISPL.ASC` curve (small, safe, already-scoped fix, not yet done).
+- **The new post-Stage-5 notebook, `findLowBand_ADAMAbenchmark`** -- scoped and partially
+  investigated (data-location/access-strategy work done), execution not started. This is where the
+  *next* conversation picks up after Stage 5/6 close out and this conversation is cleared -- its own
+  tracker, `docs/findLowBand_ADAMAbenchmark_progress.md`, is the read-first entry point for that,
+  written to stand on its own without needing this conversation's history.
+
+**Deferred, recorded so it isn't silently lost (not blocking, not currently scheduled):**
+- M/N (maxima/minima) event quality gate for a 3-way barcode -- v2 deliberately ships Z-events
+  (zero-crossings) only; extending seislib's `bad_quality` criteria to M/N is an unsolved design
+  problem, explicitly logged as future work in the plan, not started.
+- A global (non-Africa) short-period reference-curve source -- once FastMSPEC itself is validated
+  at scale, its own measurements could become a third `PhaseVelocitySource` ahead of GDM52.
+- Rayleigh-wave validation of the hybrid curve -- `wave='rayleigh'` is wired through
+  `hybrid_reference_curve.py` but only Love has been validated against real ADAMA data.
+- `gvib_loader.py`'s `chunk_days` memory-fallback parameter -- documented design target, currently
+  `NotImplementedError`; only matters if a future pair/workload doesn't fit the ~650MB/pair default.
+- `docs/stage5_bandwidth_theory.tex`'s MSE-minimization theory (`NW_low`, the bias-variance lower
+  bound) -- derived, not yet checked against real data. **This is exactly what
+  `findLowBand_ADAMAbenchmark` is designed to test**, not a separate open item.
+
 ## Checklist
 
 - [x] **Stage 0** -- This tracking file

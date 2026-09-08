@@ -8,6 +8,44 @@ catalog, `docs/notebook5_revamp_progress.md`'s 2026-09-04/05 logs). Full scoping
 this is its own notebook, not folded into Stage 4.5 or Stage 5: see
 `docs/notebook5_revamp_progress.md`'s 2026-09-05 "Scoping session" log entry.
 
+## Start here (read-first, for a session with no conversation history)
+
+**Status as of 2026-09-08: scoped and partially investigated (Goals 2 and 3 done), execution not
+started.** Nothing below has been run against real ADAMA pairs yet -- everything so far is data-
+location/access-strategy investigation and the pair-matched loading library's own unit-level
+validation (one pair, `AF.SKRH`-`XV.BAND`).
+
+**Concrete next actions, in order:**
+1. Extend the temporal-overlap check from ~9 spot-checked XV stations to all 141 island-touching
+   pairs (Goal 2's last open piece -- see Findings below for the spot-check method to repeat at
+   scale). Also finish the station-level completeness check for the remaining 57/62 networks (only
+   `G`/`II`/`IU`/`YJ`/`AF` checked so far; `AF` has a real, quantified 5-station gap).
+2. Decide/parameterize the windowing/overlap convention `gvib_loader.build_pair_matched_data`
+   exposes (currently hardcoded to Sayan's fixed 3-hour/50%-overlap convention) -- needed before
+   Goal 1 can vary `N` by distance. Default should stay `ccf_prepare_data_T_mdg.m`'s convention;
+   the override is the new part.
+3. Run `gvib_loader.build_pair_matched_data` across all 141 pairs (not just the one validated
+   pair), producing `S1_data_mat`/`S2_data_mat` for each -- this is the first real batch step nothing
+   has exercised yet. Expect to find and fix at least one new edge case at this scale (single-day
+   pairs, stations with unusually high zero-day fractions, etc.) -- budget for it, don't assume the
+   one-pair validation generalizes cleanly.
+4. Feed those through FastMspec (reuse `dispcurve_pick_batch`'s architecture: `work_unit.py`-style
+   processing, `round2_prep.py`-style NW-sweep infrastructure) and compare against ADAMA's own
+   `co`/`cf` ground-truth dispersion curves for the same pairs -- the actual benchmark this notebook
+   exists to run.
+5. Test Goal 1's windowing-strategy scaling (`N` vs. distance) on this real ADAMA-pair dataset.
+6. Only then: write the notebook itself, following this project's established `build_nb*.py`
+   pattern (see `notebooks/_lib/build_nb5.py` once Stage 5 exists, or the earlier notebooks for the
+   pattern in the meantime).
+
+**What's already solid and doesn't need re-litigating**: `ADAMA_gvib.h5` is the right data source
+(single file, parallel-safe, already local on bluehive -- see Findings), `python/dispcurve_pick/
+gvib_loader.py` is validated end-to-end against a known-good reference (rotation bug and zero-day
+dilution bug both found and fixed), and the raw-counts-vs-response-corrected question is answered:
+**the SAC files are already instrument-response-corrected** (direct user confirmation, 2026-09-06
+session) -- `ccf_prepare_data_T_mdg.m`'s `PZpath` reference does not mean these specific files need
+further correction. Do not re-open either of these as open questions.
+
 ## Goals (set 2026-09-05, user-directed)
 
 1. Test different windowing strategies -- `N` (window length) should differ by station
@@ -72,11 +110,9 @@ for path in glob.glob('/scratch/tolugboj_lab/Prj5_HarnomicRFTraces/2_Data/prepro
 `ADAMA_gvib.h5` is built by globbing **exactly** `preprocessed_data/Data*/*/*.sac` -- the same
 directory tree already found and verified on terravibranium -- reading each file with
 `obspy.read()` and appending, no processing applied in this step. **`ADAMA_gvib.h5` and the
-individual SAC files are the same data, byte-for-byte, just two different containers.** This also
-means the earlier open question (raw counts vs. response-corrected) isn't resolved by this script
-either way -- whatever the SAC files already are, `ppToHDF5.py` doesn't change it -- so that
-question still stands, now clearly scoped to "whatever state the SAC files are already in," not
-something the HDF5 packaging step could have altered.
+individual SAC files are the same data, byte-for-byte, just two different containers.** (The
+raw-counts-vs-response-corrected question this raised is resolved below -- direct user
+confirmation, not left open.)
 
 **Useful related documentation, per direct user pointer**: `trichter/notebooks`'
 `cross_correlation_okhotsk_coda.ipynb` (Tom Richter is `obspyh5`'s own author) demonstrates the
@@ -88,13 +124,11 @@ the whole file in memory. Doesn't change the recommendation below (the real bott
 *download*, not in-memory loading once downloaded) but is the right tool if `ADAMA_gvib.h5` is
 ever used directly in a later stage.
 
-**One open question still flagged, not resolved**: whether terravibranium's SAC files are raw
-instrument counts or already response-corrected. `ccf_prepare_data_T_mdg.m` references a
-`PZpath` (pole-zero response files) as a separate input, suggesting Sayan's own pipeline expects
-to do its *own* response removal -- i.e. the SAC files are likely still raw counts despite living
-under a folder named `preprocessed_data`. Not directly confirmed (would need to inspect an actual
-SAC header, e.g. `IDEP`, or check for a companion RESP/PZ archive for the mainland stations) --
-flagged for whoever starts building the actual SAC-to-mat pipeline, not assumed either way.
+**Resolved**: whether terravibranium's SAC files are raw instrument counts or already
+response-corrected. `ccf_prepare_data_T_mdg.m`'s `PZpath` reference initially suggested Sayan's
+pipeline does its own response removal (i.e. the SAC files might still be raw counts despite
+living under a folder named `preprocessed_data`) -- but per **direct user confirmation** (2026-09-06
+session): "no no... the files are already instrument removed." Settled; do not re-open.
 
 ## Recommendation (Goal 4) -- revised, `ADAMA_gvib.h5` is the decision
 
@@ -188,8 +222,12 @@ NW-sweep can actually use it. Matches the documentation depth already set by
 provenance, a companion README covering data/validation -- as the bar to clear, explicitly, not
 to fall short of again.
 
-**Before running the actual SAC-to-mat/pair-loading logic**, beyond the 1:1 verification above:
-1. Confirm the raw-counts-vs-response-corrected question (cheap: inspect one SAC header).
+**Before running the actual SAC-to-mat/pair-loading logic**, beyond the 1:1 verification above
+(superseded by the "Start here" section at the top of this file -- kept here for the detailed
+rationale, item 1 resolved):
+1. ~~Confirm the raw-counts-vs-response-corrected question~~ -- resolved, see "Start here" and the
+   Findings section above: the SAC files are already instrument-corrected, per direct user
+   confirmation.
 2. Extend the temporal-overlap check from a spot sample to all 141 island-touching pairs.
 3. Decide the windowing/overlap convention this library exposes as parameters -- reusing
    `ccf_prepare_data_T_mdg.m`'s exact convention as the *default*, matching this project's
