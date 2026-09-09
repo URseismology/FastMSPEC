@@ -1,0 +1,62 @@
+[
+  {
+    "technique": "Mspec",
+    "nw": 10.801,
+    "runtime_s": 40.7,
+    "peak_mem_mb": 4102.3,
+    "taper_size": 3,
+    "coh_num": 1620,
+    "roughness": 0.2671,
+    "k_taps": 3
+  },
+  {
+    "technique": "Mspec",
+    "nw": 10.801,
+    "runtime_s": 91.7,
+    "peak_mem_mb": 8373.5,
+    "taper_size": 7,
+    "coh_num": 1620,
+    "roughness": 0.1782,
+    "k_taps": 7
+  },
+  {
+    "technique": "Mspec",
+    "nw": 10.801,
+    "runtime_s": 119.9,
+    "peak_mem_mb": 9442.6,
+    "taper_size": 13,
+    "coh_num": 1620,
+    "roughness": 0.138,
+    "k_taps": 13
+  },
+  {
+    "technique": "Mspec",
+    "nw": 10.801,
+    "runtime_s": 171.0,
+    "peak_mem_mb": 11710.4,
+    "taper_size": 21,
+    "coh_num": 1620,
+    "roughness": 0.0927,
+    "k_taps": 21
+  },
+  {
+    "technique": "Mspec",
+    "nw": 10.801,
+    "runtime_s": 235.8,
+    "peak_mem_mb": 11714.6,
+    "taper_size": 29,
+    "coh_num": 1620,
+    "roughness": 0.0683,
+    "k_taps": 29
+  },
+  {
+    "technique": "Mspec",
+    "nw": 10.801,
+    "runtime_s": 367.0,
+    "peak_mem_mb": 11725.2,
+    "taper_size": 45,
+    "coh_num": 1620,
+    "roughness": 0.0599,
+    "k_taps": 45
+  }
+]
