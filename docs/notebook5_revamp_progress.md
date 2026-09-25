@@ -12,6 +12,10 @@ next stage.
 
 ## Status summary (read this first)
 
+> **Later state (2026-09-25):** for the cross-stream picture (Notebook 3 rework executed 2026-09-09, Notebook 05 not started, global
+> validation program, adjacent acquisition-pipeline smoke test) read [`STATE.md`](STATE.md); the catalog is [`INDEX.md`](INDEX.md).
+> This tracker remains authoritative for Stages 0–5, Round 1/2 and Stage 4.5; the block below is the 2026-09-08 snapshot.
+
 **As of 2026-09-08**, branch `notebook5-phase-velocity-revamp`, pushed to `origin` through commit
 `0e1375f`. This section is the fast-orientation entry point -- read it before the checklist or the
 full dated log below, especially if picking this up cold (new session, no conversation history).

@@ -38,6 +38,11 @@ package's `NOTES.md` — nothing here is claimed more thoroughly verified than i
 
 ## Current work: Notebook 5 revamp (phase-velocity picking)
 
+> **Current status across all work streams (2026-09-25): [`docs/STATE.md`](docs/STATE.md).** Catalog of every document:
+> [`docs/INDEX.md`](docs/INDEX.md). Agents: start at [`CLAUDE.md`](CLAUDE.md). The paragraph below is the 2026-09-08
+> snapshot of the dispersion-curve stream; since then Notebooks 3 and 4 were reworked and executed, and the program goal
+> became validation at scale (~2,000 stations), see [`docs/global_validation_readiness.md`](docs/global_validation_readiness.md).
+
 This CCF pipeline now feeds a second, actively-developed work stream: judging pick quality by
 tracking a full phase-velocity dispersion curve (an instrumented, vendored copy of `seislib`'s
 picker), not just scanning raw zero-crossings. **Source of truth for current status is
