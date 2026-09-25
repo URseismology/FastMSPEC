@@ -1,6 +1,6 @@
 # STATE — FastMSPEC status board (living; update at every milestone)
 
-*Last updated: 2026-09-25. Branch `notebook5-phase-velocity-revamp`, HEAD `7dbc8c3` (pushed) plus the uncommitted/new files listed under "Housekeeping".
+*Last updated: 2026-09-25. Branch `notebook5-phase-velocity-revamp`, pushed through `beb28f0`.
 Entry point for agents: [`../CLAUDE.md`](../CLAUDE.md). Catalog of every document: [`INDEX.md`](INDEX.md).*
 
 The project has several work streams that advanced independently. This board says, per stream, **where it stands, what is open, and where the detail lives**.
@@ -51,9 +51,10 @@ Readiness gates and the implications of the pipeline smoke test: [`global_valida
 * Notebook 03 Sections 2c, 2d and 3 (see stream F): re-evaluate against the reworked story once Tolu has reviewed 1–2b.
 
 ## Housekeeping (as of this update)
-* New, not yet on the remote: `CLAUDE.md`, `docs/STATE.md`, `docs/INDEX.md`, `docs/check_links.py`, `docs/global_validation_readiness.md` (committed locally on the working branch; **ask Tolu before pushing**).
+* `CLAUDE.md`, `docs/STATE.md`, `docs/INDEX.md`, `docs/check_links.py` and `docs/global_validation_readiness.md` were pushed to the remote in `beb28f0` (2026-09-25, Tolu's OK).
+* **Decision (Tolu, 2026-09-25): no folder reorganization**; the entry-point documents are the fix. Options that were considered are at the end of [`INDEX.md`](INDEX.md).
+* **Notebook 03 review is pending; Tolu is busy elsewhere and will come back to it.** Do not rework Sections 2c, 2d or 3 until that feedback arrives.
 * The tracker's "Status summary" is dated 2026-09-08 and predates the Notebook 3 rework and stream K; this board supersedes it as the cross-stream entry point, and the tracker remains authoritative for streams C and D.
-* A folder reorganization is **proposed, not executed** (see the end of [`INDEX.md`](INDEX.md)).
 
 ## How to update this file
 One row per stream; change the status cell and add date + commit id; if a stream has its own tracker, add the dated entry there and keep this row to one sentence.
