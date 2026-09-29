@@ -2,6 +2,8 @@
 
 *Written 2026-09-25. Program goal (Tolu): validate FastMSPEC at scale — ~2,000 stations worldwide (wavenet-epicAI `metadata3/fps_stations.csv`, fixed, never regenerate), global **Love-wave** noise correlations, **20 s dispersion maps compared with Ekström (GDM52)**, and a demonstration of FastMSPEC's global noise-correlation improvements.*
 
+> **Scope update, 2026-09-29.** The global program is now a GRL paper (planned on axon-2: `~/global-tomography/docs/FRAMING.md`, `docs/PAPER_PLAN.md`): **ten periods 8–50 s** (25–50 s overlapping GDM52), **Rayleigh and Love**, **oceans and continents**, delivered as three products (FastMSPEC v1.0, a global dispersion model, a data-driven crustal regionalization). Consequences for the gates below: Love (gate 4) and window length per distance (gate 1) are now **prerequisites**, not upside; the 20 s-only framing below is superseded; per-pair memory is an added gate (it sets throughput at ~10⁵ pairs).
+
 Source of the findings below: the XD.MTAN–XD.RUNG smoke test of the acquisition pipeline (`URseismology/wavenet-epicAI`, branch `add-september-ncf-pipeline`). The test lives in a **separate project**, `projects/wavenet_xd_pair_test/` (living handoff: `STATE.md`), and — once pushed — in `docs/ncf_pipeline_stages/xd_mtan_rung_smoke_test/` on that branch (report, patches, tests, evidence). This file records what it means **for FastMSPEC**.
 
 ## 1. Which existing FastMSPEC results are affected?
